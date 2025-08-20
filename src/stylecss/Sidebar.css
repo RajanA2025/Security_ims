@@ -1,0 +1,80 @@
+/* Logo container */
+.logo {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sidebar {
+  width: 90px;
+  background-color: white;
+  color: rgb(141, 194, 18);
+  height: auto;
+  transition: width 0.3s ease;
+  position: relative;
+  padding-top: 20px;
+}
+
+.sidebar.expanded {
+  width: 200px;
+}
+
+.toggle-btn {
+  position: absolute;
+  top: 10px;
+  right: -15px;
+  /* background-color: white; */
+  border-radius: 50%;
+  padding: 5px;
+  cursor: pointer;
+  /* color: white; */
+  z-index: 10;
+}
+
+.sidebar-icons {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px 30px;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+
+  gap: 15px;
+  cursor: pointer;
+  position: relative;
+}
+
+.icon svg {
+  font-size: 24px;
+}
+
+
+
+.label {
+  white-space: nowrap;
+  font-size: 16px;
+}
+
+.badge .dot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: red;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+/* App.css */
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+

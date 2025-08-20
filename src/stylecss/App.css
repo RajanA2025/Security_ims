@@ -1,0 +1,74 @@
+/* File: src/App.css */
+body {
+  margin: 0;
+  padding: 0;
+
+  background-color: #F7FAFC;
+
+}
+
+/* .app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+} */
+
+/* .dashboard {
+  display: flex;
+  flex: 1;
+} */
+
+/* .main-content {
+  flex: 1;
+  padding: 1rem;
+} */
+
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* 
+h6 {
+  color: #1A202C;
+}
+
+h4 {
+  color: #4A5568;
+}
+
+p {
+  color: #4A5568;
+} */
+
+
+/* File: src/stylecss/App.css */
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Full height of screen */
+  overflow: hidden; /* Prevent entire page scrolling */
+}
+
+.dashboard {
+  display: flex;
+  flex: 1;
+  overflow: hidden; /* Prevent sidebar from pushing scroll */
+}
+
+.main-content {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto; /* Only this part scrolls */
+  padding: 20px;
+  background-color: #f5f5f5; /* Optional */
+}
+
+/* Optional: Keep sidebar fixed in place */
+.sidebar {
+  flex-shrink: 0;
+  height: 100%;
+  overflow-y: auto; /* If sidebar needs its own scroll */
+}
