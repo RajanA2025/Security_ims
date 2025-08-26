@@ -40,7 +40,7 @@ const Securitygrp = () => {
   const [selectedData, setSelectedData] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [selectedAccountId, setSelectedAccountId] = useState(null);
-  const API_URL = "http://13.212.15.14:8001/security-groups";
+  const API_URL = "http://13.212.15.14:8012/security-groups";
   const { Option } = Select;
   const accountIds = [...new Set(data.map(item => item.account_id))];
   // Fetch data on mount
@@ -174,8 +174,43 @@ const Securitygrp = () => {
 
   return (
     <>
-      <h2>Security Group</h2>
-
+    
+<Row gutter={[16, 16]} style={{ marginBottom: 5 }}>
+  <Col md={16}>
+  <h2
+  style={{
+    fontFamily: "Roboto, Helvetica, Arial, sans-serif",
+    // fontWeight: 900,
+    // fontSize: "23px",
+    // color: "black"
+  }}
+>Security Group</h2>
+  </Col>
+  <Col md={4}>
+    <Select
+      placeholder="Filter by Account ID"
+      style={{ width: "100%" }}
+      allowClear
+      value={selectedAccountId}
+      onChange={handleAccountChange}
+    >
+      {accountIds.map((id) => (
+        <Option key={id} value={id}>
+          {id}
+        </Option>
+      ))}
+    </Select>
+  </Col>
+  <Col md={4}>
+    <Input
+      placeholder="Security Name"
+      prefix={<SearchOutlined />}
+      value={searchText}
+      onChange={handleSearch}
+      allowClear
+    />
+  </Col>
+</Row>
       {/* Stats Cards */}
       <Row gutter={[16, 16]}>
        
@@ -279,34 +314,7 @@ const Securitygrp = () => {
         </Col>
       </Row> */}
 
-<Row gutter={[16, 16]} style={{ marginBottom: 10 }}>
-  <Col md={16}>
-  </Col>
-  <Col md={4}>
-    <Select
-      placeholder="Filter by Account ID"
-      style={{ width: "100%" }}
-      allowClear
-      value={selectedAccountId}
-      onChange={handleAccountChange}
-    >
-      {accountIds.map((id) => (
-        <Option key={id} value={id}>
-          {id}
-        </Option>
-      ))}
-    </Select>
-  </Col>
-  <Col md={4}>
-    <Input
-      placeholder="Security Name"
-      prefix={<SearchOutlined />}
-      value={searchText}
-      onChange={handleSearch}
-      allowClear
-    />
-  </Col>
-</Row>
+
 
       {/* Table */}
       <Table

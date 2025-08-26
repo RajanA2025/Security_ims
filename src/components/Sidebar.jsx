@@ -162,7 +162,7 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
       //   { label: "SSH", path: "/securitygroup/ssh" }
       // ]
     },
-    { icon: <CloudCircle />, label: "Cloud Trial", path: "/cloud_trial" },
+    { icon: <CloudCircle />, label: "Cloud Trail", path: "/cloud_trail" },
     { icon: <GoTools />, label: "Security Tools", path: "/security_tools" }
   ];
 

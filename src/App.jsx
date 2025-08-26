@@ -7,8 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Insights from './pages/iam_insights/insights';
 import SecurityGroup from './pages/security_group/Securitygrp'
 import CloudTrail from "./pages/Cloud_Trail/Cloud_Trail"
-import Orphaned from './pages/security_group/orphaned';
-import Ssh from "./pages/security_group/Ssh"
+import SecurityTools from "./pages/SecurityTool/SecurityTools"
 function App() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [filters, setFilters] = useState({
@@ -33,10 +32,8 @@ function App() {
           <Route path="/" element={<Dashboard filters={filters} />} />
           <Route path="/iam_insights" element={<Insights filters={filters} />} />
           <Route path="/securitygroup" element={<SecurityGroup filters={filters} />} />
-          <Route path="/cloud_trial" element={< CloudTrail filters={filters} />} />
-
-          {/* <Route path="/securitygroup/orthpanel" element={<Orphaned filters={filters} />} />
-          <Route path="/securitygroup/ssh" element={<Ssh filters={filters} />} /> */}
+          <Route path="/cloud_trail" element={< CloudTrail filters={filters} />} />
+          <Route path="/security_tools" element={< SecurityTools filters={filters} />} />
         </Routes>
       </Layout>
     </Router>

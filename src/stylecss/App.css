@@ -72,3 +72,8 @@ p {
   height: 100%;
   overflow-y: auto; /* If sidebar needs its own scroll */
 }
+
+.traffic-card .ant-card-body {
+  padding: 12px;
+  border-radius: 0 0 8px 8px;
+}

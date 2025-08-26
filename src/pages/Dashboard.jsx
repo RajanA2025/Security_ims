@@ -91,8 +91,8 @@ const Insights = () => {
   const [selectedData, setSelectedData] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [selectedAccountId, setSelectedAccountId] = useState(null);
-  const API_URL = "http://13.212.15.14:8001/iam";
-  const API_URL1 = "http://13.212.15.14:8001/iam";
+  const API_URL = "http://13.212.15.14:8012/iam";
+  const API_URL1 = "http://13.212.15.14:8012/security-groups";
 
   const { Option } = Select;
   const accountIds = [...new Set(data.map(item => item.account_id))];
@@ -131,16 +131,16 @@ const Insights = () => {
 
 
 
-  const handleSearch = (e) => {
-    const value = e.target.value;
-    setSearchText(value);
-    handleFilters(value, selectedAccountId);
-  };
+  // const handleSearch = (e) => {
+  //   const value = e.target.value;
+  //   setSearchText(value);
+  //   handleFilters(value, selectedAccountId);
+  // };
   
-  const handleAccountChange = (value) => {
-    setSelectedAccountId(value);
-    handleFilters(searchText, value);
-  };
+  // const handleAccountChange = (value) => {
+  //   setSelectedAccountId(value);
+  //   handleFilters(searchText, value);
+  // };
 
   const handleFilters = (searchValue, accountValue) => {
     let filtered = data;
@@ -199,7 +199,7 @@ const Insights = () => {
     ? Math.round((OrphanedEnabledCount / total1) * 100)
     : 0;
   const IpPercent = total1
-    ? Math.round((IpEnabledCount1 / total1) * 100)
+    ? Math.round((IpEnabledCount / total1) * 100)
     : 0;
 
 
@@ -303,7 +303,7 @@ const Insights = () => {
 />
 </Tooltip>
         </span>
-        <span style={{ color: "#888" }}>{OrphanedEnabledCount}/{total} Security Groups</span>
+        <span style={{ color: "#888" }}>{OrphanedEnabledCount}/{total1} Security Groups</span>
       </Flex>
     </Card>
   </Col>
@@ -343,7 +343,7 @@ const Insights = () => {
   </Col>
 
   <Col xs={24} sm={12} md={6}>
-    <Card hoverable style={{ textAlign: "center" }}>
+    <Card hoverable style={{ textAlign: "center"}}>
       <Flex vertical align="center" gap="small">
         <PortableWifiOffOutlined style={{ fontSize: 28, color: "#722ed1" }} />
         <Progress type="circle" percent={IpPercent} strokeColor={IpPercent < 75 ? "#52c41a" : IpPercent < 50 ? "#fa8c16" : "#ff4d4f"} />
@@ -354,7 +354,7 @@ const Insights = () => {
 />
 </Tooltip>
         </span>
-        <span style={{ color: "#888" }}>{IpEnabledCount}/{total} Open Port</span>
+        <span style={{ color: "#888" }}>{IpEnabledCount}/{total1} Open Port</span>
       </Flex>
     </Card>
   </Col>

@@ -62,10 +62,18 @@ const Header = ({ onDateChange }) => {
     >
       <Toolbar sx={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <img src={logo} alt="logo" style={{ height: 40, marginRight: 25 }} />
-          <Typography variant="h5"  color='black' fontWeight={600}>
-            IMS Security
-          </Typography>
+          <img src={logo} alt="logo" style={{ height: 70, marginRight: 25 }} />
+          <Typography 
+  variant="h5"
+  color="black"
+  fontWeight={900}
+  sx={{
+    fontFamily: "Roboto, Helvetica, Arial, sans-serif",
+    fontSize: "23px"
+  }}
+>
+  IMS Security
+</Typography>
         </Box>
 
         {/* <Fade in={loaded} timeout={600}>
