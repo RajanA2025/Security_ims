@@ -13,6 +13,7 @@ import {
   Progress,
   Select,
   Flex,
+  Typography,
 } from "antd";
 
 
@@ -177,14 +178,18 @@ const Securitygrp = () => {
     
 <Row gutter={[16, 16]} style={{ marginBottom: 5 }}>
   <Col md={16}>
-  <h2
+  <Typography.Title 
+  level={4}
   style={{
-    fontFamily: "Roboto, Helvetica, Arial, sans-serif",
-    // fontWeight: 900,
-    // fontSize: "23px",
-    // color: "black"
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
+    fontSize: "20px",
+    fontWeight: 500,
+    color: "black",
+    margin: 0
   }}
->Security Group</h2>
+>
+Security Group
+</Typography.Title>
   </Col>
   <Col md={4}>
     <Select

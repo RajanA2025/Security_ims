@@ -61,6 +61,7 @@ import {
   Progress,
   Select,
   Flex,
+  Typography,
 } from "antd";
 
 
@@ -205,7 +206,19 @@ const Insights = () => {
 
   return (
     <>
-      <h2>IAM Insights</h2>
+           <Typography.Title 
+  level={4}
+  style={{
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
+    fontSize: "20px",
+    fontWeight: 500,
+    color: "black",
+    margin: 0
+  }}
+>
+IAM Insights
+</Typography.Title>
+    
 
       {/* Stats Cards */}
       <Row gutter={[16, 16]}>
@@ -285,7 +298,18 @@ const Insights = () => {
 
       <br />
 
-      <h2>Security Group</h2>
+      <Typography.Title 
+  level={4}
+  style={{
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
+    fontSize: "20px",
+    fontWeight: 500,
+    color: "black",
+    margin: 0
+  }}
+>
+Security Group
+</Typography.Title>
 
 {/* Stats Cards */}
 <Row gutter={[16, 16]}>
