@@ -44,6 +44,11 @@ const Observability = () => {
   //test for search name id
   const [searchName, setSearchName] = useState("");
   const [searchId, setSearchId] = useState("");
+  const [isModalOpenS3, setIsModalOpenS3] = useState(false);
+const [selectedS3, setSelectedS3] = useState(null);
+
+const [isModalOpenEC2, setIsModalOpenEC2] = useState(false);
+const [selectedEC2, setSelectedEC2] = useState(null);
 
 
   // Fetch data
@@ -80,7 +85,15 @@ const Observability = () => {
   }, [tabKey]);
 
   const handleSearch = e => setSearchText(e.target.value);
+const handleOpenS3 = record => {
+  setSelectedS3(record);
+  setIsModalOpenS3(true);
+};
 
+const handleOpenEC2 = record => {
+  setSelectedEC2(record);
+  setIsModalOpenEC2(true);
+};
   const handleOpenModal = record => {
     setSelectedData(record);
     setIsModalOpen(true);
@@ -449,7 +462,26 @@ const Observability = () => {
     { title: "Account ID", dataIndex: "account_id", key: "account_id" },
     { title: "Account Name", dataIndex: "account_name", key: "account_name" },
     { title: "Instance ID", dataIndex: "instance_id", key: "instance_id" },
+    { title: "Instance Name", dataIndex: "instance_name", key: "instance_name" },
     { title: "Type", dataIndex: "instance_type", key: "instance_type" },
+    { title: "region", dataIndex: "region", key: "region" },
+    { title: "cpu_avg_7d", dataIndex: "cpu_avg_7d", key: "cpu_avg_7d" },
+    {
+      title: "status_checks_ok",
+      dataIndex: "status_checks_ok",
+      key: "status_checks_ok",
+      render: value => (value ? "✅" : "❌")
+    },
+    {
+      title: "underutilized",
+      dataIndex: "underutilized",
+      key: "underutilized",
+      render: value => (
+        <Tag color={value ? "green" : "red"}>
+          {value ? "true" : "false"}
+        </Tag>
+      )
+    },
     {
       title: "State",
       dataIndex: "state",
@@ -458,19 +490,19 @@ const Observability = () => {
         <Tag color={value === "running" ? "green" : "red"}>{value}</Tag>
       )
     },
-    
+
     {
-      title: "More Details",
-      key: "action",
-      render: (_, record) => (
-        <Tooltip title="View Details">
-          <EyeOutlined
-            style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
-            onClick={() => handleOpenModal(record)}
-          />
-        </Tooltip>
-      )
-    }
+  title: "More Details",
+  key: "action",
+  render: (_, record) => (
+    <Tooltip title="View Details">
+      <EyeOutlined
+        style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
+        onClick={() => handleOpenEC2(record)}
+      />
+    </Tooltip>
+  )
+}
   ];
 
 
@@ -541,16 +573,16 @@ const Observability = () => {
         <Tabs.TabPane tab="Unassociated Elastic IP" key="2">
           <Table
             columns={eipColumns}
-            dataSource={securityData.filter(item =>
-  (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
-  (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
-)}
-
+            dataSource={eipData.filter(item =>
+              (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
+              (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
+            )}
             loading={loading}
             rowKey={(record) => record.allocation_id || 'eip-key'}
             pagination={{ pageSize: 8 }}
           />
         </Tabs.TabPane>
+
         <Tabs.TabPane tab="Orphaned volume" key="3">
           <Table
             columns={volumeColumns}
@@ -564,36 +596,36 @@ const Observability = () => {
           />
         </Tabs.TabPane>
         <Tabs.TabPane tab="S3 Details" key="4">
-  <Table
-    columns={s3Columns}
-    dataSource={s3Data.filter(item =>
-      (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
-      (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
-    )}
-    loading={loading}
-    rowKey={record => record.bucket_name || 's3-key'}
-    pagination={{ pageSize: 8 }}
-  />
-</Tabs.TabPane>
+          <Table
+            columns={s3Columns}
+            dataSource={s3Data.filter(item =>
+              (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
+              (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
+            )}
+            loading={loading}
+            rowKey={record => record.bucket_name || 's3-key'}
+            pagination={{ pageSize: 8 }}
+          />
+        </Tabs.TabPane>
 
 
         <Tabs.TabPane tab="EC2 Details" key="5">
-  <Table
-    columns={ec2Columns}
-    dataSource={ec2Data.filter(item =>
-      (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
-      (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
-    )}
-    loading={loading}
-    rowKey={record => record.instance_id || 'ec2-key'}
-    pagination={{ pageSize: 8 }}
-  />
-</Tabs.TabPane>
+          <Table
+            columns={ec2Columns}
+            dataSource={ec2Data.filter(item =>
+              (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
+              (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
+            )}
+            loading={loading}
+            rowKey={record => record.instance_id || 'ec2-key'}
+            pagination={{ pageSize: 8 }}
+          />
+        </Tabs.TabPane>
 
 
       </Tabs>
 
-      <Modal
+      {/* <Modal
         title={`${selectedData?.account_name || selectedData?.account_id || ""} - Account Details`}
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
@@ -610,34 +642,188 @@ const Observability = () => {
             </Descriptions>
           </Card>
         )}
-      </Modal>
-
+      </Modal> */}
       <Modal
-        title={`Account Details`}
-        open={isModalOpen1}
-        onCancel={() => setIsModalOpen1(false)}
+        title={`${selectedData?.account_name || selectedData?.account_id || ""} - Key Pair Details`}
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
         footer={null}
         width={900}
       >
-        {selectedData1 && (
-          <Card size="small" title="Information" style={{ marginBottom: 16 }} headStyle={header}>
+        {selectedData && (
+          <Card
+            size="small"
+            title="Information"
+            style={{ marginBottom: 16 }}
+            headStyle={header}
+          >
             <Descriptions bordered column={2} size="small">
-              <Descriptions.Item label="Account ID">{selectedData1.account_id}</Descriptions.Item>
-              <Descriptions.Item label="Key Id">{selectedData1.key_id}</Descriptions.Item>
-              <Descriptions.Item label="key ARN">{selectedData1.key_arn}</Descriptions.Item>
-              <Descriptions.Item label="Origin">{selectedData1.origin}</Descriptions.Item>
-              <Descriptions.Item label="Key Type">{selectedData1.key_type}</Descriptions.Item>
-              <Descriptions.Item label="Usage Key">{selectedData1.key_usage}</Descriptions.Item>
-              {/* <Descriptions.Item label="Status">{selectedData1.creation_date}</Descriptions.Item> */}
-              <Descriptions.Item label="Rotation Age">{selectedData1.rotation_age_days}</Descriptions.Item>
-              <Descriptions.Item label="created On">{selectedData1.creation_date}</Descriptions.Item>
-              <Descriptions.Item label="Multi Region">{selectedData1.multi_region}</Descriptions.Item>
-              <Descriptions.Item label="Acoount Access">{selectedData1.cross_account_access}</Descriptions.Item>
-              <Descriptions.Item label="Description">{selectedData1.description}</Descriptions.Item>
+              <Descriptions.Item label="Account ID">{selectedData.account_id}</Descriptions.Item>
+              <Descriptions.Item label="Account Name">{selectedData.account_name}</Descriptions.Item>
+              <Descriptions.Item label="Region">{selectedData.region}</Descriptions.Item>
+              <Descriptions.Item label="Key Name">{selectedData.key_name}</Descriptions.Item>
+              <Descriptions.Item label="Key Pair ID">{selectedData.key_pair_id}</Descriptions.Item>
+              <Descriptions.Item label="Key Type">{selectedData.key_type}</Descriptions.Item>
+              <Descriptions.Item label="Key Fingerprint">{selectedData.key_fingerprint}</Descriptions.Item>
+              <Descriptions.Item label="Created On">{selectedData.create_time}</Descriptions.Item>
+              <Descriptions.Item label="Status">{selectedData.status}</Descriptions.Item>
+              <Descriptions.Item label="Instance Name">{selectedData.instance_name || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Instance ID">{selectedData.instance_id || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Tags">
+                {Object.keys(selectedData.tags || {}).length > 0
+                  ? JSON.stringify(selectedData.tags)
+                  : "-"}
+              </Descriptions.Item>
             </Descriptions>
           </Card>
         )}
       </Modal>
+
+
+      <Modal
+  title={`${selectedData?.account_name || selectedData?.account_id || ""} - Elastic IP Details`}
+  open={isModalOpen}
+  onCancel={() => setIsModalOpen(false)}
+  footer={null}
+  width={900}
+>
+  {selectedData && (
+    <Card size="small" title="Information" style={{ marginBottom: 16 }} headStyle={header}>
+      <Descriptions bordered column={2} size="small">
+        <Descriptions.Item label="Account ID">{selectedData.account_id}</Descriptions.Item>
+        <Descriptions.Item label="Account Name">{selectedData.account_name}</Descriptions.Item>
+        <Descriptions.Item label="Region">{selectedData.region}</Descriptions.Item>
+        <Descriptions.Item label="Public IP">{selectedData.public_ip}</Descriptions.Item>
+        <Descriptions.Item label="Allocation ID">{selectedData.allocation_id}</Descriptions.Item>
+        <Descriptions.Item label="ARN">{selectedData.arn}</Descriptions.Item>
+        <Descriptions.Item label="Month">{selectedData.months}</Descriptions.Item>
+        <Descriptions.Item label="Cost Savings">{selectedData.cost_savings || "-"}</Descriptions.Item>
+        <Descriptions.Item label="Status">{selectedData.status}</Descriptions.Item>
+      </Descriptions>
+    </Card>
+  )}
+</Modal>
+<Modal
+  title={`${selectedData?.account_name || selectedData?.account_id || ""} - Orphaned Volume Details`}
+  open={isModalOpen}
+  onCancel={() => setIsModalOpen(false)}
+  footer={null}
+  width={900}
+>
+  {selectedData && (
+    <Card size="small" title="Information" style={{ marginBottom: 16 }} headStyle={header}>
+      <Descriptions bordered column={2} size="small">
+        <Descriptions.Item label="Account ID">{selectedData.account_id}</Descriptions.Item>
+        <Descriptions.Item label="Account Name">{selectedData.account_name}</Descriptions.Item>
+        <Descriptions.Item label="Region">{selectedData.region}</Descriptions.Item>
+        <Descriptions.Item label="Availability Zone">{selectedData.availability_zone}</Descriptions.Item>
+        <Descriptions.Item label="Volume ID">{selectedData.volume_id}</Descriptions.Item>
+        <Descriptions.Item label="Volume Name">{selectedData.volume_name || "-"}</Descriptions.Item>
+        <Descriptions.Item label="Size (GB)">{selectedData.size}</Descriptions.Item>
+        <Descriptions.Item label="State">{selectedData.state}</Descriptions.Item>
+        <Descriptions.Item label="Throughput">{selectedData.throughput || "-"}</Descriptions.Item>
+        <Descriptions.Item label="IOPS">{selectedData.iops || "-"}</Descriptions.Item>
+        <Descriptions.Item label="Snapshot ID">{selectedData.snapshot_id || "-"}</Descriptions.Item>
+        <Descriptions.Item label="Create Time">{selectedData.create_time}</Descriptions.Item>
+        <Descriptions.Item label="Created At">{selectedData.created_at}</Descriptions.Item>
+        <Descriptions.Item label="Tags">
+          {Array.isArray(selectedData.tags) && selectedData.tags.length > 0
+            ? selectedData.tags.map(tag => `${tag.Key}: ${tag.Value}`).join(", ")
+            : "-"}
+        </Descriptions.Item>
+      </Descriptions>
+    </Card>
+  )}
+</Modal>
+<Modal
+  title={`${selectedData?.account_name || selectedData?.account_id || ""} - S3 Bucket Details`}
+  open={isModalOpen}
+  onCancel={() => setIsModalOpen(false)}
+  footer={null}
+  width={1000}
+>
+  {selectedData && (
+    <>
+      {/* Main Bucket Information */}
+      <Card size="small" title="Bucket Information" style={{ marginBottom: 16 }} headStyle={header}>
+        <Descriptions bordered column={2} size="small">
+          <Descriptions.Item label="Account ID">{selectedData.account_id}</Descriptions.Item>
+          <Descriptions.Item label="Account Name">{selectedData.account_name}</Descriptions.Item>
+          <Descriptions.Item label="Region">{selectedData.region}</Descriptions.Item>
+          <Descriptions.Item label="Bucket Name">{selectedData.bucket_name}</Descriptions.Item>
+          <Descriptions.Item label="Bucket ARN">{selectedData.bucket_arn}</Descriptions.Item>
+          <Descriptions.Item label="Owner">{selectedData.owner}</Descriptions.Item>
+          <Descriptions.Item label="Created On">{selectedData.creation_date}</Descriptions.Item>
+          <Descriptions.Item label="Last Modified">{selectedData.last_modified_date}</Descriptions.Item>
+          <Descriptions.Item label="Versioning Status">
+            {selectedData.versioning_status ?? "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="Encryption">{selectedData.encryption || "-"}</Descriptions.Item>
+          <Descriptions.Item label="KMS Key ID">{selectedData.kms_key_id || "-"}</Descriptions.Item>
+          <Descriptions.Item label="MFA Delete">{selectedData.mfa_delete ? "✅" : "❌"}</Descriptions.Item>
+          <Descriptions.Item label="Public Access Block">{selectedData.public_access_block ? "✅" : "❌"}</Descriptions.Item>
+          <Descriptions.Item label="Replication Status">{selectedData.replication_status || "-"}</Descriptions.Item>
+          <Descriptions.Item label="Logging Status">{selectedData.logging_status || "-"}</Descriptions.Item>
+          <Descriptions.Item label="Object Count">{selectedData.object_count}</Descriptions.Item>
+          <Descriptions.Item label="Bucket Size (GB)">{selectedData.bucket_size_gb}</Descriptions.Item>
+          <Descriptions.Item label="Tags">
+            {selectedData.tags ? JSON.stringify(selectedData.tags) : "-"}
+          </Descriptions.Item>
+          <Descriptions.Item label="Checked On">{selectedData.checked_on}</Descriptions.Item>
+        </Descriptions>
+      </Card>
+
+      {/* Risk Indicators */}
+      <Card size="small" title="Risk Indicators" style={{ marginBottom: 16 }} headStyle={header}>
+        <Descriptions bordered column={2} size="small">
+          <Descriptions.Item label="Public">{selectedData.risk_indicators?.public ? "⚠️ Yes" : "✅ No"}</Descriptions.Item>
+          <Descriptions.Item label="Unencrypted">{selectedData.risk_indicators?.unencrypted ? "⚠️ Yes" : "✅ No"}</Descriptions.Item>
+          <Descriptions.Item label="No Versioning">{selectedData.risk_indicators?.no_versioning ? "⚠️ Yes" : "✅ No"}</Descriptions.Item>
+          <Descriptions.Item label="Replication Disabled">{selectedData.risk_indicators?.replication_disabled ? "⚠️ Yes" : "✅ No"}</Descriptions.Item>
+        </Descriptions>
+      </Card>
+
+      {/* CORS Configuration Table */}
+      {Array.isArray(selectedData.cors_configuration) && selectedData.cors_configuration.length > 0 && (
+        <Card size="small" title="CORS Configuration" style={{ marginBottom: 16 }} headStyle={header}>
+          <Table
+            bordered
+            size="small"
+            rowKey={(record, idx) => idx}
+            pagination={false}
+            columns={[
+              { title: "Max Age Seconds", dataIndex: "MaxAgeSeconds", key: "MaxAgeSeconds" },
+              { title: "Allowed Headers", dataIndex: "AllowedHeaders", key: "AllowedHeaders", render: v => v.join(", ") },
+              { title: "Allowed Methods", dataIndex: "AllowedMethods", key: "AllowedMethods", render: v => v.join(", ") },
+              { title: "Allowed Origins", dataIndex: "AllowedOrigins", key: "AllowedOrigins", render: v => v.join(", ") },
+            ]}
+            dataSource={selectedData.cors_configuration}
+          />
+        </Card>
+      )}
+
+      {/* Lifecycle Rules Table */}
+      {Array.isArray(selectedData.lifecycle_rules) && selectedData.lifecycle_rules.length > 0 && (
+        <Card size="small" title="Lifecycle Rules" headStyle={header}>
+          <Table
+            bordered
+            size="small"
+            rowKey={(record, idx) => idx}
+            pagination={false}
+            columns={[
+              { title: "Rule ID", dataIndex: "ID", key: "ID" },
+              { title: "Prefix", dataIndex: ["Filter", "Prefix"], key: "Prefix" },
+              { title: "Status", dataIndex: "Status", key: "Status" },
+              { title: "Expiration (Days)", dataIndex: ["Expiration", "Days"], key: "Days" },
+            ]}
+            dataSource={selectedData.lifecycle_rules}
+          />
+        </Card>
+      )}
+    </>
+  )}
+</Modal>
+
     </>
   );
 };
