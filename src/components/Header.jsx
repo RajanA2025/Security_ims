@@ -27,8 +27,7 @@ const Header = ({ onDateChange }) => {
   const [context, setContext] = useState('Account');
   const [loaded, setLoaded] = useState(false); // trigger animation
   const [anchorEl, setAnchorEl] = useState(null);
-  const isSecurity = location.pathname.toLowerCase().startsWith('/security');
-  const layout = isSecurity ? "1" : "2";
+ var layout ="3"
   // Open menu
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -76,7 +75,7 @@ const Header = ({ onDateChange }) => {
     margin: 0
   }}
 >
-{layout === "1" ? "Security": "Operational Excellence"}
+{layout === "1" ? "Security":layout === "2" ?  "Operational Excellence":"Perfomance"}
 </Typography.Title>
  
 

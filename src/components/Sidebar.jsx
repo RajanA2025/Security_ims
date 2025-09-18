@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { Typography } from 'antd';
 import { useNavigate, useLocation } from "react-router-dom";
-import { MdOutlineSecurity, MdDashboard, MdDangerous, MdInsights, MdCloudCircle, MdBusiness, MdAccessibility, MdCloudySnowing } from "react-icons/md";
+import { MdOutlineSecurity, MdDashboard, MdDangerous, MdInsights, MdCloudCircle, MdBusiness, MdAccessibility, MdCloudySnowing, MdMonitor, MdRampRight } from "react-icons/md";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { CloudCircle, Insights, ExpandLess, ExpandMore, InsightsOutlined, CloudCircleRounded } from "@mui/icons-material";
 import { GoTools } from "react-icons/go";
@@ -53,6 +53,19 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
     },
     { icon: <MdCloudySnowing size={30}/>, label: "Cloud Watch", path: "/Operational/CloudWatch" },
     // { icon: <GoTools size={30}/>, label: "Security Tools", path: "/security_tools" }
+    {
+      icon: <MdMonitor size={30}/>,
+      label: "Monitoring",
+      path: "/Operational/monitoring",
+      
+    },
+    { icon: <MdRampRight size={30}/>, label: "RightSizing", path: "/Operational/rightsizing" },
+  ];
+
+  const navItems2 = [
+    { icon: <MdDashboard size={30}/>, label: "Dashboard", path: "/Operational" },
+   
+   
   ];
 
   const handleNavClick = (item) => {
@@ -66,8 +79,11 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
       setOpenMenu(null); // close any open submenu
     }
   };
-  const itemsToRender = layout === "1" ? navItems : navItems1;
-  return (
+  const itemsToRender =
+  layout === "1" ? navItems :
+  layout === "2" ? navItems1 :
+  navItems2; 
+   return (
     <Box
       sx={{
         width: isExpanded ? 200 : 90,
