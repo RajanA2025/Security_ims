@@ -27,10 +27,12 @@ const RightSizing = () => {
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     accountId: '',
+    accountName: '',
     region: ''
   });
   const [uniqueRegions, setUniqueRegions] = useState([]);
   const [uniqueAccountIds, setUniqueAccountIds] = useState([]);
+  const [uniqueAccountNames, setUniqueAccountNames] = useState([]);
 
   // Format usage values to ensure they're properly formatted with 2 decimal places
   const formatUsageValue = (value) => {
@@ -144,9 +146,15 @@ const RightSizing = () => {
         .map(item => item.accountId)
         .filter(accountId => accountId && accountId !== '')
       )].sort();
+
+      const accountNames = [...new Set(formattedData
+        .map(item => item.accountName)
+        .filter(accountName => accountName && accountName !== 'N/A')
+      )].sort();
       
       setUniqueRegions(regions);
       setUniqueAccountIds(accountIds);
+      setUniqueAccountNames(accountNames);
       
       console.log('Formatted data:', formattedData);
       setPerformanceData(formattedData);
@@ -232,6 +240,7 @@ const RightSizing = () => {
       setFilteredData(mockData);
       setUniqueRegions(['us-east-1', 'us-west-2', 'eu-west-1', 'ap-south-1']);
       setUniqueAccountIds(['ACC-001', 'ACC-002', 'ACC-003']);
+      setUniqueAccountNames(['Production Account', 'Development Account', 'Staging Account']);
       
     } finally {
       setLoading(false);
@@ -250,6 +259,12 @@ const RightSizing = () => {
     if (filters.accountId) {
       result = result.filter(item => 
         item.accountId.toLowerCase().includes(filters.accountId.toLowerCase())
+      );
+    }
+
+    if (filters.accountName) {
+      result = result.filter(item => 
+        item.accountName.toLowerCase().includes(filters.accountName.toLowerCase())
       );
     }
     
@@ -272,6 +287,7 @@ const RightSizing = () => {
   const clearFilters = () => {
     setFilters({
       accountId: '',
+      accountName: '',
       region: ''
     });
   };
@@ -302,6 +318,12 @@ const RightSizing = () => {
       fixed: 'left',
       render: (text) => <Text strong>{text}</Text>,
       sorter: (a, b) => a.accountId.localeCompare(b.accountId),
+      filters: uniqueAccountIds.map(accountId => ({
+        text: accountId,
+        value: accountId
+      })),
+      onFilter: (value, record) => record.accountId === value,
+      filterSearch: true,
     },
     {
       title: 'Account Name',
@@ -310,6 +332,12 @@ const RightSizing = () => {
       width: 150,
       ellipsis: true,
       sorter: (a, b) => a.accountName.localeCompare(b.accountName),
+      filters: uniqueAccountNames.map(accountName => ({
+        text: accountName,
+        value: accountName
+      })),
+      onFilter: (value, record) => record.accountName === value,
+      filterSearch: true,
     },
     {
       title: 'Region',
@@ -322,6 +350,12 @@ const RightSizing = () => {
         </Tag>
       ),
       sorter: (a, b) => a.region.localeCompare(b.region),
+      filters: uniqueRegions.map(region => ({
+        text: region,
+        value: region
+      })),
+      onFilter: (value, record) => record.region === value,
+      filterSearch: true,
     },
     {
       title: 'Instance ID',
@@ -368,30 +402,6 @@ const RightSizing = () => {
         return statusA.localeCompare(statusB);
       },
     },
-    // {
-    //   title: 'CPU (Weekly)',
-    //   dataIndex: 'cpuWeekly',
-    //   key: 'cpuWeekly',
-    //   width: 120,
-    //   ellipsis: true,
-    //   render: (text) => (
-    //     <Text style={{ fontSize: '12px' }}>
-    //       {text}
-    //     </Text>
-    //   ),
-    // },
-    // {
-    //   title: 'CPU (Monthly)',
-    //   dataIndex: 'cpuMonthly',
-    //   key: 'cpuMonthly',
-    //   width: 120,
-    //   ellipsis: true,
-    //   render: (text) => (
-    //     <Text style={{ fontSize: '12px' }}>
-    //       {text}
-    //     </Text>
-    //   ),
-    // },
     {
       title: 'Recommended',
       dataIndex: 'recommended',
@@ -468,42 +478,46 @@ const RightSizing = () => {
           </Col>
           <Col xs={24} md={12}>
             <Row gutter={[8, 8]} justify="end">
-              <Col xs={12} sm={8}>
-                <Input
-                  placeholder="Search Account ID"
-                  value={filters.accountId}
-                  onChange={(e) => handleFilterChange('accountId', e.target.value)}
-                  prefix={<SearchOutlined />}
-                  allowClear
-                  size="middle"
-                />
-              </Col>
-              <Col xs={12} sm={8}>
+              <Col xs={12} sm={6}>
                 <Select
-                  placeholder="Select Region"
+                  showSearch
+                  placeholder="Select Account ID"
                   style={{ width: '100%' }}
-                  value={filters.region || undefined}
-                  onChange={(value) => handleFilterChange('region', value)}
+                  value={filters.accountId || undefined}
+                  onChange={(value) => handleFilterChange('accountId', value)}
                   allowClear
                   size="middle"
+                  filterOption={(input, option) =>
+                    option?.children.toLowerCase().includes(input.toLowerCase())
+                  }
                 >
-                  {uniqueRegions.map((region) => (
-                    <Option key={region} value={region}>
-                      {region}
+                  {uniqueAccountIds.map((accountId) => (
+                    <Option key={accountId} value={accountId}>
+                      {accountId}
                     </Option>
                   ))}
                 </Select>
               </Col>
-              {/* <Col xs={24} sm={8}>
-                <Button
-                  onClick={fetchPerformanceData}
-                  icon={<ReloadOutlined />}
-                  size="middle"
+              <Col xs={12} sm={6}>
+                <Select
+                  showSearch
+                  placeholder="Select Account Name"
                   style={{ width: '100%' }}
+                  value={filters.accountName || undefined}
+                  onChange={(value) => handleFilterChange('accountName', value)}
+                  allowClear
+                  size="middle"
+                  filterOption={(input, option) =>
+                    option?.children.toLowerCase().includes(input.toLowerCase())
+                  }
                 >
-                  Refresh
-                </Button>
-              </Col> */}
+                  {uniqueAccountNames.map((accountName) => (
+                    <Option key={accountName} value={accountName}>
+                      {accountName}
+                    </Option>
+                  ))}
+                </Select>
+              </Col>
             </Row>
           </Col>
         </Row>
