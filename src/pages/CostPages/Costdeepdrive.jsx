@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Row, Space, Select, Checkbox, Button, DatePicker } from "antd";
 import { DownOutlined } from "@ant-design/icons";
-import CollapsibleTable from "../components/Costdeepdrive";
+import CollapsibleTable from "../../components/CostComponents/Costdeepdrive";
 
 const { RangePicker } = DatePicker;
 

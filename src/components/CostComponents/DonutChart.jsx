@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
 import ReactECharts from "echarts-for-react";
 import { Card, Typography } from "antd";
-import { CostContext } from "../Context/CostContext.jsx";  // ⬅️ import context
+import { CostContext } from "../../Context/CostContext";  // ⬅️ import context
 
 const { Title } = Typography;
 

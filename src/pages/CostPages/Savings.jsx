@@ -1,6 +1,6 @@
 import React from 'react'
-import Savingschild from '../components/Savingchild'
-import { Savingdashmain } from '../components/Savingdashmain'
+import Savingschild from '../../components/CostComponents/Savingchild'
+import { Savingdashmain } from '../../components/CostComponents/Savingdashmain'
 
 export const Savings = () => {
   return (

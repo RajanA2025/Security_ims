@@ -2,7 +2,7 @@
 import React from "react";
 import { Row, Col, Card, Typography, Collapse, Table, Tag } from "antd";
 import ReactECharts from "echarts-for-react";
-import piechartimg from "../assets/piechartimg.png"; // you can swap icons like in your design
+import piechartimg from "../../assets/piechartimg.png"; // you can swap icons like in your design
 
 const { Title, Text } = Typography;
 

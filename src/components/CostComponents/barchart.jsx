@@ -4,7 +4,7 @@ import * as echarts from "echarts";
 import dayjs from "dayjs";
 import { Card, Typography, Select, Button, Modal } from "antd";
 import { FaExpandArrowsAlt } from "react-icons/fa";
-import { CostContext } from "../Context/CostContext.jsx";  // ⬅️ import context
+import { CostContext } from "../../Context/CostContext";  // ⬅️ import context
 
 const { Title } = Typography;
 const { Option } = Select;

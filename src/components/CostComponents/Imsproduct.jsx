@@ -3,8 +3,8 @@ import React from 'react';
 import { Card, Row, Col, Typography } from 'antd';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import securityimg from '../assets/securityimg.avif';
-import cloudimg from '../assets/cloudimg.png';
+import securityimg from '../../assets/securityimg.avif';
+import cloudimg from '../../assets/cloudimg.png';
 
 const { Title, Text } = Typography;
 

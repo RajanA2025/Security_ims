@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo, useRef, useContext } from "react";
 import ReactECharts from "echarts-for-react";
 import { Card, Typography, Checkbox, Row, Col } from "antd";
-import { CostContext } from "../Context/CostContext.jsx";  // ⬅️ import context
-import "../stylecss/App.css";
+import { CostContext } from "../../Context/CostContext";  // ⬅️ import context
+import "../../stylecss/App.css";
 
 const { Title } = Typography;
 

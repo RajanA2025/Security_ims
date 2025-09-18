@@ -1,10 +1,10 @@
 import React, { useContext, useMemo } from "react";
 import { Row, Col, Card, Typography } from "antd";
 import LogAxisChart from "./LogAxisChart";
-import Savingimg from "../assets/Savingimg.png";
-import realsaveimg from "../assets/realsaveimg.png";
-import piechartimg from "../assets/piechartimg.png";
-import { CostContext } from "../Context/CostContext.jsx";  // ⬅️ import context
+import Savingimg from "../../assets/Savingimg.png";
+import realsaveimg from "../../assets/realsaveimg.png";
+import piechartimg from "../../assets/piechartimg.png";
+import { CostContext } from "../../Context/CostContext";  // ⬅️ import context
 
 const { Title, Text } = Typography;
 

@@ -10,14 +10,14 @@ import {
   TreeSelect,
 } from "antd";
 import { DownOutlined } from "@ant-design/icons";
-import BarChart from "../components/barchart";
-import Top5 from "../components/Top5";
-import DonutChart from "../components/DonutChart";
-import forecastImg from "../assets/forecast.png";
+import BarChart from "../../components/CostComponents/barchart.jsx";
+import Top5 from "../../components/CostComponents/Top5";
+import DonutChart from "../../components/CostComponents/DonutChart";
+import forecastImg from "../../assets/forecast.png";
 import { LuTrendingDown, LuTrendingUp } from "react-icons/lu";
-import { Savingdashmain } from "../components/Savingdashmain";
-import { CostContext } from "../Context/CostContext.jsx";  // ⬅️ import context
-import { Complaincedashmain } from "../components/Complaincedashmain.jsx";
+import { Savingdashmain } from "../../components/CostComponents/Savingdashmain";
+import { CostContext } from "../../Context/CostContext.jsx";  // ⬅️ import context
+import { Complaincedashmain } from "../../components/CostComponents/Complaincedashmain.jsx";
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;

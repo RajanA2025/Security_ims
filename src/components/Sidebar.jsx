@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { Typography } from 'antd';
 import { useNavigate, useLocation } from "react-router-dom";
-import { MdOutlineSecurity, MdDashboard, MdDangerous, MdInsights, MdCloudCircle, MdBusiness, MdAccessibility, MdCloudySnowing, MdMonitor, MdRampRight } from "react-icons/md";
+import { MdOutlineSecurity, MdDashboard, MdDangerous, MdInsights, MdCloudCircle, MdBusiness, MdAccessibility, MdCloudySnowing, MdMonitor, MdRampRight, MdMoney, MdMoneyOff, MdSavings, MdPublic } from "react-icons/md";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { CloudCircle, Insights, ExpandLess, ExpandMore, InsightsOutlined, CloudCircleRounded } from "@mui/icons-material";
 import { GoTools } from "react-icons/go";
@@ -21,7 +21,7 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
 
   const toggleSidebar = () => setIsExpanded((prev) => !prev);
   const isSecurity = location.pathname.toLowerCase().startsWith('/security');
-  const layout = isSecurity ? "1" : "2";
+  const layout = isSecurity ? "1" : "3";
 
   const navItems = [
     { icon: <MdDashboard size={30}/>, label: "Dashboard", path: "/Security" },
@@ -62,11 +62,15 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
     { icon: <MdRampRight size={30}/>, label: "RightSizing", path: "/Operational/rightsizing" },
   ];
 
-  const navItems2 = [
-    { icon: <MdDashboard size={30}/>, label: "Dashboard", path: "/Operational" },
-   
-   
+
+   const navItems2 = [
+    { icon: <MdMoney size={30}/>, label: "Cost Overview", path: "/Dashboard2", badge: false },
+    { icon: <MdMoneyOff size={30}/>, label: "Cost Deepdrive", path: "/cost-deepdrive", badge: false },
+    { icon: <MdSavings size={30}/>, label: "Saving Opportunity", path: "/Savings", badge: false },
+    { icon: <MdPublic size={30}/>, label: "Compliance", path: "/compliance", badge: false },
+    // { icon: CgPerformance, label: "Optimization", path: "/optimization", badge: false },
   ];
+  
 
   const handleNavClick = (item) => {
     if (item.subMenu) {

@@ -1,6 +1,6 @@
 import React from 'react'
-import Complaincechild from '../components/Complaincechild'
-import { Complaincedashmain } from '../components/Complaincedashmain'
+import Complaincechild from '../../components/CostComponents/Complaincechild'
+import { Complaincedashmain } from '../../components/CostComponents/Complaincedashmain'
 
 export const Complaince = () => {
     return (
