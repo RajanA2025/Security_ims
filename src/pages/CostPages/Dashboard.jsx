@@ -24,7 +24,7 @@ const { RangePicker } = DatePicker;
 
 const Dashboard = () => {
   const { costData, loading, error } = useContext(CostContext); // ⬅️ use context
-
+console.log('costData', costData)
   const [context, setContext] = useState([]);
   const [dates, setDates] = useState([]);
   const [accounts, setAccounts] = useState([]);

@@ -65,7 +65,7 @@ function App() {
             //   isExpanded={isExpanded}
             //   setIsExpanded={setIsExpanded}
             // >
-              <Dashboard2 filters={filters} />
+              <Dashboard2 />
             // {/* </Layout> */}
           }
         />
