@@ -367,190 +367,151 @@ const Insights = () => {
   }
 
   return (
-    <>
-           <Typography.Title 
-  level={4}
-  style={{
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
-    fontSize: "20px",
-    fontWeight: 500,
-    color: "black",
-    margin: 0
-  }}
->
-IAM Insights
-</Typography.Title>
-    
-<hr/>
-      {/* Stats Cards */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center",boxShadow: "0px 2px 6px rgba(0,0,0,0.2)", }}>
-         
-            <Flex vertical align="center" gap="small">
-              <SafetyCertificateOutlined style={{ fontSize: 28, color: "#1890ff" }} />
-              {/* <Progress type="circle" percent={mfaPercent} strokeColor={mfaPercent > 50 ? "#52c41a" : "#ff4d4f"} /> */}
-              <Progress
-  type="circle"
-  percent={mfaPercent}
-  strokeColor={
-    mfaPercent >= 75
-      ? "red"
-      : mfaPercent > 50
-      ? "orange"
-      : "green"
-  }
-/>
-              <span style={{ fontWeight: "bold" }}>MFA Enabled <Tooltip placement="rightBottom" title="Enable Multi-Factor Authentication (MFA) for all IAM users to enhance account security.">
-    <InfoCircleOutlined
-    
-    />
-  </Tooltip>
-  </span>
-              <span style={{ color: "#888" }}>{mfaTrueCount}/{total} Users</span>
-            </Flex>
-          </Card>
-        </Col>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      style={{ padding: '10px', background: '#f8faff', minHeight: '100vh' }}
+    >
+      <AnimatePresence mode="wait">
+        {loading ? (
+          <LoadingState key="loading" />
+        ) : (
+          <motion.div key="content">
+            {/* IAM Insights Section */}
+            <SectionTitle delay={0}>IAM Insights</SectionTitle>
+            
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '24px',
+                marginBottom: '48px'
+              }}
+            >
+              <StatCard
+                icon={<SafetyCertificateOutlined />}
+                title="MFA Enabled"
+                tooltip="Enable Multi-Factor Authentication (MFA) for all IAM users to enhance account security."
+                percent={stats.iam.mfa.percent}
+                count={stats.iam.mfa.count}
+                total={stats.iam.mfa.total}
+                strokeColor={stats.iam.mfa.percent >= 75 ? "#ff4d4f" : stats.iam.mfa.percent > 50 ? "#fa8c16" : "#52c41a"}
+                index={0}
+              />
+              
+              <StatCard
+                icon={<LockOutlined />}
+                title="Password Enabled"
+                tooltip="Enforce strong password policies for all IAM users to enhance account security."
+                percent={stats.iam.password.percent}
+                count={stats.iam.password.count}
+                total={stats.iam.password.total}
+                strokeColor={stats.iam.password.percent > 50 ? "#52c41a" : "#ff4d4f"}
+                index={1}
+              />
+              
+              <StatCard
+                icon={<UserSwitchOutlined />}
+                title="Admin Access"
+                tooltip="Validate if each IAM user truly requires administrator access and remove unnecessary privileges."
+                percent={stats.iam.admin.percent}
+                count={stats.iam.admin.count}
+                total={stats.iam.admin.total}
+                strokeColor={stats.iam.admin.percent > 75 ? "#52c41a" : stats.iam.admin.percent > 50 ? "#fa8c16" : "#ff4d4f"}
+                index={2}
+              />
+              
+              <StatCard
+                icon={<DesktopOutlined />}
+                title="Console Access"
+                tooltip="Review console access permissions and ensure they align with user responsibilities."
+                percent={stats.iam.console.percent}
+                count={stats.iam.console.count}
+                total={stats.iam.console.total}
+                strokeColor={stats.iam.console.percent > 75 ? "#52c41a" : stats.iam.console.percent > 50 ? "#fa8c16" : "#ff4d4f"}
+                index={3}
+              />
+            </motion.div>
 
-        <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center",boxShadow: "0px 2px 6px rgba(0,0,0,0.2)", }}>
-            <Flex vertical align="center" gap="small">
-              <LockOutlined style={{ fontSize: 28, color: "#722ed1" }} />
-              <Progress type="circle" percent={passwordPercent} strokeColor={passwordPercent > 50 ? "#52c41a" : "#ff4d4f"} />
-              <span style={{ fontWeight: "bold" }}>Password Enabled <Tooltip placement="rightBottom" title="Enforce strong password policies for all IAM users to enhance account security.">
-    <InfoCircleOutlined
-     
-    />
-  </Tooltip></span>
-              <span style={{ color: "#888" }}>{passwordEnabledCount}/{total} Users</span>
-            </Flex>
-          </Card>
-        </Col>
+            {/* Security Groups Section */}
+            <SectionTitle delay={0.5}>Security Groups</SectionTitle>
+            
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '24px'
+              }}
+            >
+              <StatCard
+                icon={<SecurityScanFilled />}
+                title="Orphaned Groups"
+                tooltip="Remove orphaned security groups that are not associated with any resources and are no longer needed."
+                percent={stats.security.orphaned.percent}
+                count={stats.security.orphaned.count}
+                total={stats.security.orphaned.total}
+                strokeColor={stats.security.orphaned.percent > 75 ? "#52c41a" : stats.security.orphaned.percent > 50 ? "#fa8c16" : "#ff4d4f"}
+                index={0}
+              />
+              
+              <StatCard
+                icon={<SecuritySharp />}
+                title="Open SSH"
+                tooltip="Restrict open SSH access by limiting inbound traffic to trusted IP addresses only."
+                count={stats.security.ssh.count}
+                strokeColor="#ff4d4f"
+                index={1}
+                isNumeric={true}
+              />
+              
+              <StatCard
+                icon={<SecuritySharp />}
+                title="Open RDP"
+                tooltip="Restrict RDP (port 3389) access to Windows instances by allowing only trusted IP addresses."
+                count={stats.security.rdp.count}
+                strokeColor="#fa8c16"
+                index={2}
+                isNumeric={true}
+              />
+              
+              <StatCard
+                icon={<PortableWifiOffOutlined />}
+                title="All Traffic Open"
+                tooltip="Restrict 'All Traffic' rules in security groups to only trusted sources and required ports."
+                percent={stats.security.openIp.percent}
+                count={stats.security.openIp.count}
+                total={stats.security.openIp.total}
+                strokeColor={stats.security.openIp.percent < 75 ? "#52c41a" : stats.security.openIp.percent < 50 ? "#fa8c16" : "#ff4d4f"}
+                index={3}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center",boxShadow: "0px 2px 6px rgba(0,0,0,0.2)", }}>
-            <Flex vertical align="center" gap="small">
-              <UserSwitchOutlined style={{ fontSize: 28, color: "#722ed1" }} />
-              <Progress type="circle" percent={adminPercent} strokeColor={adminPercent > 75 ? "#52c41a" : adminPercent > 50 ? "#fa8c16" : "#ff4d4f"} />
-              <span style={{ fontWeight: "bold" }}>Is Admin <Tooltip placement="rightBottom" title="Validate if each IAM user truly requires administrator access and remove unnecessary privileges.">
-    <InfoCircleOutlined
-     
-    />
-  </Tooltip></span>
-              <span style={{ color: "#888" }}>{AdminEnabledCount}/{total} Users</span>
-            </Flex>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center",boxShadow: "0px 2px 6px rgba(0,0,0,0.2)", }}>
-            <Flex vertical align="center" gap="small">
-              <DesktopOutlined style={{ fontSize: 28, color: "#722ed1" }} />
-              <Progress type="circle" percent={consolePercent} strokeColor={consolePercent > 75 ? "#52c41a" : consolePercent > 50 ? "#fa8c16" : "#ff4d4f"} />
-              <span style={{ fontWeight: "bold" }}>Console  <Tooltip placement="rightBottom" title="Validate if each IAM user truly requires administrator access and remove unnecessary privileges.">
-    <InfoCircleOutlined
-     
-    />
-  </Tooltip></span>
-              <span style={{ color: "#888" }}>{ConsoleEnabledCount}/{total} Users</span>
-            </Flex>
-          </Card>
-        </Col>
-      </Row>
-
-      <br />
-
-      <Typography.Title 
-  level={4}
-  style={{
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
-    fontSize: "20px",
-    fontWeight: 500,
-    color: "black",
-    margin: 0
-  }}
->
-Security Group
-</Typography.Title>
-<hr/>
-{/* Stats Cards */}
-<Row gutter={[16, 16]}>
- 
-
-  <Col xs={24} sm={12} md={6}>
-    <Card hoverable style={{ textAlign: "center",boxShadow: "0px 2px 6px rgba(0,0,0,0.2)", }} >
-      <Flex vertical align="center" gap="small">
-        <SecurityScanFilled style={{ fontSize: 28, color: "#722ed1" }} />
-        <Progress type="circle" percent={OrphanedPercent} strokeColor={OrphanedPercent > 75 ? "#52c41a" : OrphanedPercent > 50 ? "#fa8c16" : "#ff4d4f"} />
-        <span style={{ fontWeight: "bold" }}>Is Orphaned  &nbsp;
-         <Tooltip placement="rightBottom" title="Remove orphaned security groups that are not associated with any resources and are no longer needed.">
-<InfoCircleOutlined
-
-/>
-</Tooltip>
-        </span>
-        <span style={{ color: "#888" }}>{OrphanedEnabledCount}/{total1} Security Groups</span>
-      </Flex>
-    </Card>
-  </Col>
-  <Col xs={24} sm={12} md={6}>
-    <Card hoverable style={{ textAlign: "center",boxShadow: "0px 2px 6px rgba(0,0,0,0.2)", }}>
-      <Flex vertical align="center" gap="small">
-        <SecuritySharp style={{ fontSize: 28, color: "#1890ff" }} />
-        {/* <Progress type="circle" percent={mfaPercent} strokeColor={mfaPercent > 50 ? "#52c41a" : "#ff4d4f"} /> */}
-        <h1 className="m-5" style={{ fontWeight: "bold", padding:"8% 5% "}}>{sshCount}</h1>
-        <Tooltip placement="rightBottom" title="Restrict open SSH access by limiting inbound traffic to trusted IP addresses only.">
-<InfoCircleOutlined
-
-/>
-</Tooltip>
-        <span style={{ fontWeight: "bold" ,color: "#888" }}>Open SSH</span>
-        {/* <span style={{ color: "#888" }}>{mfaTrueCount}/{total} Users</span> */}
-        {/* <span style={{ color: "#888" }}> 5</span> */}
-      </Flex>
-    </Card>
-  </Col>
-  <Col xs={24} sm={12} md={6}>
-    <Card hoverable style={{ textAlign: "center",boxShadow: "0px 2px 6px rgba(0,0,0,0.2)", }}>
-      <Flex vertical align="center" gap="small">
-        <SecuritySharp style={{ fontSize: 28, color: "#1890ff" }} />
-        {/* <Progress type="circle" percent={mfaPercent} strokeColor={mfaPercent > 50 ? "#52c41a" : "#ff4d4f"} /> */}
-        <h1 className="m-5" style={{ fontWeight: "bold", padding:"8% 5% "}}>{RDPCount}</h1>
-        <Tooltip placement="rightBottom" title="Restrict RDP (port 3389) access to Windows instances by allowing only trusted IP addresses">
-<InfoCircleOutlined
-
-/>
-</Tooltip>
-        <span style={{ fontWeight: "bold",color: "#888"  }}>Open RDP</span>
-        {/* <span style={{ color: "#888" }}>{mfaTrueCount}/{total} Users</span> */}
-        {/* <span style={{ color: "#888" }}> 5</span> */}
-      </Flex>
-    </Card>
-  </Col>
-
-  <Col xs={24} sm={12} md={6}>
-    <Card hoverable style={{ textAlign: "center",boxShadow: "0px 2px 6px rgba(0,0,0,0.2)", }}>
-      <Flex vertical align="center" gap="small">
-        <PortableWifiOffOutlined style={{ fontSize: 28, color: "#722ed1" }} />
-        <Progress type="circle" percent={IpPercent} strokeColor={IpPercent < 75 ? "#52c41a" : IpPercent < 50 ? "#fa8c16" : "#ff4d4f"} />
-        <span style={{ fontWeight: "bold" }}>All Traffic  &nbsp;
-        <Tooltip placement="rightBottom" title="Restrict “All Traffic” rules in security groups to only trusted sources and required ports.">
-<InfoCircleOutlined
-
-/>
-</Tooltip>
-        </span>
-        <span style={{ color: "#888" }}>{IpEnabledCount}/{total1} Open Port</span>
-      </Flex>
-    </Card>
-  </Col>
- 
-</Row>
-
-
-      
-     
-    </>
+      <style jsx>{`
+        .stat-card {
+          transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        
+        .stat-card:hover {
+          transform: translateY(-4px);
+        }
+        
+        @media (max-width: 768px) {
+          .grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
+    </motion.div>
   );
 };
 
