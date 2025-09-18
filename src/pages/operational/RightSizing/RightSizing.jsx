@@ -461,12 +461,12 @@ const RightSizing = () => {
     <div style={{ padding: '0 0 24px 0' }}>
       <div style={{ maxWidth: '100%', margin: 0, padding: '0 0' }}>
         {/* Header with Filters */}
-        <Row gutter={[16, 8]} style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <Row gutter={[16, 8]} style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
           <Col xs={24} md={12}>
             <Typography.Title 
               level={4}
               style={{
-                fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif",
+                fontFamily: "'Roboto', 'Segoe UI', sans-serif",
                 fontSize: "20px",
                 fontWeight: 600,
                 color: "#1f2937",

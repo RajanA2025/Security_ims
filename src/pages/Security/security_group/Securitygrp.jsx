@@ -181,7 +181,7 @@ const Securitygrp = () => {
   <Typography.Title 
   level={4}
   style={{
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
+    fontFamily: "'Roboto', 'Segoe UI', sans-serif",
     fontSize: "20px",
     fontWeight: 500,
     color: "black",

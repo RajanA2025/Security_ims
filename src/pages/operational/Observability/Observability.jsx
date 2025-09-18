@@ -11,8 +11,10 @@ import {
   Select,
   Tabs,
   Tooltip,
+  Typography,
+  Progress,
   Button,
-  Typography
+  Space
 } from "antd";
 import {
   EyeOutlined,
@@ -485,12 +487,12 @@ const Observability = () => {
     <>
 
 
-      <Row gutter={[16, 16]} style={{ justifyContent: "flex-end" }}>
-        <Col md={20}>
+      <Row justify="space-between" align="middle" style={{ marginBottom: 4 }}>
+        <Col>
           <Typography.Title
             level={4}
             style={{
-              fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
+              fontFamily: "'Roboto', 'Segoe UI', sans-serif",
               fontSize: "20px",
               fontWeight: 500,
               color: "black",
@@ -499,28 +501,27 @@ const Observability = () => {
           >
             Observability
           </Typography.Title>
-
-
         </Col>
-        <Col md={4}>
-          <Input
-            placeholder="Search by Account Name"
-            prefix={<SearchOutlined />}
-            value={searchName}
-            onChange={e => setSearchName(e.target.value)}
-            allowClear
-          />
+        <Col>
+          <Space>
+            <Input
+              placeholder="Search by Account Name"
+              prefix={<SearchOutlined />}
+              value={searchName}
+              onChange={e => setSearchName(e.target.value)}
+              allowClear
+              style={{ width: 200 }}
+            />
+            <Input
+              placeholder="Search by Account ID"
+              prefix={<SearchOutlined />}
+              value={searchId}
+              onChange={e => setSearchId(e.target.value)}
+              allowClear
+              style={{ width: 200 }}
+            />
+          </Space>
         </Col>
-        <Col md={4}>
-          <Input
-            placeholder="Search by Account ID"
-            prefix={<SearchOutlined />}
-            value={searchId}
-            onChange={e => setSearchId(e.target.value)}
-            allowClear
-          />
-        </Col>
-
       </Row>
 
       <Tabs

@@ -206,8 +206,7 @@ const Business = () => {
                     <Typography.Title
                         level={4}
                         style={{
-                            fontFamily:
-                                "Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif",
+                            fontFamily: "'Roboto', 'Segoe UI', sans-serif",
                             fontSize: "20px",
                             fontWeight: 500,
                             color: "black",

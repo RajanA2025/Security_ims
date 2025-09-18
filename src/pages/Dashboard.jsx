@@ -237,7 +237,7 @@ const SectionTitle = ({ children, delay = 0 }) => (
     <Title 
       level={3}
       style={{
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        fontFamily: "'Roboto', 'Segoe UI', sans-serif",
         fontSize: "24px",
         fontWeight: 600,
         color: "#1a1a1a",
