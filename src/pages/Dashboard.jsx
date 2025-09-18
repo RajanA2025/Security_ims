@@ -219,11 +219,11 @@ const Insights = () => {
 IAM Insights
 </Typography.Title>
     
-
+<hr/>
       {/* Stats Cards */}
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center" }}>
+          <Card hoverable style={{ textAlign: "center",boxShadow: "0px 2px 6px rgba(0,0,0,0.2)", }}>
          
             <Flex vertical align="center" gap="small">
               <SafetyCertificateOutlined style={{ fontSize: 28, color: "#1890ff" }} />
@@ -251,7 +251,7 @@ IAM Insights
         </Col>
 
         <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center" }}>
+          <Card hoverable style={{ textAlign: "center",boxShadow: "0px 2px 6px rgba(0,0,0,0.2)", }}>
             <Flex vertical align="center" gap="small">
               <LockOutlined style={{ fontSize: 28, color: "#722ed1" }} />
               <Progress type="circle" percent={passwordPercent} strokeColor={passwordPercent > 50 ? "#52c41a" : "#ff4d4f"} />
@@ -266,7 +266,7 @@ IAM Insights
         </Col>
 
         <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center" }}>
+          <Card hoverable style={{ textAlign: "center",boxShadow: "0px 2px 6px rgba(0,0,0,0.2)", }}>
             <Flex vertical align="center" gap="small">
               <UserSwitchOutlined style={{ fontSize: 28, color: "#722ed1" }} />
               <Progress type="circle" percent={adminPercent} strokeColor={adminPercent > 75 ? "#52c41a" : adminPercent > 50 ? "#fa8c16" : "#ff4d4f"} />
@@ -281,7 +281,7 @@ IAM Insights
         </Col>
 
         <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center" }}>
+          <Card hoverable style={{ textAlign: "center",boxShadow: "0px 2px 6px rgba(0,0,0,0.2)", }}>
             <Flex vertical align="center" gap="small">
               <DesktopOutlined style={{ fontSize: 28, color: "#722ed1" }} />
               <Progress type="circle" percent={consolePercent} strokeColor={consolePercent > 75 ? "#52c41a" : consolePercent > 50 ? "#fa8c16" : "#ff4d4f"} />
@@ -310,13 +310,13 @@ IAM Insights
 >
 Security Group
 </Typography.Title>
-
+<hr/>
 {/* Stats Cards */}
 <Row gutter={[16, 16]}>
  
 
   <Col xs={24} sm={12} md={6}>
-    <Card hoverable style={{ textAlign: "center" }}>
+    <Card hoverable style={{ textAlign: "center",boxShadow: "0px 2px 6px rgba(0,0,0,0.2)", }} >
       <Flex vertical align="center" gap="small">
         <SecurityScanFilled style={{ fontSize: 28, color: "#722ed1" }} />
         <Progress type="circle" percent={OrphanedPercent} strokeColor={OrphanedPercent > 75 ? "#52c41a" : OrphanedPercent > 50 ? "#fa8c16" : "#ff4d4f"} />
@@ -332,7 +332,7 @@ Security Group
     </Card>
   </Col>
   <Col xs={24} sm={12} md={6}>
-    <Card hoverable style={{ textAlign: "center" }}>
+    <Card hoverable style={{ textAlign: "center",boxShadow: "0px 2px 6px rgba(0,0,0,0.2)", }}>
       <Flex vertical align="center" gap="small">
         <SecuritySharp style={{ fontSize: 28, color: "#1890ff" }} />
         {/* <Progress type="circle" percent={mfaPercent} strokeColor={mfaPercent > 50 ? "#52c41a" : "#ff4d4f"} /> */}
@@ -349,7 +349,7 @@ Security Group
     </Card>
   </Col>
   <Col xs={24} sm={12} md={6}>
-    <Card hoverable style={{ textAlign: "center" }}>
+    <Card hoverable style={{ textAlign: "center",boxShadow: "0px 2px 6px rgba(0,0,0,0.2)", }}>
       <Flex vertical align="center" gap="small">
         <SecuritySharp style={{ fontSize: 28, color: "#1890ff" }} />
         {/* <Progress type="circle" percent={mfaPercent} strokeColor={mfaPercent > 50 ? "#52c41a" : "#ff4d4f"} /> */}
@@ -367,7 +367,7 @@ Security Group
   </Col>
 
   <Col xs={24} sm={12} md={6}>
-    <Card hoverable style={{ textAlign: "center"}}>
+    <Card hoverable style={{ textAlign: "center",boxShadow: "0px 2px 6px rgba(0,0,0,0.2)", }}>
       <Flex vertical align="center" gap="small">
         <PortableWifiOffOutlined style={{ fontSize: 28, color: "#722ed1" }} />
         <Progress type="circle" percent={IpPercent} strokeColor={IpPercent < 75 ? "#52c41a" : IpPercent < 50 ? "#fa8c16" : "#ff4d4f"} />

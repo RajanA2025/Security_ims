@@ -277,12 +277,12 @@ const Amis = () => {
     margin: 0
   }}
 >
-SnapShots
+AMI
 </Typography.Title>
   </Col>
   <Col md={4}>
           <Input
-            placeholder="Search by AccountName"
+            placeholder="Search by AMI Name"
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={handleSearch}

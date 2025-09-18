@@ -62,9 +62,9 @@ function DonutChart() {
             type: 'pie',
             radius: '50%',
             data: [
-              { value: 1048, name: 'Available' },
-              { value: 735, name: 'Attached' },
-              { value: 580, name: 'Deleted' },
+              { value: 12, name: 'Available' },
+              { value: 17, name: 'Attached' },
+              { value: 34, name: 'Deleted' },
               // { value: 484, name: 'Union Ads' },
               // { value: 300, name: 'Video Ads' }
             ],
@@ -90,7 +90,7 @@ function DonutChart() {
     <div>
       <div
         ref={chartRef}
-        style={{ width: '100%', height: '500px' }} // Must set size
+        style={{ width: '100%', height: '250px' }} // Must set size
       />
     </div>
   );

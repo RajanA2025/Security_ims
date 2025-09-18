@@ -77,3 +77,7 @@ p {
   padding: 12px;
   border-radius: 0 0 8px 8px;
 }
+
+.css-dev-only-do-not-override-15wnser.ant-card .ant-card-body {
+  padding: 10px !important;
+}

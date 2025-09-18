@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import {
   Box,
   IconButton,
-  Typography,
   Tooltip,
   Badge,
   useTheme
 } from "@mui/material";
+import { Typography } from 'antd';
 import { useNavigate, useLocation } from "react-router-dom";
 import { MdOutlineSecurity, MdDashboard, MdDangerous, MdInsights, MdCloudCircle, MdBusiness, MdAccessibility, MdCloudySnowing } from "react-icons/md";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
@@ -20,7 +20,8 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
   const [openMenu, setOpenMenu] = useState(null); // track which menu is open
 
   const toggleSidebar = () => setIsExpanded((prev) => !prev);
-  var layout ="2"
+  const isSecurity = location.pathname.toLowerCase().startsWith('/security');
+  const layout = isSecurity ? "1" : "2";
 
   const navItems = [
     { icon: <MdDashboard size={30}/>, label: "Dashboard", path: "/Security" },
@@ -36,11 +37,11 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
   ];
   const navItems1 = [
     { icon: <MdDashboard size={30}/>, label: "Dashboard", path: "/Operational" },
-    { icon: <MdBusiness size={30} />, label: "Business      ", badge: true ,
+    { icon: <MdBusiness size={30} />, label: "Business", badge: true ,
   
   
       subMenu: [
-        { label: "Snapshot", path: "/Operational/Snapshot" },
+        { icon: <MdBusiness size={30} />,label: "Snapshot", path: "/Operational/Snapshot" },
         { label: "AMI", path: "/Operational/ami" }
       ]
   },
@@ -48,13 +49,9 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
       icon: <MdAccessibility size={30}/>,
       label: "Observability",
       path: "/Operational/observability",
-      // subMenu: [
-      //   { label: "Orthpanel", path: "/securitygroup/orthpanel" },
-      //   { label: "SSH", path: "/securitygroup/ssh" }
-      // ]
+     
     },
     { icon: <MdCloudySnowing size={30}/>, label: "Cloud Watch", path: "/cloud_trail" },
-    // { icon: <GoTools size={30}/>, label: "Security Tools", path: "/security_tools" }
   ];
 
   const handleNavClick = (item) => {
@@ -159,10 +156,9 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
                       item.icon
                     )}
                     {isExpanded && (
-                      <Typography variant="body1" noWrap sx={{ color: "inherit",    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
-                      }}>
+                      <Typography.Text style={{ color: "inherit", fontWeight:"500",fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'", fontSize: "16px" }}>
                         {item.label}
-                      </Typography>
+                      </Typography.Text>
                     )}
                   </Box>
                   {item.subMenu && isExpanded && (
@@ -202,7 +198,7 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
                           }
                         }}
                       >
-                        {isExpanded ? subItem.label : "•"}
+                        {isExpanded ? subItem.label : <MdOutlineSecurity/>}
                       </Box>
                     );
                   })}

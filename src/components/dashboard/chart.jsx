@@ -32,7 +32,7 @@ const Chart = () => {
   return (
     <div
       id="main"
-      style={{ width: '100%', height: '500px' }} // Required for chart display
+      style={{ width: '100%', height: '250px' }} // Required for chart display
     ></div>
   );
 };
