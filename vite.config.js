@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0', // Allows access from LAN IP or domain
-    port: 5173,       // You can change the port if needed
+  port: 5173,       // Changed port to avoid conflict
     hmr: {
       protocol: 'ws',
       host: 'imsserver.com', // Replace with your live hostname or IP

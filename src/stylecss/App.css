@@ -77,3 +77,42 @@ p {
   padding: 12px;
   border-radius: 0 0 8px 8px;
 }
+
+/* Monitoring Table Styles */
+.monitoring-table-row {
+  height: 56px; /* Increased row height for 16px spacing (48px content + 8px padding) */
+}
+
+.monitoring-table-row > td {
+  padding: 16px 8px;
+  border-color: #f0f0f0;
+}
+
+.monitoring-table-row:hover > td {
+  background: #fafafa;
+}
+
+/* Remove vertical lines between table cells */
+.custom-table .ant-table {
+  border: none !important;
+}
+
+.custom-table .ant-table-container,
+.custom-table .ant-table-thead > tr > th,
+.custom-table .ant-table-tbody > tr > td {
+  border: none !important;
+  border-bottom: 1px solid #f0f0f0 !important;
+}
+
+.custom-table .ant-table-thead > tr > th {
+  background: #fafafa;
+  font-weight: 500;
+}
+
+.custom-table .ant-table-tbody > tr > td {
+  background: #fff;
+}
+
+.custom-table .ant-table-tbody > tr:hover > td {
+  background: #fafafa !important;
+}

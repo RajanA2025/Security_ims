@@ -12,6 +12,9 @@ import Business from "./pages/operational/Business/Business"
 import Dashboard1 from "./pages/operational/Dashboard"
 import Ami from "./pages/operational/Amis"
 import Observability from './pages/operational/Observability/Observability';
+import Monitoring from './pages/operational/Monitoring/Monitoring';
+import RightSizing from './pages/operational/RightSizing/RightSizing';
+
 function App() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [filters, setFilters] = useState({
@@ -38,11 +41,17 @@ function App() {
           <Route path="/Security/group" element={<SecurityGroup filters={filters} />} />
           <Route path="/Security/cloudTrail" element={< CloudTrail filters={filters} />} />
           <Route path="/Security/tools" element={< SecurityTools filters={filters} />} />
-{/* // operational */}
+
+          {/* operational */}
           <Route path="/Operational" element={<Dashboard1 filters={filters} />} />
           <Route path="/Operational/Snapshot" element={<Business filters={filters} />} />
           <Route path="/Operational/ami" element={<Ami filters={filters} />} />
           <Route path="/Operational/observability" element={<Observability filters={filters} />} />
+
+          {/* performance */}
+          <Route path="/Operational/monitoring" element={<Monitoring filters={filters} />} />
+          <Route path="/Operational/rightsizing" element={<RightSizing filters={filters} />} /> Add this route
+
         </Routes>
       </Layout>
     </Router>
