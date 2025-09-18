@@ -20,7 +20,7 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
   const [openMenu, setOpenMenu] = useState(null); // track which menu is open
 
   const toggleSidebar = () => setIsExpanded((prev) => !prev);
-  var layout ="1"
+  var layout ="2"
 
   const navItems = [
     { icon: <MdDashboard size={30}/>, label: "Dashboard", path: "/Security" },
