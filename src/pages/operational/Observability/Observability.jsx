@@ -103,7 +103,8 @@ const handleOpenEC2 = record => {
     setIsModalOpen1(true);
   };
 
-
+  const accountIds = [...new Set(securityData.map(item => item.account_id))];
+  const statusIds = [...new Set(securityData.map(item => item.status))];
   const getUniqueOptions = (data, key) => {
     const unique = [...new Set(data.map(item => item[key]))];
     return unique.map(value => ({ text: String(value), value }));
@@ -111,6 +112,20 @@ const handleOpenEC2 = record => {
 
   // Security Tab Columns
   const columns = [
+    {
+      title: (
+        <span>
+          Account Id{" "}
+          <Tooltip title="The AWS account's name.">
+            <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
+          </Tooltip>
+        </span>
+      ),
+      dataIndex: "account_id",
+      key: "account_id",
+      filters: accountIds.map(id => ({ text: id, value: id })),
+      onFilter: (value, record) => record.account_id === value
+    },
     {
       title: (
         <span>
@@ -137,7 +152,6 @@ const handleOpenEC2 = record => {
       filters: getUniqueOptions(securityData, "region"),
       onFilter: (value, record) => record.region === value
     },
-
     {
       title: (
         <span>
@@ -149,10 +163,8 @@ const handleOpenEC2 = record => {
       ),
       dataIndex: "status",
       key: "status",
-      filters: [
-        { text: "Enabled", value: "Enabled" },
-        { text: "Disabled", value: "Disabled" }
-      ],
+      filters: statusIds.map(id => ({ text: id, value: id })),
+      // onFilter: (value, record) => record.account_id === value
       onFilter: (value, record) => record.status === value,
       render: value => (
         <Tag color={value === "Disabled" ? "red" : "green"}>{value}</Tag>
@@ -284,40 +296,20 @@ const handleOpenEC2 = record => {
     {
       title: (
         <span>
-          Alias Key{" "}
-          <Tooltip title="A Key Alias is a friendly name that you assign to a KMS key">
-            <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
-          </Tooltip>
-        </span>
-      ),
-      dataIndex: "key_alias",
-      key: "key_alias",
-      // filters: getUniqueOptions(eipData, "key_alias"),
-      // onFilter: (value, record) => record.key_alias === value
-    },
-    {
-      title: (
-        <span>
-          State Key{" "}
+          Account Name{" "}
           <Tooltip title="The AWS account's name.">
             <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
           </Tooltip>
         </span>
       ),
-      dataIndex: "key_state",
-      key: "key_state",
-      filters: getUniqueOptions(eipData, "key_state"),
-      onFilter: (value, record) => record.key_state === value,
-      render: value => (
-        <Tag color={value ? "green" : "red"}>{value ? "Enabled" : "Disabled"}</Tag>
-      )
+      dataIndex: "account_name",
+      key: "account_name"
     },
-
     {
       title: (
         <span>
-          Last Accessed Service{" "}
-          <Tooltip title="The AWS account's name.">
+          Region{" "}
+          <Tooltip title="AWS region where the service is running.">
             <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
           </Tooltip>
         </span>
@@ -329,7 +321,21 @@ const handleOpenEC2 = record => {
     {
       title: (
         <span>
-          Key Rotation{" "}
+           Public IP{" "}
+          <Tooltip title="Security Key used in AWS.">
+            <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
+          </Tooltip>
+        </span>
+      ),
+      dataIndex: "key_name",
+      key: "key_name",
+      filters: getUniqueOptions(securityData, "keyName"),
+      onFilter: (value, record) => record.key_name === value
+    },
+    {
+      title: (
+        <span>
+          allocation ID{" "}
           <Tooltip title="The AWS account's name.">
             <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
           </Tooltip>
@@ -638,7 +644,13 @@ const handleOpenEC2 = record => {
               <Descriptions.Item label="Account ID">{selectedData.account_id}</Descriptions.Item>
               <Descriptions.Item label="Account Name">{selectedData.account_name}</Descriptions.Item>
               <Descriptions.Item label="Status">{selectedData.status}</Descriptions.Item>
-              <Descriptions.Item label="Check On">{selectedData.checked_on}</Descriptions.Item>
+              <Descriptions.Item label="Created On">{selectedData.create_time}</Descriptions.Item>
+              <Descriptions.Item label="Instance ID">{selectedData.instance_id || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Instance Name">{selectedData.instance_name || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Status">{selectedData.status}</Descriptions.Item>
+              <Descriptions.Item label="Key Name">{selectedData.key_name || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Key Type">{selectedData.key_type || "-"}</Descriptions.Item>
+              <Descriptions.Item label="FingerPrint Key">{selectedData.key_fingerprint || "-"}</Descriptions.Item>
             </Descriptions>
           </Card>
         )}

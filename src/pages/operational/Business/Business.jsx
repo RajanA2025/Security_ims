@@ -255,7 +255,7 @@ SnapShots
   </Col>
   <Col md={4}>
           <Input
-            placeholder="Search by AccountName"
+            placeholder="Search by Account Name"
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={handleSearch}

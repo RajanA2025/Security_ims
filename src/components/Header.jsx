@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import {
   AppBar,
@@ -19,13 +20,14 @@ import { Typography } from 'antd';
 
 const Header = ({ onDateChange }) => {
   const theme = useTheme();
+  const location = useLocation();
 
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [context, setContext] = useState('Account');
   const [loaded, setLoaded] = useState(false); // trigger animation
   const [anchorEl, setAnchorEl] = useState(null);
- var layout ="2"
+ var layout ="3"
   // Open menu
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -67,13 +69,13 @@ const Header = ({ onDateChange }) => {
   level={3}
   style={{
     fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
-    fontSize: "22px",
-    fontWeight: 500,
+    fontSize: "23px",
+    fontWeight: 700,
     color: "black",
     margin: 0
   }}
 >
-{layout === "1" ? "Security": "Operational Excellence"}
+{layout === "1" ? "Security":layout === "2" ?  "Operational Excellence":"Perfomance"}
 </Typography.Title>
  
 
