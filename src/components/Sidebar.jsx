@@ -53,7 +53,7 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
       //   { label: "SSH", path: "/securitygroup/ssh" }
       // ]
     },
-    { icon: <MdCloudySnowing size={30}/>, label: "Cloud Watch", path: "/cloud_trail" },
+    { icon: <MdCloudySnowing size={30}/>, label: "Cloud Watch", path: "/Operational/CloudWatch" },
     // { icon: <GoTools size={30}/>, label: "Security Tools", path: "/security_tools" }
   ];
 
