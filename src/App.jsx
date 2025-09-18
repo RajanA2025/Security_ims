@@ -14,6 +14,7 @@ import Ami from "./pages/operational/Amis"
 import Observability from './pages/operational/Observability/Observability';
 import Monitoring from './pages/operational/Monitoring/Monitoring';
 import RightSizing from './pages/operational/RightSizing/RightSizing';
+import CloudWatch from './pages/operational/cloudWatch/cloudWatch'
 
 function App() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -47,11 +48,11 @@ function App() {
           <Route path="/Operational/Snapshot" element={<Business filters={filters} />} />
           <Route path="/Operational/ami" element={<Ami filters={filters} />} />
           <Route path="/Operational/observability" element={<Observability filters={filters} />} />
+          <Route path="/Operational/CloudWatch" element={<CloudWatch filters={filters} />} />
 
           {/* performance */}
           <Route path="/Operational/monitoring" element={<Monitoring filters={filters} />} />
-          <Route path="/Operational/rightsizing" element={<RightSizing filters={filters} />} /> Add this route
-
+          <Route path="/Operational/rightsizing" element={<RightSizing filters={filters} />} /> 
         </Routes>
       </Layout>
     </Router>

@@ -480,7 +480,7 @@ IAM Insights
             </Card>
 
             {/* Policies */}
-            <Row gutter={16}>
+            {/* <Row gutter={16}>
               <Col span={12}>
                 <Card size="small" title="Inline Policies" headStyle={header}>
                   {selectedData.inline_policies.length > 0 ? (
@@ -495,17 +495,17 @@ IAM Insights
                   ) : <p style={{ color: "#888" }}>No Group Policies</p>}
                 </Card>
               </Col>
-            </Row>
+            </Row> */}
 
             {/* Roles & Groups */}
-            <Row gutter={16} style={{ marginTop: 16 }}>
-              <Col span={12}>
+            {/* <Row gutter={16} style={{ marginTop: 16 }}>
+              <Col span={12}> */}
                 {/* <Card size="small" title="Roles" headStyle={header}>
                   {selectedData.roles.length > 0 ? (
                     <List size="small" dataSource={selectedData.roles} renderItem={(item) => <List.Item>{item}</List.Item>} />
                   ) : <p style={{ color: "#888" }}>No Roles</p>}
                 </Card> */}
-              </Col>
+              {/* </Col>
               <Col span={12}>
                 <Card size="small" title="Groups" headStyle={header}>
                   {selectedData.groups.length > 0 ? (
@@ -513,7 +513,7 @@ IAM Insights
                   ) : <p style={{ color: "#888" }}>No Groups</p>}
                 </Card>
               </Col>
-            </Row>
+            </Row> */}
           </>
         )}
       </Modal>
