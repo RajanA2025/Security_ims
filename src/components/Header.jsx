@@ -1,31 +1,33 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import {
   AppBar,
   Toolbar,
   Box,
-  Typography,
+  
   IconButton,
-  Select,
+
   MenuItem,
   Menu,
-  TextField,
-  Button,
+
   useTheme,
-  Fade,
+
 } from '@mui/material';
 import { AccountCircle, AccountCircleOutlined, Login } from '@mui/icons-material';
 import { GiRamProfile } from 'react-icons/gi';
+import { Typography } from 'antd';
 
 const Header = ({ onDateChange }) => {
   const theme = useTheme();
+  const location = useLocation();
 
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [context, setContext] = useState('Account');
   const [loaded, setLoaded] = useState(false); // trigger animation
   const [anchorEl, setAnchorEl] = useState(null);
-
+ var layout ="3"
   // Open menu
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -63,17 +65,20 @@ const Header = ({ onDateChange }) => {
       <Toolbar sx={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <img src={logo} alt="logo" style={{ height: 70, marginRight: 25 }} />
-          <Typography 
-  variant="h5"
-  color="black"
-  fontWeight={900}
-  sx={{
-    fontFamily: "Roboto, Helvetica, Arial, sans-serif",
-    fontSize: "23px"
+          <Typography.Title 
+  level={3}
+  style={{
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
+    fontSize: "23px",
+    fontWeight: 700,
+    color: "black",
+    margin: 0
   }}
 >
-  IMS Security
-</Typography>
+{layout === "1" ? "Security":layout === "2" ?  "Operational Excellence":"Perfomance"}
+</Typography.Title>
+ 
+
         </Box>
 
         {/* <Fade in={loaded} timeout={600}>

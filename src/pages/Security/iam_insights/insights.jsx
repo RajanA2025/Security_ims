@@ -13,6 +13,7 @@ import {
   Progress,
   Select,
   Flex,
+  Typography,
 } from "antd";
 
 
@@ -26,7 +27,6 @@ import {
   KeyOutlined
 } from "@ant-design/icons";
 import axios from "axios";
-import { KeyOffRounded } from "@mui/icons-material";
 
 const header = {
   backgroundColor: "#4f46e5",
@@ -134,7 +134,7 @@ const Insights = () => {
       title: "Name",
       dataIndex: "user_name",
       key: "name",
-      width: 100
+      width: 50
     },
     {
       title: (
@@ -164,7 +164,7 @@ const Insights = () => {
 
       dataIndex: "password_enabled",
       key: "password_enabled",
-      width: 100,
+      width: 120,
       render: (value) => (
         <Tag color={value ? "green" : "red"}>{value ? "True" : "False"}</Tag>
       )
@@ -269,7 +269,7 @@ const Insights = () => {
 
       dataIndex: "has_admin_access",
       key: "has_admin_access",
-      width: 100,
+      width: 80,
       render: (value) => (
         <Tag color={value ? "green" : "red"}>{value ? "True" : "False"}</Tag>
       )
@@ -308,18 +308,21 @@ const Insights = () => {
     <>
   <Row gutter={[16, 16]} style={{ marginBottom: 5 }}>
   <Col md={16}>
-  <h2
+
+<Typography.Title 
+  level={4}
   style={{
-    fontFamily: "Roboto, Helvetica, Arial, sans-serif",
-    // fontWeight: 900,
-    // fontSize: "23px",
-    // color: "black"
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
+    fontSize: "20px",
+    fontWeight: 500,
+    color: "black",
+    margin: 0
   }}
 >
-  IAM Insights
-</h2>
+IAM Insights
+</Typography.Title>
   </Col>
-  <Col md={4}>
+  <Col md={4} className="pt-5">
     <Select
       placeholder="Filter by Account ID"
       style={{ width: "100%" }}
@@ -376,7 +379,7 @@ const Insights = () => {
         </Col>
 
         <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center" }}>
+          <Card hoverable style={{ textAlign: "center"}}>
             <Flex vertical align="center" gap="small">
               <LockOutlined style={{ fontSize: 28, color: "#722ed1" }} />
               <Progress type="circle" percent={passwordPercent} strokeColor={passwordPercent > 50 ? "#52c41a" : "#ff4d4f"} />

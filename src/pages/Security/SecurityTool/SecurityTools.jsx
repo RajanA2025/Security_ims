@@ -11,7 +11,8 @@ import {
   Select,
   Tabs,
   Tooltip,
-  Button
+  Button,
+  Typography
 } from "antd";
 import {
   EyeOutlined,
@@ -282,18 +283,22 @@ const SecurityTools = () => {
     <>
      
 
-      <Row gutter={[16, 16]} style={{ marginBottom: 10, justifyContent: "flex-end" }}>
+      <Row gutter={[16, 16]} style={{ justifyContent: "flex-end" }}>
         <Col md={20}>
-        <h2
-        style={{
-          fontFamily: "Roboto, Helvetica, Arial, sans-serif",
-          // fontWeight: 900,
-          // fontSize: "23px",
-          // color: "black"
-        }}
-      >
-        Security & KMS Tools
-      </h2>
+        <Typography.Title 
+  level={4}
+  style={{
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
+    fontSize: "20px",
+    fontWeight: 500,
+    color: "black",
+    margin: 0
+  }}
+>
+Security & KMS Tools
+</Typography.Title>
+      
+     
         </Col>
         <Col md={4}>
           <Input
@@ -306,7 +311,14 @@ const SecurityTools = () => {
         </Col>
       </Row>
 
-      <Tabs defaultActiveKey="1" onChange={key => setTabKey(key)}>
+      <Tabs 
+        defaultActiveKey="1" 
+        onChange={key => setTabKey(key)}
+        style={{
+          marginTop: "0px",
+          padding: "0px"
+        }}
+      >
         <Tabs.TabPane tab="Security" key="1">
           <Table
             columns={columns}
