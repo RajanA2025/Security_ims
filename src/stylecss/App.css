@@ -1,22 +1,23 @@
-/* File: src/App.css */
+/* Custom application-specific styles */
+
+/* Reset and base styles */
 body {
   margin: 0;
   padding: 0;
-
-  background-color: #F7FAFC;
-
+  min-height: 100vh;
 }
 
-/* .app-container {
+/* Layout */
+.app-container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-} */
+}
 
-/* .dashboard {
+.dashboard {
   display: flex;
   flex: 1;
-} */
+}
 
 /* .main-content {
   flex: 1;
@@ -128,12 +129,12 @@ body {
   padding: 0;
 }
 
-/* .ant-typography 
+.ant-typography 
 {
   font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 400;
   font-size: 14px;
-} */
+}
 
 .app-container {
   display: flex;

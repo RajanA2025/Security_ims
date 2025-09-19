@@ -87,7 +87,7 @@ const Business = () => {
     // 🔹 Filters
     const accountIds = [...new Set(data.map((item) => item.account_id))];
     const regions = [...new Set(data.map((item) => item.region))];
-    const alarms = [...new Set(data.map((item) => item.alarm_name))];
+    const alaIMS = [...new Set(data.map((item) => item.alarm_name))];
 
     // 🔹 Open modal
     const handleOpenModal = (record) => {
@@ -137,7 +137,7 @@ const Business = () => {
             ),
             dataIndex: "alarm_name",
             key: "alarm_name",
-            filters: alarms.map((a) => ({ text: a, value: a })),
+            filters: alaIMS.map((a) => ({ text: a, value: a })),
             onFilter: (value, record) => record.alarm_name === value,
         },
         {

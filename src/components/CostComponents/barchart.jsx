@@ -183,9 +183,10 @@ const BarChart = () => {
             flexWrap: "wrap",
             gap: "1rem",
             padding: "8px 12px",
+            
           }}
         >
-          <Title level={5} style={{ fontWeight: 500, fontSize: 14, margin: 0 }}>
+          <Title level={5} style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>
             Daily Cost
           </Title>
 

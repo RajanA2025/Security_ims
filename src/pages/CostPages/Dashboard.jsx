@@ -139,6 +139,7 @@ console.log('costData', costData)
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     maxWidth: "100%",
+                    fontWeight: 600,
                   }}
                 >
                   Current Month Cost
@@ -214,6 +215,7 @@ console.log('costData', costData)
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     maxWidth: "100%",
+                    fontWeight: 600,
                   }}
                 >
                   Forecast Cost

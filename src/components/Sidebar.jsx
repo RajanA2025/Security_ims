@@ -21,53 +21,54 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
 
   const toggleSidebar = () => setIsExpanded((prev) => !prev);
   const isSecurity = location.pathname.toLowerCase().startsWith('/security');
-  const layout = isSecurity ? "1" : "2";
+  const Operational = location.pathname.toLowerCase().startsWith('/operational');
+  const layout = isSecurity ? "1" : Operational ? "2" :"3"
 
   const navItems = [
-    { icon: <MdDashboard size={30}/>, label: "Dashboard", path: "/Security" },
-    { icon: <MdInsights size={30} />, label: "IAM Insights", badge: true, path: "/Security/iaminsights" },
+    { icon: <MdDashboard size={30}/>, label: "Dashboard", path: "/security" },
+    { icon: <MdInsights size={30} />, label: "IAM Insights", badge: true, path: "/security/iaminsights" },
     {
       icon: <MdOutlineSecurity size={30}/>,
       label: "Security Group",
-      path: "/Security/group",
+      path: "/security/group",
    
     },
-    { icon: <MdCloudCircle size={30}/>, label: "Cloud Trail", path: "/Security/cloudTrail" },
-    { icon: <GoTools size={30}/>, label: "Security Tools", path: "/Security/tools" }
+    { icon: <MdCloudCircle size={30}/>, label: "Cloud Trail", path: "/security/cloudTrail" },
+    { icon: <GoTools size={30}/>, label: "Security Tools", path: "/security/tools" }
   ];
   const navItems1 = [
-    { icon: <MdDashboard size={30}/>, label: "Dashboard", path: "/Operational" },
+    { icon: <MdDashboard size={30}/>, label: "Dashboard", path: "/operational" },
     { icon: <MdBusiness size={30} />, label: "Business", badge: true ,
   
   
       subMenu: [
-        { icon: <MdBusiness size={30} />,label: "Snapshot", path: "/Operational/Snapshot" },
+        { icon: <MdBusiness size={30} />,label: "Snapshot", path: "/operational/Snapshot" },
         { label: "AMI", path: "/Operational/ami" }
       ]
   },
     {
       icon: <MdAccessibility size={30}/>,
       label: "Observability",
-      path: "/Operational/observability",
+      path: "/operational/observability",
      
     },
-    { icon: <MdCloudySnowing size={30}/>, label: "Cloud Watch", path: "/Operational/CloudWatch" },
+    { icon: <MdCloudySnowing size={30}/>, label: "Cloud Watch", path: "/operational/CloudWatch" },
     // { icon: <GoTools size={30}/>, label: "Security Tools", path: "/security_tools" }
     {
       icon: <MdMonitor size={30}/>,
       label: "Monitoring",
-      path: "/Operational/monitoring",
+      path: "/operational/monitoring",
       
     },
-    { icon: <MdRampRight size={30}/>, label: "RightSizing", path: "/Operational/rightsizing" },
+    { icon: <MdRampRight size={30}/>, label: "RightSizing", path: "/operational/rightsizing" },
   ];
 
 
    const navItems2 = [
-    { icon: <MdMoney size={30}/>, label: "Cost Overview", path: "/Dashboard2", badge: false },
-    { icon: <MdMoneyOff size={30}/>, label: "Cost Deepdrive", path: "/cost-deepdrive", badge: false },
-    { icon: <MdSavings size={30}/>, label: "Saving Opportunity", path: "/Savings", badge: false },
-    { icon: <MdPublic size={30}/>, label: "Compliance", path: "/compliance", badge: false },
+    { icon: <MdMoney size={30}/>, label: "Cost Overview", path: "/cost  ", badge: false },
+    { icon: <MdMoneyOff size={30}/>, label: "Cost Deepdrive", path: "/cost/cost-deepdrive", badge: false },
+    { icon: <MdSavings size={30}/>, label: "Saving Opportunity", path: "/cost/Savings", badge: false },
+    { icon: <MdPublic size={30}/>, label: "Compliance", path: "/cost/compliance", badge: false },
     // { icon: CgPerformance, label: "Optimization", path: "/optimization", badge: false },
   ];
   

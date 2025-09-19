@@ -1,17 +1,17 @@
-// File: src/layout/Layout.jsx
 import React from 'react';
+import { Outlet } from 'react-router-dom';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
-import '../stylecss/App.css'
+import '../stylecss/App.css';
 
-const Layout = ({ children, onDateChange, isExpanded, setIsExpanded }) => {
+const Layout = ({ onDateChange, isExpanded, setIsExpanded }) => {
   return (
     <div className="app-container">
       <Header onDateChange={onDateChange} />
       <div className="dashboard">
         <Sidebar isExpanded={isExpanded} setIsExpanded={setIsExpanded} />
         <main className="main-content">
-          {children}
+          <Outlet /> {/* ✅ Nested routes render here */}
         </main>
       </div>
     </div>

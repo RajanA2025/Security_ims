@@ -28,7 +28,8 @@ const Header = ({ onDateChange }) => {
   const [loaded, setLoaded] = useState(false); // trigger animation
   const [anchorEl, setAnchorEl] = useState(null);
   const isSecurity = location.pathname.toLowerCase().startsWith('/security');
-  const layout ="3"
+  const Operational = location.pathname.toLowerCase().startsWith('/operational');
+  const layout = isSecurity ? "1" : Operational ? "2" :"3"
 
   // Open menu
   const handleMenu = (event) => {

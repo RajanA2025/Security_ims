@@ -35,7 +35,7 @@ const Imsproduct = () => {
             whileHover="hover"
             variants={cardAnimation}
             viewport={{ once: true }}
-            onClick={() => navigate('/Dashboard')}
+            onClick={() => navigate('/cost')}
             style={{ cursor: 'pointer' }}
           >
             <Card
@@ -78,7 +78,7 @@ const Imsproduct = () => {
               whileHover="hover"
               variants={cardAnimation}
               viewport={{ once: true }}
-              // onClick={() => navigate('http://192.168.1.18:5173/')}
+              onClick={() => navigate('/security')}
               style={{ cursor: 'pointer' }}
             >
               <Card
@@ -121,7 +121,7 @@ const Imsproduct = () => {
               whileHover="hover"
               variants={cardAnimation}
               viewport={{ once: true }}
-              // onClick={() => navigate('http://192.168.1.18:5173/')}
+              onClick={() => navigate('/operational')}
               style={{ cursor: 'pointer' }}
             >
               <Card
@@ -145,9 +145,9 @@ const Imsproduct = () => {
                   >
                     <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRr8MIn0_lXk26lbBEqZzEWec1koj6Wy33mw&s" alt="Security" width="300px" height="230px" />
                   </div>
-                  <Title level={4} style={{ margin: '20px 0' }}>operational excellence</Title>
+                  <Title level={4} style={{ margin: '20px 0' }}>Operational Excellence</Title>
                   <Text>
-                    Our company strives for operational excellence by continuously improving processes, reducing waste, and delivering                  </Text>
+                    Our company strives for Operational Excellence by continuously improving processes, reducing waste, and delivering                  </Text>
                 </div>
               </Card>
             </motion.div>
