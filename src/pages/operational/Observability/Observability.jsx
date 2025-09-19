@@ -49,29 +49,74 @@ const Observability = () => {
   const [isModalOpenEC2, setIsModalOpenEC2] = useState(false);
   const [selectedEC2, setSelectedEC2] = useState(null);
 
+  // API base URL
+  const API_BASE_URL = "http://13.212.15.14:8016";
+  
   // Fetch data
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        if (tabKey === "1") {
-          const res = await axios.get("http://13.212.15.14:8016/keypairs2");
-          setSecurityData(res.data);
-        } else if (tabKey === "2") {
-          const res = await axios.get("http://13.212.15.14:8016/orphaned-eip");
-          seteipData(res.data);
-        } else if (tabKey === "3") {
-          const res = await axios.get("http://13.212.15.14:8016/orphaned-volumes");
-          setVolumeData(res.data);
-        } else if (tabKey === "4") {
-          const res = await axios.get("http://13.212.15.14:8016/s3");
-          setS3Data(res.data);
-        } else if (tabKey === "5") {
-          const res = await axios.get("http://13.212.15.14:8016/ec2");
-          setEC2Data(res.data);
+        let endpoint = '';
+        let response = null;
+        
+        switch(tabKey) {
+          case "1":
+            endpoint = `${API_BASE_URL}/keypairs2`;
+            console.log('Fetching keypairs from:', endpoint);
+            response = await axios.get(endpoint);
+            setSecurityData(response.data);
+            break;
+          case "2":
+            endpoint = `${API_BASE_URL}/orphaned-eip`;
+            console.log('Fetching EIP data from:', endpoint);
+            response = await axios.get(endpoint);
+            seteipData(response.data);
+            break;
+          case "3":
+            endpoint = `${API_BASE_URL}/orphaned-volumes`;
+            console.log('Fetching volumes from:', endpoint);
+            response = await axios.get(endpoint);
+            setVolumeData(response.data);
+            break;
+          case "4":
+            endpoint = `${API_BASE_URL}/s3`;
+            console.log('Fetching S3 data from:', endpoint);
+            response = await axios.get(endpoint);
+            setS3Data(response.data);
+            break;
+          case "5":
+            endpoint = `${API_BASE_URL}/ec2`;
+            console.log('Fetching EC2 data from:', endpoint);
+            response = await axios.get(endpoint);
+            setEC2Data(response.data);
+            break;
+          default:
+            console.warn('Unknown tab key:', tabKey);
         }
+        
+        console.log(`Successfully fetched data for tab ${tabKey} from ${endpoint}`);
       } catch (err) {
-        console.error("Error fetching data:", err);
+        console.error("Error fetching data:", {
+          message: err.message,
+          response: err.response ? {
+            status: err.response.status,
+            statusText: err.response.statusText,
+            data: err.response.data
+          } : 'No response',
+          config: {
+            url: err.config?.url,
+            method: err.config?.method,
+            headers: err.config?.headers
+          }
+        });
+        
+        // Set empty data to prevent UI from breaking
+        if (tabKey === "1") setSecurityData([]);
+        else if (tabKey === "2") seteipData([]);
+        else if (tabKey === "3") setVolumeData([]);
+        else if (tabKey === "4") setS3Data([]);
+        else if (tabKey === "5") setEC2Data([]);
       } finally {
         setLoading(false);
       }
