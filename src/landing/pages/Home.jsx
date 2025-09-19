@@ -228,7 +228,7 @@ Your complete solution for smarter, faster, and more efficient IT infrastructure
             transition={{ duration: 0.8 }}
             className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg"
           >
-            Ready to Transform Your Hiring?
+            Ready to Transform Your Aws?
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 30 }}
