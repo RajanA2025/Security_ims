@@ -1,105 +1,128 @@
-// import React, { useRef, useEffect, useState } from "react";
-// import {
-//   Chart as ChartJS,
-//   CategoryScale,
-//   LinearScale,
-//   BarElement,
-//   Title,
-//   Tooltip,
-//   Legend
-// } from "chart.js";
-// import { Bar } from "react-chartjs-2";
-// import { Card, Spin, Alert } from "antd";
+import React, { useEffect, useState } from "react";
+import * as echarts from 'echarts';
+import { Spin, Alert } from "antd"; // Removed Card from imports
 
-// // Register ChartJS components
-// ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+const ResourceBarChart = () => {
+  const [keyPairs, setKeyPairs] = useState([]);
+  const [elasticIPs, setElasticIPs] = useState([]);
+  const [volumes, setVolumes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-// const ResourceBarChart = () => {
-//   const [data, setData] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-//   const chartRef = useRef(null);
+  // Keep your existing data fetching useEffect
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const [keyPairRes, eipRes, volumeRes] = await Promise.all([
+          fetch("http://13.212.15.14:8016/keypairs2"),
+          fetch("http://13.212.15.14:8016/orphaned-eip"),
+          fetch("http://13.212.15.14:8016/orphaned-volumes")
+        ]);
 
-//   // ✅ Fetch API data
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       try {
-//         const response = await fetch("http://13.212.15.14:8016/keypairs2");
-//         if (!response.ok) {
-//           throw new Error("Failed to fetch key pairs");
-//         }
-//         const result = await response.json();
-//         setData(result);
-//       } catch (err) {
-//         setError(err.message);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-//     fetchData();
-//   }, []);
+        if (!keyPairRes.ok) throw new Error("Failed to fetch key pairs");
+        if (!eipRes.ok) throw new Error("Failed to fetch elastic IPs");  
+        if (!volumeRes.ok) throw new Error("Failed to fetch volumes");
 
-//   // ✅ Filter only Orphaned key pairs
-//   const orphanedKeyPairs = data.filter(
-//     (item) => item.status === "Orphaned"
-//   ).length;
+        const [keyPairData, eipData, volumeData] = await Promise.all([
+          keyPairRes.json(),
+          eipRes.json(),
+          volumeRes.json()
+        ]);
 
-//   // ✅ ChartJS dataset
-//   const chartData = {
-//     labels: ["Key Pairs (Orphaned)"],
-//     datasets: [
-//       {
-//         label: "Orphaned Key Pairs",
-//         data: [orphanedKeyPairs],
-//         backgroundColor: ["#1677ff"],
-//         borderRadius: 8,
-//       },
-//     ],
-//   };
+        setKeyPairs(Array.isArray(keyPairData) ? keyPairData : []);
+        setElasticIPs(Array.isArray(eipData) ? eipData : []);
+        setVolumes(Array.isArray(volumeData) ? volumeData : []);
 
-//   // ✅ Cleanup on unmount
-//   useEffect(() => {
-//     return () => {
-//       if (chartRef.current) {
-//         chartRef.current.destroy();
-//       }
-//     };
-//   }, []);
+      } catch (err) {
+        console.error("Error fetching resource data:", err);
+        setError(err.message);
+        setKeyPairs([]);
+        setElasticIPs([]);
+        setVolumes([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-//   if (loading) {
-//     return <Spin tip="Loading orphaned key pairs..." />;
-//   }
+    fetchAllData();
+  }, []);
 
-//   if (error) {
-//     return <Alert type="error" message={error} />;
-//   }
+  // Simplified chart initialization
+  useEffect(() => {
+    if (!loading && !error) {
+      const chartDom = document.getElementById('resource-chart');
+      const myChart = echarts.init(chartDom);
 
-//   return (
-//     <Card style={{ borderRadius: "12px", marginTop: "24px" }}>
-//       <div style={{ height: "250px" }}>
-//         <Bar
-//           ref={chartRef}
-//           data={chartData}
-//           options={{
-//             responsive: true,
-//             maintainAspectRatio: false,
-//             plugins: {
-//               legend: { display: false },
-//             },
-//             scales: {
-//               y: {
-//                 beginAtZero: true,
-//                 ticks: { precision: 0 },
-//               },
-//               x: {
-//                 grid: { display: false },
-//               },
-//             },
-//           }}
-//         />
-//       </div>
-//     </Card>
-//   );
-// };
+      const orphanedKeyPairs = keyPairs.filter(item => item.status === "Orphaned").length;
+      const orphanedElasticIPs = elasticIPs.length;
+      const orphanedVolumes = volumes.length;
+
+      const option = {
+        tooltip: {
+          trigger: 'axis'
+        },
+        xAxis: {
+          type: 'category',
+          data: ['Key Pairs', 'Elastic IPs', 'Volumes'],
+        },
+        yAxis: {
+          type: 'value',
+        },
+        series: [
+          {
+            data: [orphanedKeyPairs, orphanedElasticIPs, orphanedVolumes],
+            type: 'bar',
+            barWidth: '20%',
+            itemStyle: {
+              color: '#4A90E2'
+            }
+          },
+        ],
+      };
+
+      myChart.setOption(option);
+
+      return () => {
+        myChart.dispose();
+      };
+    }
+  }, [keyPairs, elasticIPs, volumes, loading, error]);
+
+  if (loading) {
+    return (
+      <div style={{ 
+        height: "280px", 
+        display: "flex", 
+        justifyContent: "center", 
+        alignItems: "center" 
+      }}>
+        <Spin tip="Loading..." size="large" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ 
+        height: "280px", 
+        display: "flex", 
+        justifyContent: "center", 
+        alignItems: "center" 
+      }}>
+        <Alert type="error" message="Failed to load data" description={error} showIcon />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      id="resource-chart"
+      style={{ width: '100%', height: '280px' }}
+    />
+  );
+};
 
 // export default ResourceBarChart;

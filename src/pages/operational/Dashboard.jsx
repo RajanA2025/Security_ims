@@ -1,4 +1,5 @@
 import { Col, Row, Card, Space, Typography, Statistic, Tooltip } from 'antd'
+import CpuAvg from '../../components/cpuavg';
 import {
   BarChartOutlined,
   CheckCircleOutlined,
