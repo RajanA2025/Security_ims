@@ -14,17 +14,22 @@ import {
   Select,
   Flex,
   Typography,
+  Divider,
+  Badge,
 } from "antd";
-
 
 import {
   EyeOutlined,
   LockOutlined,
   SafetyCertificateOutlined,
   UserSwitchOutlined,
-  SearchOutlined,InfoCircleOutlined ,
+  SearchOutlined,
+  InfoCircleOutlined,
   DesktopOutlined,
-  KeyOutlined
+  KeyOutlined,
+  SecurityScanOutlined,
+  CalendarOutlined,
+  GlobalOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 
@@ -46,6 +51,12 @@ const Insights = () => {
   const API_URL = "http://13.212.15.14:8012/iam";
   const { Option } = Select;
   const accountIds = [...new Set(data.map(item => item.account_id))];
+
+  const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
+  const [selectedPolicyData, setSelectedPolicyData] = useState(null);
+  const [isPolicyDetailModalOpen, setIsPolicyDetailModalOpen] = useState(false);
+  const [selectedPolicyDetail, setSelectedPolicyDetail] = useState(null);
+
   // Fetch data on mount
   useEffect(() => {
     const fetchData = async () => {
@@ -53,7 +64,7 @@ const Insights = () => {
       try {
         const response = await axios.get(API_URL);
         setData(response.data);
-        setFilteredData(response.data); 
+        setFilteredData(response.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -64,14 +75,32 @@ const Insights = () => {
     fetchData();
   }, []);
 
+  // Helper function to format dates
+  const formatDate = (dateString) => {
+    if (!dateString || dateString === 'null') return "N/A";
+    return new Date(dateString).toLocaleString();
+  };
 
+  // Helper function to get password age color
+  const getPasswordAgeColor = (age) => {
+    if (age == null) return "default";
+    if (age > 90) return "red";
+    if (age > 60) return "orange";
+    if (age > 30) return "gold";
+    return "green";
+  };
+
+  // Helper function to get password enabled status
+  const getPasswordEnabledStatus = (data) => {
+    return data.password_created_on !== null || data.password_last_used !== null || data.password_age !== null;
+  };
 
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearchText(value);
     handleFilters(value, selectedAccountId);
   };
-  
+
   const handleAccountChange = (value) => {
     setSelectedAccountId(value);
     handleFilters(searchText, value);
@@ -79,54 +108,51 @@ const Insights = () => {
 
   const handleFilters = (searchValue, accountValue) => {
     let filtered = data;
-  
 
     if (accountValue) {
       filtered = filtered.filter(item => item.account_id === accountValue);
     }
-  
-    
+
     if (searchValue.trim() !== "") {
       filtered = filtered.filter(item =>
         item.user_name.toLowerCase().includes(searchValue.toLowerCase())
       );
     }
-  
+
     setFilteredData(filtered);
   };
-  // Open modal
+
+  // Open modal functions
   const handleOpenModal = (record) => {
     setSelectedData(record);
     setIsModalOpen(true);
   };
+
   const handleOpenModal1 = (record) => {
     setSelectedData1(record);
     setIsModalOpen1(true);
   };
-  
 
-  // Stats
+  const handleOpenPolicyModal = (record) => {
+    setSelectedPolicyData(record);
+    setIsPolicyModalOpen(true);
+  };
+
+  // Stats calculations
   const total = filteredData.length;
   const mfaTrueCount = filteredData.filter(
-    (item) => item.mfa_enabled === "Enabled"
+    (item) => item.mfa_enabled === true
   ).length;
   const passwordEnabledCount = filteredData.filter(
-    (item) => item.password_enabled
+    (item) => getPasswordEnabledStatus(item)
   ).length;
   const AdminEnabledCount = filteredData.filter((item) => item.has_admin_access).length;
-  const ConsoleEnabledCount = filteredData.filter((item) => item.console_access)
-    .length;
+  const ConsoleEnabledCount = filteredData.filter((item) => item.console_access).length;
 
   const mfaPercent = total ? Math.round((mfaTrueCount / total) * 100) : 0;
-  const passwordPercent = total
-    ? Math.round((passwordEnabledCount / total) * 100)
-    : 0;
-  const adminPercent = total
-    ? Math.round((AdminEnabledCount / total) * 100)
-    : 0;
-  const consolePercent = total
-    ? Math.round((ConsoleEnabledCount / total) * 100)
-    : 0;
+  const passwordPercent = total ? Math.round((passwordEnabledCount / total) * 100) : 0;
+  const adminPercent = total ? Math.round((AdminEnabledCount / total) * 100) : 0;
+  const consolePercent = total ? Math.round((ConsoleEnabledCount / total) * 100) : 0;
 
   // Table columns
   const columns = [
@@ -156,18 +182,20 @@ const Insights = () => {
       title: (
         <span>
           Password Enabled{' '}
-          <Tooltip title="Indicates whether Multi-Factor Authentication is enabled.">
+          <Tooltip title="Indicates whether password authentication is enabled.">
             <InfoCircleOutlined style={{ color: '#1890ff', cursor: 'pointer' }} />
           </Tooltip>
         </span>
       ),
-
       dataIndex: "password_enabled",
       key: "password_enabled",
       width: 120,
-      render: (value) => (
-        <Tag color={value ? "green" : "red"}>{value ? "True" : "False"}</Tag>
-      )
+      render: (value, record) => {
+        const isEnabled = getPasswordEnabledStatus(record);
+        return (
+          <Tag color={isEnabled ? "green" : "red"}>{isEnabled ? "True" : "False"}</Tag>
+        );
+      }
     },
     {
       title: "Password Age",
@@ -176,7 +204,7 @@ const Insights = () => {
       width: 100,
       render: (value) => {
         if (value == null) {
-          return '-'; // 
+          return '-';
         }
         let color = "#52c41a";
         let blink = false;
@@ -204,29 +232,40 @@ const Insights = () => {
       }
     },
     {
+      title: "Policy",
+      key: "policy",
+      width: 100,
+      render: (_, record) => (
+        <Tooltip title="View Policies">
+          <EyeOutlined
+            style={{ fontSize: 18, color: "#722ed1", cursor: "pointer" }}
+            onClick={() => handleOpenPolicyModal(record)}
+          />
+        </Tooltip>
+      )
+    },
+    {
       title: (
         <span>
-        Access Key Age{' '}
-          <Tooltip title="Indicates whether Multi-Factor Authentication is enabled.">
+          Access Key Age{' '}
+          <Tooltip title="Shows the age of access keys in days.">
             <InfoCircleOutlined style={{ color: '#1890ff', cursor: 'pointer' }} />
           </Tooltip>
         </span>
       ),
-
       dataIndex: "access_key_age",
       key: "access_key_age",
       width: 150,
       render: (_, record) => {
         const key1 = record.access_key_1_age ?? "-";
         const key2 = record.access_key_2_age ?? "-";
-    
-        // function to return colored text
+
         const renderAge = (value) => {
           if (value === "-") return "-";
-    
+
           let color = "#52c41a";
           let blink = false;
-    
+
           if (value > 90) {
             color = "#ff4d4f";
             blink = true;
@@ -235,7 +274,7 @@ const Insights = () => {
           } else if (value > 30) {
             color = "#faad14";
           }
-    
+
           return (
             <span
               style={{
@@ -249,7 +288,7 @@ const Insights = () => {
             </span>
           );
         };
-    
+
         return (
           <span>
             {renderAge(key1)} / {renderAge(key2)}
@@ -260,27 +299,25 @@ const Insights = () => {
     {
       title: (
         <span>
-         Admin{' '}
-          <Tooltip title="Indicates whether Multi-Factor Authentication is enabled.">
+          Admin{' '}
+          <Tooltip title="Indicates whether user has administrator access.">
             <InfoCircleOutlined style={{ color: '#1890ff', cursor: 'pointer' }} />
           </Tooltip>
         </span>
       ),
-
       dataIndex: "has_admin_access",
       key: "has_admin_access",
       width: 80,
       render: (value) => (
-        <Tag color={value ? "green" : "red"}>{value ? "True" : "False"}</Tag>
+        <Tag color={value ? "orange" : "green"}>{value ? "True" : "False"}</Tag>
       )
     },
-   
     {
       title: "Access Key",
-      key: "action",
+      key: "access_key",
       width: 80,
       render: (_, record) => (
-        <Tooltip title="View Details">
+        <Tooltip title="View Access Key Details">
           <KeyOutlined
             style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
             onClick={() => handleOpenModal1(record)}
@@ -288,13 +325,12 @@ const Insights = () => {
         </Tooltip>
       )
     },
-    
     {
       title: "More Details",
-      key: "action",
+      key: "more_details",
       width: 80,
       render: (_, record) => (
-        <Tooltip title="View Details">
+        <Tooltip title="View Complete Details">
           <EyeOutlined
             style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
             onClick={() => handleOpenModal(record)}
@@ -306,88 +342,80 @@ const Insights = () => {
 
   return (
     <>
-  <Row gutter={[16, 16]} style={{ marginBottom: 5 }}>
-  <Col md={16}>
-
-<Typography.Title 
-  level={4}
-  style={{
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
-    fontSize: "20px",
-    fontWeight: 500,
-    color: "black",
-    margin: 0
-  }}
->
-IAM Insights
-</Typography.Title>
-  </Col>
-  <Col md={4} className="pt-5">
-    <Select
-      placeholder="Filter by Account ID"
-      style={{ width: "100%" }}
-      allowClear
-      value={selectedAccountId}
-      onChange={handleAccountChange}
-    >
-      {accountIds.map((id) => (
-        <Option key={id} value={id}>
-          {id}
-        </Option>
-      ))}
-    </Select>
-  </Col>
-  <Col md={4}>
-    <Input
-      placeholder="Search by Name"
-      prefix={<SearchOutlined />}
-      value={searchText}
-      onChange={handleSearch}
-      allowClear
-    />
-  </Col>
-</Row>
+      <Row gutter={[16, 16]} style={{ marginBottom: 5 }}>
+        <Col md={16}>
+          <Typography.Title
+            level={4}
+            style={{
+              fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
+              fontSize: "20px",
+              fontWeight: 500,
+              color: "black",
+              margin: 0
+            }}
+          >
+            IAM Insights
+          </Typography.Title>
+        </Col>
+        <Col md={4} className="pt-5">
+          <Select
+            placeholder="Filter by Account ID"
+            style={{ width: "100%" }}
+            allowClear
+            value={selectedAccountId}
+            onChange={handleAccountChange}
+          >
+            {accountIds.map((id) => (
+              <Option key={id} value={id}>
+                {id}
+              </Option>
+            ))}
+          </Select>
+        </Col>
+        <Col md={4}>
+          <Input
+            placeholder="Search by Name"
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={handleSearch}
+            allowClear
+          />
+        </Col>
+      </Row>
 
       {/* Stats Cards */}
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} md={6}>
           <Card hoverable style={{ textAlign: "center" }}>
-         
             <Flex vertical align="center" gap="small">
               <SafetyCertificateOutlined style={{ fontSize: 28, color: "#1890ff" }} />
-              {/* <Progress type="circle" percent={mfaPercent} strokeColor={mfaPercent > 50 ? "#52c41a" : "#ff4d4f"} /> */}
               <Progress
-  type="circle"
-  percent={mfaPercent}
-  strokeColor={
-    mfaPercent >= 75
-      ? "red"
-      : mfaPercent > 50
-      ? "orange"
-      : "green"
-  }
-/>
-              <span style={{ fontWeight: "bold" }}>MFA Enabled <Tooltip placement="rightBottom" title="Enable Multi-Factor Authentication (MFA) for all IAM users to enhance account security.">
-    <InfoCircleOutlined
-    
-    />
-  </Tooltip>
-  </span>
+                type="circle"
+                percent={mfaPercent}
+                strokeColor={
+                  mfaPercent >= 75 ? "green" : mfaPercent > 50 ? "orange" : "red"
+                }
+              />
+              <span style={{ fontWeight: "bold" }}>MFA Enabled 
+                <Tooltip placement="rightBottom" title="Enable Multi-Factor Authentication (MFA) for all IAM users to enhance account security.">
+                  <InfoCircleOutlined />
+                </Tooltip>
+              </span>
               <span style={{ color: "#888" }}>{mfaTrueCount}/{total} Users</span>
             </Flex>
           </Card>
         </Col>
 
         <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center"}}>
+          <Card hoverable style={{ textAlign: "center" }}>
             <Flex vertical align="center" gap="small">
               <LockOutlined style={{ fontSize: 28, color: "#722ed1" }} />
               <Progress type="circle" percent={passwordPercent} strokeColor={passwordPercent > 50 ? "#52c41a" : "#ff4d4f"} />
-              <span style={{ fontWeight: "bold" }}>Password Enabled <Tooltip placement="rightBottom" title="Enforce strong password policies for all IAM users to enhance account security.">
-    <InfoCircleOutlined
-     
-    />
-  </Tooltip></span>
+              <span style={{ fontWeight: "bold" }}>Password Enabled 
+                <Tooltip placement="rightBottom" title="Enforce strong password policies for all IAM users to enhance account security.">
+                  <InfoCircleOutlined />
+                </Tooltip>
+              </span>
               <span style={{ color: "#888" }}>{passwordEnabledCount}/{total} Users</span>
             </Flex>
           </Card>
@@ -397,12 +425,12 @@ IAM Insights
           <Card hoverable style={{ textAlign: "center" }}>
             <Flex vertical align="center" gap="small">
               <UserSwitchOutlined style={{ fontSize: 28, color: "#722ed1" }} />
-              <Progress type="circle" percent={adminPercent} strokeColor={adminPercent > 75 ? "#52c41a" : adminPercent > 50 ? "#fa8c16" : "#ff4d4f"} />
-              <span style={{ fontWeight: "bold" }}>Is Admin <Tooltip placement="rightBottom" title="Validate if each IAM user truly requires administrator access and remove unnecessary privileges.">
-    <InfoCircleOutlined
-     
-    />
-  </Tooltip></span>
+              <Progress type="circle" percent={adminPercent} strokeColor={adminPercent > 75 ? "#ff4d4f" : adminPercent > 50 ? "#fa8c16" : "#52c41a"} />
+              <span style={{ fontWeight: "bold" }}>Is Admin 
+                <Tooltip placement="rightBottom" title="Validate if each IAM user truly requires administrator access and remove unnecessary privileges.">
+                  <InfoCircleOutlined />
+                </Tooltip>
+              </span>
               <span style={{ color: "#888" }}>{AdminEnabledCount}/{total} Users</span>
             </Flex>
           </Card>
@@ -413,11 +441,11 @@ IAM Insights
             <Flex vertical align="center" gap="small">
               <DesktopOutlined style={{ fontSize: 28, color: "#722ed1" }} />
               <Progress type="circle" percent={consolePercent} strokeColor={consolePercent > 75 ? "#52c41a" : consolePercent > 50 ? "#fa8c16" : "#ff4d4f"} />
-              <span style={{ fontWeight: "bold" }}>Console  <Tooltip placement="rightBottom" title="Validate if each IAM user truly requires administrator access and remove unnecessary privileges.">
-    <InfoCircleOutlined
-     
-    />
-  </Tooltip></span>
+              <span style={{ fontWeight: "bold" }}>Console Access 
+                <Tooltip placement="rightBottom" title="Review console access permissions for security compliance.">
+                  <InfoCircleOutlined />
+                </Tooltip>
+              </span>
               <span style={{ color: "#888" }}>{ConsoleEnabledCount}/{total} Users</span>
             </Flex>
           </Card>
@@ -425,24 +453,6 @@ IAM Insights
       </Row>
 
       <br />
-
-      {/* Search */}
-      {/* <Row gutter={[16, 16]} style={{ marginBottom: 10 }}>
-      <Col md={18}>
-          
-        </Col>
-        <Col md={6}>
-          <Input
-            placeholder="Search by First Name"
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={handleSearch}
-            allowClear
-          />
-        </Col>
-      </Row> */}
-
-
 
       {/* Table */}
       <Table
@@ -453,106 +463,611 @@ IAM Insights
         pagination={{ pageSize: 8 }}
       />
 
-      {/* Modal */}
+      {/* Enhanced More Details Modal */}
       <Modal
-      
-        title={`${selectedData?.user_name || ""} - Account Details`}
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <UserSwitchOutlined style={{ color: '#4f46e5' }} />
+            {`${selectedData?.user_name || ""} - Comprehensive Details`}
+          </div>
+        }
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
-        width={900}
+        width={1200}
+        style={{ top: 20 }}
       >
         {selectedData && (
-          <>
-            <Card size="small" title="Information" style={{ marginBottom: 16 }} headStyle={header}>
-              <Descriptions bordered column={2} size="small">
-                <Descriptions.Item label="Account ID">{selectedData.account_id}</Descriptions.Item>
-                <Descriptions.Item label="Account Name">{selectedData.account_name}</Descriptions.Item>
-                <Descriptions.Item label="ARN">{selectedData.arn}</Descriptions.Item>
-                <Descriptions.Item label="Created On">{selectedData.user_created_on}</Descriptions.Item>
-                <Descriptions.Item label="Password Last Used">{selectedData.password_last_used}</Descriptions.Item>
-                <Descriptions.Item label="Admin">
-                  <Tag color={selectedData.has_admin_access ? "green" : "red"}>
-                    {selectedData.has_admin_access ? "True" : "False"}
-                  </Tag>
-                </Descriptions.Item>
-              </Descriptions>
+          <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+            {/* Basic Information Card */}
+            <Card 
+              size="small" 
+              title={
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <InfoCircleOutlined />
+                  Basic Information
+                </div>
+              } 
+              style={{ marginBottom: 16 }} 
+              headStyle={header}
+            >
+              <Row gutter={[16, 16]}>
+                <Col span={12}>
+                  <Descriptions bordered column={1} size="small">
+                    <Descriptions.Item label="Account ID">
+                      <Badge count={selectedData.account_id} style={{ backgroundColor: '#52c41a' }} />
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Account Name">
+                      <strong>{selectedData.account_name}</strong>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="ARN">
+                      <code style={{ fontSize: '11px', background: '#f5f5f5', padding: '2px 4px', wordBreak: 'break-all' }}>
+                        {selectedData.arn}
+                      </code>
+                    </Descriptions.Item>
+                  </Descriptions>
+                </Col>
+                <Col span={12}>
+                  <Descriptions bordered column={1} size="small">
+                    <Descriptions.Item label="User Created On">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <CalendarOutlined />
+                        {formatDate(selectedData.user_created_on)}
+                      </div>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Console Access">
+                      <Tag color={selectedData.console_access ? "green" : "red"} icon={<DesktopOutlined />}>
+                        {selectedData.console_access ? "Enabled" : "Disabled"}
+                      </Tag>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Admin Access">
+                      <Tag color={selectedData.has_admin_access ? "orange" : "green"} icon={<SecurityScanOutlined />}>
+                        {selectedData.has_admin_access ? "Admin User" : "Regular User"}
+                      </Tag>
+                    </Descriptions.Item>
+                  </Descriptions>
+                </Col>
+              </Row>
             </Card>
 
-            {/* Policies */}
-            {/* <Row gutter={16}>
-              <Col span={12}>
-                <Card size="small" title="Inline Policies" headStyle={header}>
-                  {selectedData.inline_policies.length > 0 ? (
-                    <List size="small" dataSource={selectedData.inline_policies} renderItem={(item) => <List.Item>{item}</List.Item>} />
-                  ) : <p style={{ color: "#888" }}>No Inline Policies</p>}
-                </Card>
-              </Col>
-              <Col span={12}>
-                <Card size="small" title="Group Policies" headStyle={header}>
-                  {selectedData.group_policies.length > 0 ? (
-                    <List size="small" dataSource={selectedData.group_policies} renderItem={(item) => <List.Item>{item}</List.Item>} />
-                  ) : <p style={{ color: "#888" }}>No Group Policies</p>}
-                </Card>
-              </Col>
-            </Row> */}
+            {/* Security Information Card */}
+            <Card 
+              size="small" 
+              title={
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <SafetyCertificateOutlined />
+                  Security & Authentication
+                </div>
+              }
+              style={{ marginBottom: 16 }} 
+              headStyle={header}
+            >
+              <Row gutter={[16, 16]}>
+                <Col span={8}>
+                  <Descriptions bordered column={1} size="small">
+                    <Descriptions.Item label="MFA Status">
+                      <Tag 
+                        color={selectedData.mfa_enabled ? "green" : "red"}
+                        icon={<SafetyCertificateOutlined />}
+                      >
+                        {selectedData.mfa_enabled ? "Enabled" : "Disabled"}
+                      </Tag>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Password Enabled">
+                      <Tag 
+                        color={getPasswordEnabledStatus(selectedData) ? "green" : "red"}
+                        icon={<LockOutlined />}
+                      >
+                        {getPasswordEnabledStatus(selectedData) ? "Yes" : "No"}
+                      </Tag>
+                    </Descriptions.Item>
+                  </Descriptions>
+                </Col>
+                <Col span={8}>
+                  <Descriptions bordered column={1} size="small">
+                    <Descriptions.Item label="Password Age">
+                      {selectedData.password_age != null ? (
+                        <Badge 
+                          count={`${selectedData.password_age} days`}
+                          style={{ 
+                            backgroundColor: getPasswordAgeColor(selectedData.password_age) === 'red' ? '#ff4d4f' :
+                                           getPasswordAgeColor(selectedData.password_age) === 'orange' ? '#fa8c16' :
+                                           getPasswordAgeColor(selectedData.password_age) === 'gold' ? '#faad14' : '#52c41a'
+                          }}
+                        />
+                      ) : (
+                        <Tag color="default">Not Set</Tag>
+                      )}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Password Created">
+                      {formatDate(selectedData.password_created_on)}
+                    </Descriptions.Item>
+                  </Descriptions>
+                </Col>
+                <Col span={8}>
+                  <Descriptions bordered column={1} size="small">
+                    <Descriptions.Item label="Password Last Used">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <CalendarOutlined />
+                        {formatDate(selectedData.password_last_used)}
+                      </div>
+                    </Descriptions.Item>
+                  </Descriptions>
+                </Col>
+              </Row>
+            </Card>
 
-            {/* Roles & Groups */}
-            {/* <Row gutter={16} style={{ marginTop: 16 }}>
-              <Col span={12}> */}
-                {/* <Card size="small" title="Roles" headStyle={header}>
-                  {selectedData.roles.length > 0 ? (
-                    <List size="small" dataSource={selectedData.roles} renderItem={(item) => <List.Item>{item}</List.Item>} />
-                  ) : <p style={{ color: "#888" }}>No Roles</p>}
-                </Card> */}
-              {/* </Col>
-              <Col span={12}>
-                <Card size="small" title="Groups" headStyle={header}>
-                  {selectedData.groups.length > 0 ? (
-                    <List size="small" dataSource={selectedData.groups} renderItem={(item) => <List.Item>{item}</List.Item>} />
-                  ) : <p style={{ color: "#888" }}>No Groups</p>}
-                </Card>
-              </Col>
-            </Row> */}
+            {/* Access Keys Information Card */}
+            <Card 
+              size="small" 
+              title={
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <KeyOutlined />
+                  Access Keys Information
+                </div>
+              }
+              style={{ marginBottom: 16 }} 
+              headStyle={header}
+            >
+              <Row gutter={[16, 16]}>
+                <Col span={12}>
+                  <Card 
+                    size="small" 
+                    title="Access Key 1" 
+                    type="inner" 
+                    style={{ height: '100%' }}
+                  >
+                    <Descriptions bordered column={1} size="small">
+                      <Descriptions.Item label="Key ID">
+                        {selectedData.access_key_1_id ? (
+                          <code style={{ fontSize: '11px', background: '#f5f5f5', padding: '2px 4px' }}>
+                            {selectedData.access_key_1_id}
+                          </code>
+                        ) : (
+                          <Tag color="default">Not Available</Tag>
+                        )}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Status">
+                        {selectedData.access_key_1_status ? (
+                          <Tag color={selectedData.access_key_1_status === 'Active' ? 'green' : 'red'}>
+                            {selectedData.access_key_1_status}
+                          </Tag>
+                        ) : (
+                          <Tag color="default">N/A</Tag>
+                        )}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Created On">
+                        {formatDate(selectedData.access_key_1_created)}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Age">
+                        {selectedData.access_key_1_age ? (
+                          <Badge 
+                            count={`${selectedData.access_key_1_age} days`}
+                            style={{ backgroundColor: selectedData.access_key_1_age > 90 ? '#ff4d4f' : '#52c41a' }}
+                          />
+                        ) : (
+                          <Tag color="default">N/A</Tag>
+                        )}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Last Used">
+                        {formatDate(selectedData.access_key_1_last_used)}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Last Service">
+                        {selectedData.access_key_1_last_service && selectedData.access_key_1_last_service !== 'N/A' ? (
+                          <Tag color="blue" icon={<GlobalOutlined />}>
+                            {selectedData.access_key_1_last_service}
+                          </Tag>
+                        ) : (
+                          <Tag color="default">N/A</Tag>
+                        )}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Last Region">
+                        {selectedData.access_key_1_last_region && selectedData.access_key_1_last_region !== 'N/A' ? (
+                          <Tag color="purple">
+                            {selectedData.access_key_1_last_region}
+                          </Tag>
+                        ) : (
+                          <Tag color="default">N/A</Tag>
+                        )}
+                      </Descriptions.Item>
+                    </Descriptions>
+                  </Card>
+                </Col>
+                <Col span={12}>
+                  <Card 
+                    size="small" 
+                    title="Access Key 2" 
+                    type="inner" 
+                    style={{ height: '100%' }}
+                  >
+                    <Descriptions bordered column={1} size="small">
+                      <Descriptions.Item label="Key ID">
+                        {selectedData.access_key_2_id ? (
+                          <code style={{ fontSize: '11px', background: '#f5f5f5', padding: '2px 4px' }}>
+                            {selectedData.access_key_2_id}
+                          </code>
+                        ) : (
+                          <Tag color="default">Not Available</Tag>
+                        )}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Status">
+                        {selectedData.access_key_2_status ? (
+                          <Tag color={selectedData.access_key_2_status === 'Active' ? 'green' : 'red'}>
+                            {selectedData.access_key_2_status}
+                          </Tag>
+                        ) : (
+                          <Tag color="default">N/A</Tag>
+                        )}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Created On">
+                        {formatDate(selectedData.access_key_2_created)}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Age">
+                        {selectedData.access_key_2_age ? (
+                          <Badge 
+                            count={`${selectedData.access_key_2_age} days`}
+                            style={{ backgroundColor: selectedData.access_key_2_age > 90 ? '#ff4d4f' : '#52c41a' }}
+                          />
+                        ) : (
+                          <Tag color="default">N/A</Tag>
+                        )}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Last Used">
+                        {formatDate(selectedData.access_key_2_last_used)}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Last Service">
+                        {selectedData.access_key_2_last_service && selectedData.access_key_2_last_service !== 'N/A' ? (
+                          <Tag color="blue" icon={<GlobalOutlined />}>
+                            {selectedData.access_key_2_last_service}
+                          </Tag>
+                        ) : (
+                          <Tag color="default">N/A</Tag>
+                        )}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Last Region">
+                        {selectedData.access_key_2_last_region && selectedData.access_key_2_last_region !== 'N/A' ? (
+                          <Tag color="purple">
+                            {selectedData.access_key_2_last_region}
+                          </Tag>
+                        ) : (
+                          <Tag color="default">N/A</Tag>
+                        )}
+                      </Descriptions.Item>
+                    </Descriptions>
+                  </Card>
+                </Col>
+              </Row>
+            </Card>
+
+            {/* Policies Summary Card */}
+            <Card 
+              size="small" 
+              title={
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <SecurityScanOutlined />
+                  Policies Summary
+                </div>
+              }
+              style={{ marginBottom: 16 }} 
+              headStyle={header}
+            >
+              <Row gutter={[16, 16]}>
+                <Col span={8}>
+                  <Card size="small" title="Inline Policies" type="inner">
+                    <div style={{ textAlign: 'center' }}>
+                      <Badge 
+                        count={selectedData.inline_policies?.length || 0}
+                        style={{ backgroundColor: '#722ed1' }}
+                      />
+                      <div style={{ marginTop: '8px', color: '#666' }}>
+                        {selectedData.inline_policies?.length === 0 ? 'No inline policies' : 'Click Policy tab to view'}
+                      </div>
+                    </div>
+                  </Card>
+                </Col>
+                <Col span={8}>
+                  <Card size="small" title="Group Policies" type="inner">
+                    <div style={{ textAlign: 'center' }}>
+                      <Badge 
+                        count={selectedData.group_policies?.length || 0}
+                        style={{ backgroundColor: '#fa8c16' }}
+                      />
+                      <div style={{ marginTop: '8px', color: '#666' }}>
+                        {selectedData.group_policies?.length === 0 ? 'No group policies' : 'Click Policy tab to view'}
+                      </div>
+                    </div>
+                  </Card>
+                </Col>
+                <Col span={8}>
+                  <Card size="small" title="Managed Policies" type="inner">
+                    <div style={{ textAlign: 'center' }}>
+                      <Badge 
+                        count={selectedData.managed_policies?.length || 0}
+                        style={{ backgroundColor: '#52c41a' }}
+                      />
+                      <div style={{ marginTop: '8px', color: '#666' }}>
+                        {selectedData.managed_policies?.length === 0 ? 'No managed policies' : 'Click Policy tab to view'}
+                      </div>
+                    </div>
+                  </Card>
+                </Col>
+              </Row>
+            </Card>
+
+            {/* Groups Information Card */}
+            {selectedData.groups && selectedData.groups.length > 0 && (
+              <Card 
+                size="small" 
+                title={
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <UserSwitchOutlined />
+                    User Groups
+                  </div>
+                }
+                style={{ marginBottom: 16 }} 
+                headStyle={header}
+              >
+                <List
+                  size="small"
+                  dataSource={selectedData.groups}
+                  renderItem={(group, index) => (
+                    <List.Item>
+                      <Tag color="blue" style={{ marginRight: '8px' }}>
+                        {index + 1}
+                      </Tag>
+                      {group}
+                    </List.Item>
+                  )}
+                />
+              </Card>
+            )}
+          </div>
+        )}
+      </Modal>
+
+      {/* Access Key Modal */}
+      <Modal
+        title={`${selectedData1?.user_name || ""} - Access Details`}
+        open={isModalOpen1}
+        onCancel={() => setIsModalOpen1(false)}
+        footer={null}
+        width={900}
+      >
+        {selectedData1 && (
+          <>
+            <Card size="small" title="Access Key Information" style={{ marginBottom: 16 }} headStyle={header}>
+              <Descriptions bordered column={2} size="small">
+                <Descriptions.Item label="Key 1 - ID">{selectedData1.access_key_1_id || 'Not Available'}</Descriptions.Item>
+                <Descriptions.Item label="Key 2 - ID">{selectedData1.access_key_2_id || 'Not Available'}</Descriptions.Item>
+                <Descriptions.Item label="Key 1 - Status">
+                  <Tag color={selectedData1.access_key_1_status === 'Active' ? 'green' : 'red'}>
+                    {selectedData1.access_key_1_status || 'N/A'}
+                  </Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Key 2 - Status">
+                  <Tag color={selectedData1.access_key_2_status === 'Active' ? 'green' : 'red'}>
+                    {selectedData1.access_key_2_status || 'N/A'}
+                  </Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Key 1 - Age">{selectedData1.access_key_1_age || "0"} Days</Descriptions.Item>
+                <Descriptions.Item label="Key 2 - Age">{selectedData1.access_key_2_age || "0"} Days</Descriptions.Item>
+                <Descriptions.Item label="Key 1 - Created">{formatDate(selectedData1.access_key_1_created)}</Descriptions.Item>
+                <Descriptions.Item label="Key 2 - Created">{formatDate(selectedData1.access_key_2_created)}</Descriptions.Item>
+                <Descriptions.Item label="Key 1 - Last Used">{formatDate(selectedData1.access_key_1_last_used)}</Descriptions.Item>
+                <Descriptions.Item label="Key 2 - Last Used">{formatDate(selectedData1.access_key_2_last_used)}</Descriptions.Item>
+                <Descriptions.Item label="Key 1 - Last Region">{selectedData1.access_key_1_last_region || 'N/A'}</Descriptions.Item>
+                <Descriptions.Item label="Key 2 - Last Region">{selectedData1.access_key_2_last_region || 'N/A'}</Descriptions.Item>
+                <Descriptions.Item label="Key 1 - Last Service">{selectedData1.access_key_1_last_service || 'N/A'}</Descriptions.Item>
+                <Descriptions.Item label="Key 2 - Last Service">{selectedData1.access_key_2_last_service || 'N/A'}</Descriptions.Item>
+              </Descriptions>
+            </Card>
           </>
         )}
       </Modal>
 
-
+      {/* Policy Modal */}
       <Modal
-      
-      title={`${selectedData1?.user_name || ""} - Access Details`}
-      open={isModalOpen1}
-      onCancel={() => setIsModalOpen1(false)}
-      footer={null}
-      width={900}
-    >
-      {selectedData1 && (
-        <>
-          <Card size="small" title="Information" style={{ marginBottom: 16 }} headStyle={header}>
-            <Descriptions bordered column={2} size="small">
-            <Descriptions.Item label="Key 1 - Id">{selectedData1.access_key_1_id}</Descriptions.Item>
-              <Descriptions.Item label="Key 2 - Id">{selectedData1.access_key_2_id}</Descriptions.Item>
-              <Descriptions.Item label="Key 1 - Status">{selectedData1.access_key_1_status}</Descriptions.Item>
-              <Descriptions.Item label="Key 2 - Status">{selectedData1.access_key_2_status}</Descriptions.Item>
-              <Descriptions.Item label="Key 1 - Age">{selectedData1.access_key_1_age || "0"}Days</Descriptions.Item>
-              <Descriptions.Item label="Key 2 - Age">{selectedData1.access_key_2_age || "0 " }Days</Descriptions.Item>
-              <Descriptions.Item label="Key 1 - Created">{selectedData1.access_key_1_created}</Descriptions.Item>
-              <Descriptions.Item label="Key 2 - Created">{selectedData1.access_key_2_created}</Descriptions.Item>
-              <Descriptions.Item label="Key 1 - Last Used">{selectedData1.access_key_1_last_used}</Descriptions.Item>
-              <Descriptions.Item label="Key 2 - Last Used">{selectedData1.access_key_2_last_used}</Descriptions.Item>
-              <Descriptions.Item label="Key 1 - Last Region">{selectedData1.access_key_1_last_region}</Descriptions.Item>
-              <Descriptions.Item label="Key 2 - Last Region">{selectedData1.access_key_2_last_region}</Descriptions.Item>
-              <Descriptions.Item label="Key 1 - Last Service">{selectedData1.access_key_1_last_service}</Descriptions.Item>
-              <Descriptions.Item label="Key 2 - Last Service">{selectedData1.access_key_2_last_service}</Descriptions.Item>
-              {/* <Descriptions.Item label="Password Last Used">{selectedData1.password_last_used}</Descriptions.Item> */}
-             
-            </Descriptions>
-          </Card>
+        title={`${selectedPolicyData?.user_name || ""} - Attached Policies`}
+        open={isPolicyModalOpen}
+        onCancel={() => setIsPolicyModalOpen(false)}
+        footer={null}
+        width={900}
+      >
+        {selectedPolicyData && (
+          <>
+            <Table
+              bordered
+              pagination={false}
+              rowKey={(record, index) => index}
+              dataSource={[
+                {
+                  key: 1,
+                  inlinePolicies: selectedPolicyData.inline_policies || [],
+                  groupPolicies: selectedPolicyData.group_policies || [],
+                  managedPolicies: selectedPolicyData.managed_policies || [],
+                },
+              ]}
+              columns={[
+                {
+                  title: "Inline Policies",
+                  dataIndex: "inlinePolicies",
+                  key: "inlinePolicies",
+                  width: "33.33%",
+                  render: (policies) => {
+                    if (!policies || policies.length === 0) {
+                      return <Tag color="red">None</Tag>;
+                    }
 
-        </>
-      )}
-    </Modal>
+                    return (
+                      <List
+                        size="small"
+                        dataSource={policies}
+                        renderItem={(p, index) => (
+                          <List.Item key={index} style={{ padding: "2px 0" }}>
+                            <a
+                              onClick={() => {
+                                setSelectedPolicyDetail({
+                                  ...p,
+                                  type: "Inline Policies",
+                                });
+                                setIsPolicyDetailModalOpen(true);
+                              }}
+                              style={{
+                                color: "#1890ff",
+                                cursor: "pointer",
+                              }}
+                            >
+                              {index + 1}. {p.policy_name || p}
+                            </a>
+                          </List.Item>
+                        )}
+                      />
+                    );
+                  },
+                },
+                {
+                  title: "Group Policies",
+                  dataIndex: "groupPolicies",
+                  key: "groupPolicies",
+                  width: "33.33%",
+                  render: (policies) => {
+                    if (!policies || policies.length === 0) {
+                      return <Tag color="red">None</Tag>;
+                    }
+
+                    return (
+                      <List
+                        size="small"
+                        dataSource={policies}
+                        renderItem={(p, index) => (
+                          <List.Item key={index} style={{ padding: "2px 0" }}>
+                            <a
+                              onClick={() => {
+                                setSelectedPolicyDetail({
+                                  ...p,
+                                  type: "Group Policies",
+                                });
+                                setIsPolicyDetailModalOpen(true);
+                              }}
+                              style={{
+                                color: "#1890ff",
+                                cursor: "pointer",
+                              }}
+                            >
+                              {index + 1}. {p.policy_name || p}
+                            </a>
+                          </List.Item>
+                        )}
+                      />
+                    );
+                  },
+                },
+                {
+                  title: "Managed Policies",
+                  dataIndex: "managedPolicies",
+                  key: "managedPolicies",
+                  width: "33.33%",
+                  render: (policies) => {
+                    if (!policies || policies.length === 0) {
+                      return <Tag color="red">None</Tag>;
+                    }
+
+                    return (
+                      <List
+                        size="small"
+                        dataSource={policies}
+                        renderItem={(p, index) => (
+                          <List.Item key={index} style={{ padding: "2px 0" }}>
+                            <span
+                              style={{
+                                color: "black",
+                                cursor: "default",
+                              }}
+                            >
+                              {index + 1}. {p.policy_name || p}
+                            </span>
+                          </List.Item>
+                        )}
+                      />
+                    );
+                  },
+                },
+              ]}
+            />
+          </>
+        )}
+      </Modal>
+
+      {/* Policy Details Modal */}
+      <Modal
+        title={`${selectedPolicyDetail?.policy_name || ""} - Details`}
+        open={isPolicyDetailModalOpen}
+        onCancel={() => setIsPolicyDetailModalOpen(false)}
+        footer={null}
+        width={800}
+      >
+        {selectedPolicyDetail && (
+          <Row gutter={24}>
+            <Col span={12}>
+              <div>
+                <h4 style={{ 
+                  color: "#52c41a", 
+                  paddingBottom: "8px",
+                  marginBottom: "16px"
+                }}>
+                  Allowed Services
+                </h4>
+                {selectedPolicyDetail.allowed_services?.length ? (
+                  <List
+                    size="small"
+                    dataSource={selectedPolicyDetail.allowed_services}
+                    renderItem={(service, index) => (
+                      <List.Item style={{ padding: "4px 0" }}>
+                        <span>• {service}</span>
+                      </List.Item>
+                    )}
+                  />
+                ) : (
+                  <Tag color="red">None</Tag>
+                )}
+              </div>
+            </Col>
+            
+            <Col span={12}>
+              <div>
+                <h4 style={{ 
+                  color: "#ff4d4f", 
+                  paddingBottom: "8px",
+                  marginBottom: "16px"
+                }}>
+                  Denied Services
+                </h4>
+                {selectedPolicyDetail.denied_services?.length ? (
+                  <List
+                    size="small"
+                    dataSource={selectedPolicyDetail.denied_services}
+                    renderItem={(service, index) => (
+                      <List.Item style={{ padding: "4px 0" }}>
+                        <span>• {service}</span>
+                      </List.Item>
+                    )}
+                  />
+                ) : (
+                  <Tag color="green">None</Tag>
+                )}
+              </div>
+            </Col>
+          </Row>
+        )}
+      </Modal>
+
+      {/* CSS for blinking animation */}
+      <style jsx>{`
+        @keyframes blink {
+          0%, 50% { opacity: 1; }
+          51%, 100% { opacity: 0.3; }
+        }
+      `}</style>
     </>
   );
 };
