@@ -118,3 +118,100 @@ p {
 .custom-table .ant-table-tbody > tr:hover > td {
   background: #fafafa !important;
 }
+
+
+  /* // */
+
+  /* File: src/App.css */
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* .ant-typography 
+{
+  font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+} */
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden; /* prevent body scroll */
+}
+
+/* Header fixed at top */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60px; /* adjust as needed */
+  background-color: #fff;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Dashboard below header */
+.dashboard {
+  display: flex;
+  height: calc(100vh - 60px);
+  overflow: hidden;
+}
+
+/* Sidebar fixed */
+.sidebar {
+  position: fixed;
+  left: 0;
+  width: 250px; /* expanded width */
+  overflow-y: auto;
+  background-color: #f5f5f5;
+  transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 80px; /* collapsed width */
+}
+
+/* Main content scrollable */
+.main-content {
+  flex: 1;
+  padding: 20px;
+  /* height: calc(100vh - 90px); */
+  overflow-y: auto;
+}
+
+.main-content.sidebar-collapsed {
+  margin-left: 80px; /* match collapsed sidebar */
+}
+
+
+/* Make checkbox box smaller */
+.custom-checkbox-group .ant-checkbox-inner {
+  width: 10px;   /* smaller square */
+  height: 10px;
+}
+
+/* Scale down the tick mark */
+.custom-checkbox-group .ant-checkbox-inner::after {
+  transform: rotate(45deg) scale(0.6) translate(-50%, -50%);
+  top: 30%;
+  left: 15%;
+}
+
+/* Reduce spacing between checkboxes */
+.custom-checkbox-group .ant-checkbox-wrapper {
+  margin-inline-end: 2px !important;
+}
+
+/* Adjust overall clickable area */
+.custom-checkbox-group .ant-checkbox {
+  transform: scale(0.9);
+}
+
+/* Shrink label text */
+.custom-checkbox-group .ant-checkbox-wrapper span {
+  font-size: 10px;
+}

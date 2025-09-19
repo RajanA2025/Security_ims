@@ -14,7 +14,11 @@ import Ami from "./pages/operational/Amis"
 import Observability from './pages/operational/Observability/Observability';
 import Monitoring from './pages/operational/Monitoring/Monitoring';
 import RightSizing from './pages/operational/RightSizing/RightSizing';
-
+import Dashboard2 from './pages/CostPages/Dashboard';
+import { Costdeepdrive } from './pages/CostPages/Costdeepdrive';
+import Imsproduct from './components/CostComponents/Imsproduct';
+import { Savings } from './pages/CostPages/Savings';
+import { Complaince } from './pages/CostPages/Complaince';
 function App() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [filters, setFilters] = useState({
@@ -52,6 +56,60 @@ function App() {
           <Route path="/Operational/monitoring" element={<Monitoring filters={filters} />} />
           <Route path="/Operational/rightsizing" element={<RightSizing filters={filters} />} /> Add this route
 
+{/* //cost */}
+<Route
+          path="/Dashboard2"
+          element={
+            // <Layout
+            //   onDateChange={handleDateChange}
+            //   isExpanded={isExpanded}
+            //   setIsExpanded={setIsExpanded}
+            // >
+              <Dashboard2 />
+            // {/* </Layout> */}
+          }
+        />
+        <Route
+          path="/cost-deepdrive"
+          element={
+            // <Layout
+            //   onDateChange={handleDateChange}
+            //   isExpanded={isExpanded}
+            //   setIsExpanded={setIsExpanded}
+            // >
+              <Costdeepdrive />
+            // </Layout>
+          }
+        />
+        <Route
+          path="/Savings"
+          element={
+            // <Layout
+            //   onDateChange={handleDateChange}
+            //   isExpanded={isExpanded}
+            //   setIsExpanded={setIsExpanded}
+            // >
+              <Savings />
+            // </Layout>
+          }
+        />
+
+        <Route
+          path="/compliance"
+          element={
+            // <Layout
+            //   onDateChange={handleDateChange}
+            //   isExpanded={isExpanded}
+            //   setIsExpanded={setIsExpanded}
+            // >
+              <Complaince />
+
+            // </Layout>
+          }
+        />
+
+        {/* Page outside Layout */}
+        <Route path="/" element={<Imsproduct />} />
         </Routes>
       </Layout>
     </Router>

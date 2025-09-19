@@ -5,13 +5,22 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: '0.0.0.0', // Allows access from LAN IP or domain
-  port: 5173,       // Changed port to avoid conflict
+    host: true, // Listen on all network interfaces
+    port: 5173,
+    strictPort: true,
     hmr: {
+      clientPort: 5173, // Force WebSocket port to match the server port
       protocol: 'ws',
-      host: 'imsserver.com', // Replace with your live hostname or IP
+      host: 'localhost',
+      port: 5173
     },
-    strictPort: true, // Optional: avoid port auto-switching
-    cors: true        // Optional: allows cross-origin if needed
+    watch: {
+      usePolling: true
+    },
+    cors: true
+  },
+  preview: {
+    port: 5173,
+    strictPort: true,
   }
 });
