@@ -238,7 +238,7 @@ const SectionTitle = ({ children, delay = 0 }) => (
       level={3}
       style={{
         fontFamily: "'Roboto', 'Segoe UI', sans-serif",
-        fontSize: "24px",
+        fontSize: "20px",
         fontWeight: 600,
         color: "#1a1a1a",
         margin: "0 0 24px 0",
@@ -379,7 +379,7 @@ const Insights = () => {
         ) : (
           <motion.div key="content">
             {/* IAM Insights Section */}
-            <SectionTitle delay={0}>IAM Insights</SectionTitle>
+            <SectionTitle delay={0} >IAM Insights</SectionTitle>
             
             <motion.div
               variants={containerVariants}
@@ -388,7 +388,7 @@ const Insights = () => {
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: '24px',
+                gap: '16px',
                 marginBottom: '48px'
               }}
             >

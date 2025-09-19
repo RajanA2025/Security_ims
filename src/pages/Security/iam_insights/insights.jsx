@@ -17,6 +17,7 @@ import {
   Divider,
   Badge,
 } from "antd";
+import { motion } from "framer-motion";
 
 import {
   EyeOutlined,
@@ -32,6 +33,67 @@ import {
   GlobalOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2
+    }
+  }
+};
+
+const cardVariants = {
+  hidden: { 
+    opacity: 0, 
+    y: 20,
+    scale: 0.95
+  },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 12
+    }
+  },
+  hover: {
+    y: -8,
+    scale: 1.02,
+    boxShadow: "0 20px 40px rgba(0,0,0,0.12)",
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 20
+    }
+  }
+};
+
+// Custom animated progress component
+const AnimatedProgress = ({ percent, strokeColor, delay = 0 }) => (
+  <motion.div
+    initial={{ scale: 0, rotate: -180 }}
+    animate={{ scale: 1, rotate: 0 }}
+    transition={{ 
+      delay,
+      type: "spring",
+      stiffness: 200,
+      damping: 15
+    }}
+  >
+    <Progress 
+      type="circle" 
+      percent={percent} 
+      strokeColor={strokeColor}
+      width={80}
+    />
+  </motion.div>
+);
 
 const header = {
   backgroundColor: "#4f46e5",
@@ -232,19 +294,6 @@ const Insights = () => {
       }
     },
     {
-      title: "Policy",
-      key: "policy",
-      width: 100,
-      render: (_, record) => (
-        <Tooltip title="View Policies">
-          <EyeOutlined
-            style={{ fontSize: 18, color: "#722ed1", cursor: "pointer" }}
-            onClick={() => handleOpenPolicyModal(record)}
-          />
-        </Tooltip>
-      )
-    },
-    {
       title: (
         <span>
           Access Key Age{' '}
@@ -326,9 +375,22 @@ const Insights = () => {
       )
     },
     {
+      title: "Policy",
+      key: "policy",
+      width: 100,
+      render: (_, record) => (
+        <Tooltip title="View Policies">
+          <EyeOutlined
+            style={{ fontSize: 18, color: "#722ed1", cursor: "pointer" }}
+            onClick={() => handleOpenPolicyModal(record)}
+          />
+        </Tooltip>
+      )
+    },
+    {
       title: "More Details",
       key: "more_details",
-      width: 80,
+      width: 100,
       render: (_, record) => (
         <Tooltip title="View Complete Details">
           <EyeOutlined
@@ -358,7 +420,7 @@ const Insights = () => {
 IAM Insights
 </Typography.Title>
   </Col>
-  <Col md={4} className="pt-5">
+  <Col md={4} >
     <Select
       placeholder="Filter by Account ID"
       style={{ width: "100%" }}
@@ -385,73 +447,326 @@ IAM Insights
 </Row>
 
       {/* Stats Cards */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center" }}>
-            <Flex vertical align="center" gap="small">
-              <SafetyCertificateOutlined style={{ fontSize: 28, color: "#1890ff" }} />
-              <Progress
-                type="circle"
-                percent={mfaPercent}
-                strokeColor={
-                  mfaPercent >= 75 ? "green" : mfaPercent > 50 ? "orange" : "red"
-                }
-              />
-              <span style={{ fontWeight: "bold" }}>MFA Enabled 
-                <Tooltip placement="rightBottom" title="Enable Multi-Factor Authentication (MFA) for all IAM users to enhance account security.">
-                  <InfoCircleOutlined />
-                </Tooltip>
-              </span>
-              <span style={{ color: "#888" }}>{mfaTrueCount}/{total} Users</span>
-            </Flex>
-          </Card>
-        </Col>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="stats-container"
+      >
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} md={6}>
+            <motion.div
+              variants={cardVariants}
+              initial="hidden"
+              animate="visible"
+              whileHover="hover"
+              className="stat-card"
+            >
+              <Card 
+                hoverable={false}
+                style={{ 
+                  height: '100%',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                }}
+                bodyStyle={{ padding: '24px' }}
+              >
+                <div style={{ textAlign: 'center' }}>
+                  <motion.div
+                    initial={{ scale: 0, rotate: -90 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ 
+                      delay: 0.1,
+                      type: "spring",
+                      stiffness: 200
+                    }}
+                    style={{ marginBottom: '16px' }}
+                  >
+                    {React.cloneElement(<SafetyCertificateOutlined />, { 
+                      style: { 
+                        fontSize: 32, 
+                        color: mfaPercent >= 75 ? "#ff4d4f" : mfaPercent > 50 ? "#fa8c16" : "#52c41a" 
+                      } 
+                    })}
+                  </motion.div>
+                  
+                  <AnimatedProgress 
+                    percent={mfaPercent} 
+                    strokeColor={mfaPercent >= 75 ? "#ff4d4f" : mfaPercent > 50 ? "#fa8c16" : "#52c41a"}
+                    delay={0.2}
+                  />
+                  
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    style={{ marginTop: '16px' }}
+                  >
+                    <div style={{ 
+                      fontWeight: 600, 
+                      fontSize: '16px',
+                      marginBottom: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
+                    }}>
+                      MFA Enabled
+                      <Tooltip placement="top" title="Enable Multi-Factor Authentication (MFA) for all IAM users to enhance account security.">
+                        <InfoCircleOutlined style={{ color: '#1890ff' }} />
+                      </Tooltip>
+                    </div>
+                    <motion.span 
+                      style={{ color: "#666", fontSize: '14px' }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.6 }}
+                    >
+                      {mfaTrueCount}/{total} Users
+                    </motion.span>
+                  </motion.div>
+                </div>
+              </Card>
+            </motion.div>
+          </Col>
 
-        <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center" }}>
-            <Flex vertical align="center" gap="small">
-              <LockOutlined style={{ fontSize: 28, color: "#722ed1" }} />
-              <Progress type="circle" percent={passwordPercent} strokeColor={passwordPercent > 50 ? "#52c41a" : "#ff4d4f"} />
-              <span style={{ fontWeight: "bold" }}>Password Enabled 
-                <Tooltip placement="rightBottom" title="Enforce strong password policies for all IAM users to enhance account security.">
-                  <InfoCircleOutlined />
-                </Tooltip>
-              </span>
-              <span style={{ color: "#888" }}>{passwordEnabledCount}/{total} Users</span>
-            </Flex>
-          </Card>
-        </Col>
+          <Col xs={24} sm={12} md={6}>
+            <motion.div
+              variants={cardVariants}
+              initial="hidden"
+              animate="visible"
+              whileHover="hover"
+              className="stat-card"
+            >
+              <Card 
+                hoverable={false}
+                style={{ 
+                  height: '100%',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                }}
+                bodyStyle={{ padding: '24px' }}
+              >
+                <div style={{ textAlign: 'center' }}>
+                  <motion.div
+                    initial={{ scale: 0, rotate: -90 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ 
+                      delay: 0.2,
+                      type: "spring",
+                      stiffness: 200
+                    }}
+                    style={{ marginBottom: '16px' }}
+                  >
+                    {React.cloneElement(<LockOutlined />, { 
+                      style: { 
+                        fontSize: 32, 
+                        color: passwordPercent > 50 ? "#52c41a" : "#ff4d4f" 
+                      } 
+                    })}
+                  </motion.div>
+                  
+                  <AnimatedProgress 
+                    percent={passwordPercent} 
+                    strokeColor={passwordPercent > 50 ? "#52c41a" : "#ff4d4f"}
+                    delay={0.3}
+                  />
+                  
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    style={{ marginTop: '16px' }}
+                  >
+                    <div style={{ 
+                      fontWeight: 600, 
+                      fontSize: '16px',
+                      marginBottom: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
+                    }}>
+                      Password Enabled
+                      <Tooltip placement="top" title="Enforce strong password policies for all IAM users to enhance account security.">
+                        <InfoCircleOutlined style={{ color: '#1890ff' }} />
+                      </Tooltip>
+                    </div>
+                    <motion.span 
+                      style={{ color: "#666", fontSize: '14px' }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.7 }}
+                    >
+                      {passwordEnabledCount}/{total} Users
+                    </motion.span>
+                  </motion.div>
+                </div>
+              </Card>
+            </motion.div>
+          </Col>
 
-        <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center" }}>
-            <Flex vertical align="center" gap="small">
-              <UserSwitchOutlined style={{ fontSize: 28, color: "#722ed1" }} />
-              <Progress type="circle" percent={adminPercent} strokeColor={adminPercent > 75 ? "#ff4d4f" : adminPercent > 50 ? "#fa8c16" : "#52c41a"} />
-              <span style={{ fontWeight: "bold" }}>Is Admin 
-                <Tooltip placement="rightBottom" title="Validate if each IAM user truly requires administrator access and remove unnecessary privileges.">
-                  <InfoCircleOutlined />
-                </Tooltip>
-              </span>
-              <span style={{ color: "#888" }}>{AdminEnabledCount}/{total} Users</span>
-            </Flex>
-          </Card>
-        </Col>
+          <Col xs={24} sm={12} md={6}>
+            <motion.div
+              variants={cardVariants}
+              initial="hidden"
+              animate="visible"
+              whileHover="hover"
+              className="stat-card"
+            >
+              <Card 
+                hoverable={false}
+                style={{ 
+                  height: '100%',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                }}
+                bodyStyle={{ padding: '24px' }}
+              >
+                <div style={{ textAlign: 'center' }}>
+                  <motion.div
+                    initial={{ scale: 0, rotate: -90 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ 
+                      delay: 0.3,
+                      type: "spring",
+                      stiffness: 200
+                    }}
+                    style={{ marginBottom: '16px' }}
+                  >
+                    {React.cloneElement(<UserSwitchOutlined />, { 
+                      style: { 
+                        fontSize: 32, 
+                        color: adminPercent > 75 ? "#52c41a" : adminPercent > 50 ? "#fa8c16" : "#ff4d4f" 
+                      } 
+                    })}
+                  </motion.div>
+                  
+                  <AnimatedProgress 
+                    percent={adminPercent} 
+                    strokeColor={adminPercent > 75 ? "#ff4d4f" : adminPercent > 50 ? "#fa8c16" : "#52c41a"}
+                    delay={0.4}
+                  />
+                  
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                    style={{ marginTop: '16px' }}
+                  >
+                    <div style={{ 
+                      fontWeight: 600, 
+                      fontSize: '16px',
+                      marginBottom: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
+                    }}>
+                      Admin Access
+                      <Tooltip placement="top" title="Validate if each IAM user truly requires administrator access and remove unnecessary privileges.">
+                        <InfoCircleOutlined style={{ color: '#1890ff' }} />
+                      </Tooltip>
+                    </div>
+                    <motion.span 
+                      style={{ color: "#666", fontSize: '14px' }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.8 }}
+                    >
+                      {AdminEnabledCount}/{total} Users
+                    </motion.span>
+                  </motion.div>
+                </div>
+              </Card>
+            </motion.div>
+          </Col>
 
-        <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center" }}>
-            <Flex vertical align="center" gap="small">
-              <DesktopOutlined style={{ fontSize: 28, color: "#722ed1" }} />
-              <Progress type="circle" percent={consolePercent} strokeColor={consolePercent > 75 ? "#52c41a" : consolePercent > 50 ? "#fa8c16" : "#ff4d4f"} />
-              <span style={{ fontWeight: "bold" }}>Console Access 
-                <Tooltip placement="rightBottom" title="Review console access permissions for security compliance.">
-                  <InfoCircleOutlined />
-                </Tooltip>
-              </span>
-              <span style={{ color: "#888" }}>{ConsoleEnabledCount}/{total} Users</span>
-            </Flex>
-          </Card>
-        </Col>
-      </Row>
+          <Col xs={24} sm={12} md={6}>
+            <motion.div
+              variants={cardVariants}
+              initial="hidden"
+              animate="visible"
+              whileHover="hover"
+              className="stat-card"
+            >
+              <Card 
+                hoverable={false}
+                style={{ 
+                  height: '100%',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                }}
+                bodyStyle={{ padding: '24px' }}
+              >
+                <div style={{ textAlign: 'center' }}>
+                  <motion.div
+                    initial={{ scale: 0, rotate: -90 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ 
+                      delay: 0.4,
+                      type: "spring",
+                      stiffness: 200
+                    }}
+                    style={{ marginBottom: '16px' }}
+                  >
+                    {React.cloneElement(<DesktopOutlined />, { 
+                      style: { 
+                        fontSize: 32, 
+                        color: consolePercent > 75 ? "#52c41a" : consolePercent > 50 ? "#fa8c16" : "#ff4d4f" 
+                      } 
+                    })}
+                  </motion.div>
+                  
+                  <AnimatedProgress 
+                    percent={consolePercent} 
+                    strokeColor={consolePercent > 75 ? "#52c41a" : consolePercent > 50 ? "#fa8c16" : "#ff4d4f"}
+                    delay={0.5}
+                  />
+                  
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.7 }}
+                    style={{ marginTop: '16px' }}
+                  >
+                    <div style={{ 
+                      fontWeight: 600, 
+                      fontSize: '16px',
+                      marginBottom: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
+                    }}>
+                      Console Access
+                      <Tooltip placement="top" title="Review console access permissions for security compliance.">
+                        <InfoCircleOutlined style={{ color: '#1890ff' }} />
+                      </Tooltip>
+                    </div>
+                    <motion.span 
+                      style={{ color: "#666", fontSize: '14px' }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.9 }}
+                    >
+                      {ConsoleEnabledCount}/{total} Users
+                    </motion.span>
+                  </motion.div>
+                </div>
+              </Card>
+            </motion.div>
+          </Col>
+        </Row>
+      </motion.div>
 
       <br />
 

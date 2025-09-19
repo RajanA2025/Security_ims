@@ -12,7 +12,7 @@ import DonutChart from '../../components/dashboard/donutchart'
 import Chart from "../../components/dashboard/chart"
 import Graph from "../../components/dashboard/graphchart"
 import axios from 'axios'
-import ResourceBarChart from '../../components/dashboard/resourceBarChart'
+// import ResourceBarChart from '../../components/dashboard/resourceBarChart'
 // Add this function before the Dashboard component
 const getTooltipText = (title) => {
   const tooltips = {
@@ -219,7 +219,7 @@ const SectionTitle = ({ children, delay = 0 }) => (
       level={4}
       style={{
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        fontSize: "24px",
+        fontSize: "20px",
         fontWeight: 600,
         color: "#1a1a1a",
         margin: "0 0 24px 0",
@@ -511,14 +511,14 @@ function Dashboard() {
                 </Col>
               </Row>
             </motion.div>
-            <SectionTitle delay={1}>Resource Overview</SectionTitle>
+            {/* <SectionTitle delay={1}>Resource Overview</SectionTitle>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.2 }}
             >
               <ResourceBarChart data={resourceCounts} />
-            </motion.div>
+            </motion.div> */}
 
 
           </motion.div>

@@ -14,12 +14,13 @@ import {
   Select,
   Flex,
   Typography,
+  Spin,
+  Alert
 } from "antd";
-
-
+import { motion, AnimatePresence } from "framer-motion";
 import {
   EyeOutlined,
-  InfoCircleOutlined ,
+  InfoCircleOutlined,
   SearchOutlined,
   DesktopOutlined,
   SecurityScanFilled,
@@ -27,6 +28,79 @@ import {
 } from "@ant-design/icons";
 import axios from "axios";
 import { PortableWifiOffOutlined, PortraitOutlined, SecuritySharp } from "@mui/icons-material";
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2
+    }
+  }
+};
+
+const cardVariants = {
+  hidden: { 
+    opacity: 0, 
+    y: 20,
+    scale: 0.95
+  },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 12
+    }
+  },
+  hover: {
+    y: -8,
+    scale: 1.02,
+    boxShadow: "0 20px 40px rgba(0,0,0,0.12)",
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 20
+    }
+  }
+};
+
+const progressVariants = {
+  hidden: { pathLength: 0, opacity: 0 },
+  visible: { 
+    pathLength: 1, 
+    opacity: 1,
+    transition: {
+      pathLength: { duration: 1.5, ease: "easeOut" },
+      opacity: { duration: 0.5 }
+    }
+  }
+};
+
+// Custom animated progress component
+const AnimatedProgress = ({ percent, strokeColor, delay = 0 }) => (
+  <motion.div
+    initial={{ scale: 0, rotate: -180 }}
+    animate={{ scale: 1, rotate: 0 }}
+    transition={{ 
+      delay,
+      type: "spring",
+      stiffness: 200,
+      damping: 15
+    }}
+  >
+    <Progress 
+      type="circle" 
+      percent={percent} 
+      strokeColor={strokeColor}
+      width={80}
+    />
+  </motion.div>
+);
 
 const header = {
   backgroundColor: "#4f46e5",
@@ -217,89 +291,349 @@ Security Group
   </Col>
 </Row>
       {/* Stats Cards */}
-      <Row gutter={[16, 16]}>
-       
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="stats-container"
+        style={{ marginBottom: 24 }}
+      >
+        <Row gutter={[16, 16]}>
+          {/* Orphaned Groups Card */}
+          <Col xs={24} sm={12} md={6}>
+            <motion.div
+              variants={cardVariants}
+              whileHover="hover"
+              style={{ height: '100%' }}
+            >
+              <Card 
+                hoverable={false}
+                style={{ 
+                  height: '100%',
+                  borderRadius: 12,
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                }}
+                bodyStyle={{ 
+                  padding: '24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%',
+                  justifyContent: 'space-between'
+                }}
+              >
+                <div style={{ textAlign: 'center' }}>
+                  <motion.div
+                    initial={{ scale: 0, rotate: -90 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ 
+                      delay: 0.1,
+                      type: "spring",
+                      stiffness: 200
+                    }}
+                    style={{ marginBottom: 16 }}
+                  >
+                    <SecurityScanFilled style={{ fontSize: 32, color: "#722ed1" }} />
+                  </motion.div>
+                  <AnimatedProgress 
+                    percent={OrphanedPercent} 
+                    strokeColor={OrphanedPercent > 75 ? "#52c41a" : OrphanedPercent > 50 ? "#fa8c16" : "#ff4d4f"} 
+                    delay={0.2}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    style={{ marginTop: 16 }}
+                  >
+                    <div style={{ 
+                      fontWeight: 600, 
+                      fontSize: '16px',
+                      marginBottom: 4,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      Orphaned Groups
+                      <Tooltip 
+                        placement="top" 
+                        title="Remove orphaned security groups that are not associated with any resources and are no longer needed."
+                      >
+                        <InfoCircleOutlined style={{ marginLeft: 6, color: "#8c8c8c" }} />
+                      </Tooltip>
+                    </div>
+                    <div style={{ color: "#8c8c8c", fontSize: 14 }}>
+                      {OrphanedEnabledCount} of {total} groups
+                    </div>
+                  </motion.div>
+                </div>
+              </Card>
+            </motion.div>
+          </Col>
 
-        <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center" }}>
-            <Flex vertical align="center" gap="small">
-              <SecurityScanFilled style={{ fontSize: 28, color: "#722ed1" }} />
-              <Progress type="circle" percent={OrphanedPercent} strokeColor={OrphanedPercent > 75 ? "#52c41a" : OrphanedPercent > 50 ? "#fa8c16" : "#ff4d4f"} />
-              <span style={{ fontWeight: "bold" }}>Is Orphaned  &nbsp;
-               <Tooltip placement="rightBottom" title="Remove orphaned security groups that are not associated with any resources and are no longer needed.">
-    <InfoCircleOutlined
-   
-    />
-  </Tooltip>
-              </span>
-              <span style={{ color: "#888" }}>{OrphanedEnabledCount}/{total} Security Groups</span>
-            </Flex>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center" }}>
-            <Flex vertical align="center" gap="small">
-              <SecuritySharp style={{ fontSize: 28, color: "#1890ff" }} />
-              {/* <Progress type="circle" percent={mfaPercent} strokeColor={mfaPercent > 50 ? "#52c41a" : "#ff4d4f"} /> */}
-              <h1 className="m-5" style={{ fontWeight: "bold", padding:"8% 5% "}}>{sshCount}</h1>
-              <Tooltip placement="rightBottom" title="Restrict open SSH access by limiting inbound traffic to trusted IP addresses only.">
-    <InfoCircleOutlined
-   
-    />
-  </Tooltip>
-              <span style={{ fontWeight: "bold" ,color: "#888" }}>Open SSH</span>
-              {/* <span style={{ color: "#888" }}>{mfaTrueCount}/{total} Users</span> */}
-              {/* <span style={{ color: "#888" }}> 5</span> */}
-            </Flex>
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center" }}>
-            <Flex vertical align="center" gap="small">
-              <SecuritySharp style={{ fontSize: 28, color: "#1890ff" }} />
-              {/* <Progress type="circle" percent={mfaPercent} strokeColor={mfaPercent > 50 ? "#52c41a" : "#ff4d4f"} /> */}
-              <h1 className="m-5" style={{ fontWeight: "bold", padding:"8% 5% "}}>{RDPCount}</h1>
-              <Tooltip placement="rightBottom" title="Restrict RDP (port 3389) access to Windows instances by allowing only trusted IP addresses">
-    <InfoCircleOutlined
-   
-    />
-  </Tooltip>
-              <span style={{ fontWeight: "bold",color: "#888"  }}>Open RDP</span>
-              {/* <span style={{ color: "#888" }}>{mfaTrueCount}/{total} Users</span> */}
-              {/* <span style={{ color: "#888" }}> 5</span> */}
-            </Flex>
-          </Card>
-        </Col>
+          {/* Open SSH Card */}
+          <Col xs={24} sm={12} md={6}>
+            <motion.div
+              variants={cardVariants}
+              whileHover="hover"
+              style={{ height: '100%' }}
+            >
+              <Card 
+                hoverable={false}
+                style={{ 
+                  height: '100%',
+                  borderRadius: 12,
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                }}
+                bodyStyle={{ 
+                  padding: '24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%',
+                  justifyContent: 'space-between'
+                }}
+              >
+                <div style={{ textAlign: 'center' }}>
+                  <motion.div
+                    initial={{ scale: 0, rotate: -90 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ 
+                      delay: 0.2,
+                      type: "spring",
+                      stiffness: 200
+                    }}
+                    style={{ marginBottom: 8 }}
+                  >
+                    <SecuritySharp style={{ fontSize: 32, color: "#1890ff" }} />
+                  </motion.div>
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.3, type: "spring" }}
+                  >
+                    <motion.div
+                      style={{
+                        fontSize: '48px',
+                        fontWeight: 'bold',
+                        margin: '8px 0',
+                        color: sshCount > 0 ? "#ff4d4f" : "#52c41a",
+                        textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                      }}
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ 
+                        duration: 2,
+                        repeat: Infinity,
+                        repeatType: "reverse"
+                      }}
+                    >
+                      {sshCount}
+                    </motion.div>
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <div style={{ 
+                      fontWeight: 600, 
+                      fontSize: '16px',
+                      marginBottom: 4,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      Open SSH
+                      <Tooltip 
+                        placement="top" 
+                        title="Restrict open SSH access by limiting inbound traffic to trusted IP addresses only."
+                      >
+                        <InfoCircleOutlined style={{ marginLeft: 6, color: "#ff4d4f" }} />
+                      </Tooltip>
+                    </div>
+                    <div style={{ 
+                      color: sshCount > 0 ? "#ff4d4f" : "#52c41a", 
+                      fontWeight: 500,
+                      fontSize: 14 
+                    }}>
+                      {sshCount > 0 ? "Needs attention" : "Secure"}
+                    </div>
+                  </motion.div>
+                </div>
+              </Card>
+            </motion.div>
+          </Col>
 
-        <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center" }}>
-            <Flex vertical align="center" gap="small">
-              <PortableWifiOffOutlined style={{ fontSize: 28, color: "#722ed1" }} />
-              <Progress type="circle" percent={IpPercent} strokeColor={IpPercent < 75 ? "#52c41a" : IpPercent < 50 ? "#fa8c16" : "#ff4d4f"} />
-              <span style={{ fontWeight: "bold" }}>All Traffic  &nbsp;
-              <Tooltip placement="rightBottom" title="Restrict “All Traffic” rules in security groups to only trusted sources and required ports.">
-    <InfoCircleOutlined
-   
-    />
-  </Tooltip>
-              </span>
-              <span style={{ color: "#888" }}>{IpEnabledCount}/{total} Open Port</span>
-            </Flex>
-          </Card>
-        </Col>
-       
+          {/* Open RDP Card */}
+          <Col xs={24} sm={12} md={6}>
+            <motion.div
+              variants={cardVariants}
+              whileHover="hover"
+              style={{ height: '100%' }}
+            >
+              <Card 
+                hoverable={false}
+                style={{ 
+                  height: '100%',
+                  borderRadius: 12,
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                }}
+                bodyStyle={{ 
+                  padding: '24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%',
+                  justifyContent: 'space-between'
+                }}
+              >
+                <div style={{ textAlign: 'center' }}>
+                  <motion.div
+                    initial={{ scale: 0, rotate: -90 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ 
+                      delay: 0.3,
+                      type: "spring",
+                      stiffness: 200
+                    }}
+                    style={{ marginBottom: 8 }}
+                  >
+                    <DesktopOutlined style={{ fontSize: 32, color: "#722ed1" }} />
+                  </motion.div>
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.4, type: "spring" }}
+                  >
+                    <motion.div
+                      style={{
+                        fontSize: '48px',
+                        fontWeight: 'bold',
+                        margin: '8px 0',
+                        color: RDPCount > 0 ? "#ff4d4f" : "#52c41a",
+                        textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                      }}
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ 
+                        duration: 2,
+                        repeat: Infinity,
+                        repeatType: "reverse"
+                      }}
+                    >
+                      {RDPCount}
+                    </motion.div>
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <div style={{ 
+                      fontWeight: 600, 
+                      fontSize: '16px',
+                      marginBottom: 4,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      Open RDP
+                      <Tooltip 
+                        placement="top" 
+                        title="Restrict RDP (port 3389) access to Windows instances by allowing only trusted IP addresses"
+                      >
+                        <InfoCircleOutlined style={{ marginLeft: 6, color: "#8c8c8c" }} />
+                      </Tooltip>
+                    </div>
+                    <div style={{ 
+                      color: RDPCount > 0 ? "#ff4d4f" : "#52c41a", 
+                      fontWeight: 500,
+                      fontSize: 14 
+                    }}>
+                      {RDPCount > 0 ? "Needs attention" : "Secure"}
+                    </div>
+                  </motion.div>
+                </div>
+              </Card>
+            </motion.div>
+          </Col>
 
-        {/* <Col xs={24} sm={12} md={6}>
-          <Card hoverable style={{ textAlign: "center" }}>
-            <Flex vertical align="center" gap="small">
-              <LockOutlined style={{ fontSize: 28, color: "#722ed1" }} />
-              <Progress type="circle" percent={passwordPercent} strokeColor={passwordPercent > 50 ? "#52c41a" : "#ff4d4f"} />
-              <span style={{ fontWeight: "bold" }}>Password Enabled</span>
-              <span style={{ color: "#888" }}>{passwordEnabledCount}/{total} Users</span>
-            </Flex>
-          </Card>
-        </Col> */}
-      </Row>
+          {/* All Traffic Open Card */}
+          <Col xs={24} sm={12} md={6}>
+            <motion.div
+              variants={cardVariants}
+              whileHover="hover"
+              style={{ height: '100%' }}
+            >
+              <Card 
+                hoverable={false}
+                style={{ 
+                  height: '100%',
+                  borderRadius: 12,
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                }}
+                bodyStyle={{ 
+                  padding: '24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%',
+                  justifyContent: 'space-between'
+                }}
+              >
+                <div style={{ textAlign: 'center' }}>
+                  <motion.div
+                    initial={{ scale: 0, rotate: -90 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ 
+                      delay: 0.4,
+                      type: "spring",
+                      stiffness: 200
+                    }}
+                    style={{ marginBottom: 16 }}
+                  >
+                    <PortableWifiOffOutlined style={{ fontSize: 32, color: "#fa8c16" }} />
+                  </motion.div>
+                  <AnimatedProgress 
+                    percent={IpPercent} 
+                    strokeColor={IpPercent > 75 ? "#ff4d4f" : IpPercent > 50 ? "#fa8c16" : "#52c41a"}
+                    delay={0.5}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                    style={{ marginTop: 16 }}
+                  >
+                    <div style={{ 
+                      fontWeight: 600, 
+                      fontSize: '16px',
+                      marginBottom: 4,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      All Traffic Open
+                      <Tooltip 
+                        placement="top" 
+                        title="Restrict 'All Traffic' rules in security groups to only trusted sources and required ports."
+                      >
+                        <InfoCircleOutlined style={{ marginLeft: 6, color: "#8c8c8c" }} />
+                      </Tooltip>
+                    </div>
+                    <div style={{ color: "#8c8c8c", fontSize: 14 }}>
+                      {IpEnabledCount} of {total} ports
+                    </div>
+                  </motion.div>
+                </div>
+              </Card>
+            </motion.div>
+          </Col>
+        </Row>
+      </motion.div>
 
       <br />
 

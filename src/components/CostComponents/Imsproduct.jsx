@@ -69,7 +69,7 @@ const Imsproduct = () => {
         </Col>
 
         {/* Security Card */}
-        <Link to='http://192.168.1.18:5173/Security'>
+        {/* <Link to='http://192.168.1.18:5173/Security'> */}
 
           <Col>
             <motion.div
@@ -110,9 +110,9 @@ const Imsproduct = () => {
               </Card>
             </motion.div>
           </Col>
-        </Link>
+        {/* </Link> */}
 
-        <Link to='http://192.168.1.18:5173/Operational'>
+        {/* <Link to='http://192.168.1.18:5173/Operational'> */}
 
           <Col>
             <motion.div
@@ -147,12 +147,12 @@ const Imsproduct = () => {
                   </div>
                   <Title level={4} style={{ margin: '20px 0' }}>Operational Excellence</Title>
                   <Text>
-                    Our company strives for Operational Excellence by continuously improving processes, reducing waste, and delivering                  </Text>
+                    Our company strives for Operational Excellence by continuously improving processes</Text>
                 </div>
               </Card>
             </motion.div>
           </Col>
-        </Link>
+        {/* </Link> */}
       </Row>
     </div>
   );
