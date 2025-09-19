@@ -1,4 +1,5 @@
 import { Col, Row, Card, Space, Typography, Statistic, Tooltip } from 'antd'
+import CpuAvg from '../../components/cpuavg';
 import {
   BarChartOutlined,
   CheckCircleOutlined,
@@ -517,7 +518,24 @@ function Dashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.2 }}
             >
-              <ResourceBarChart data={resourceCounts} />
+              <Row gutter={[16, 16]}>
+                <Col span={24} md={12}>
+                  <Card 
+                    title="Resource Distribution" 
+                    style={{ borderRadius: '12px', height: '100%' }}
+                  >
+                    <ResourceBarChart data={resourceCounts} />
+                  </Card>
+                </Col>
+                <Col span={24} md={12}>
+                  <Card 
+                    title="CPU Usage (Last 7 Days)" 
+                    style={{ borderRadius: '12px', height: '100%' }}
+                  >
+                    <CpuAvg />
+                  </Card>
+                </Col>
+              </Row>
             </motion.div>
 
 
