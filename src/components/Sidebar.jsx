@@ -21,7 +21,7 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
 
   const toggleSidebar = () => setIsExpanded((prev) => !prev);
   const isSecurity = location.pathname.toLowerCase().startsWith('/security');
-  const layout = isSecurity ? "1" : "3";
+  const layout = isSecurity ? "1" : "2";
 
   const navItems = [
     { icon: <MdDashboard size={30}/>, label: "Dashboard", path: "/Security" },

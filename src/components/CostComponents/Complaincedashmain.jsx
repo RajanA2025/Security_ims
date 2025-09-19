@@ -10,6 +10,8 @@ export const Complaincedashmain = () => {
         total_cost: 25000,
         tagged_cost: 18000,
         untagged_cost: 5000,
+        resources: 100,
+        tagged_resources: 80,
         non_taggable_cost: 2000,
         service_costs: {
             EC2: 8000,
@@ -26,34 +28,36 @@ export const Complaincedashmain = () => {
 
     const total = compliance.total_cost;
 
-    const cardStyle = (border) => ({
-        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-        minHeight: 250, // unified height
-        display: "flex",
-        flexDirection: "column",
-        // justifyContent: "center",
-        alignItems: "center",
-        borderRadius: 12,
-        borderTop: border,
-        padding: 20,
-        width: "100%",
+    const cardStyles = (border) => ({
+        body: {
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            minHeight: 250, // unified height
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            borderRadius: 12,
+            borderTop: border,
+            padding: 20,
+            width: "100%",
+        }
     });
 
     const renderGradientProgress = (label, value, color, icon = null) => {
-        const percent = Math.round((value / total) * 100);
+        const safeValue = value || 0; // Add null check
+        const percent = Math.round((safeValue / total) * 100);
         return (
             <div style={{ marginTop: 0, width: "100%" }}>
                 <Text strong>
                     {icon && <span style={{ marginRight: 6 }}>{icon}</span>}
                     {label}
                 </Text>
-                <Tooltip title={`$${value.toLocaleString()} (${percent}%)`}>
+                <Tooltip title={`$${safeValue.toLocaleString()} (${percent}%)`}>
                     <Progress
                         percent={percent}
                         strokeColor={{ "0%": color, "100%": `${color}AA` }}
                         strokeWidth={14}
                         showInfo={true}
-                        format={(percent) => `${percent}%`}
+                        format={() => `${percent}%`}
                         style={{ marginTop: 5 }}
                     />
                 </Tooltip>
@@ -67,7 +71,11 @@ export const Complaincedashmain = () => {
         const enabledPercent = Math.round((enabled / total) * 100);
 
         return (
-            <Card bodyStyle={cardStyle("4px solid #eb2f96")} hoverable style={{ flex: 1 }}>
+            <Card 
+                styles={cardStyles("4px solid #eb2f96")} 
+                hoverable 
+                style={{ flex: 1 }}
+            >
                 <Text strong style={{ marginBottom: 15, marginTop: 0 }}>Auto Start/Stop</Text>
                 <Tooltip title={`Enabled: ${enabled} | Disabled: ${disabled}`}>
                     <Progress
@@ -75,7 +83,7 @@ export const Complaincedashmain = () => {
                         percent={enabledPercent}
                         strokeColor="#52c41a"
                         strokeWidth={12}
-                        width={100}
+                        size={100}
                         format={() => `${enabledPercent}%`}
                     />
                 </Tooltip>
@@ -88,12 +96,16 @@ export const Complaincedashmain = () => {
     };
 
     const CostBreakdownCard = () => (
-        <Card bodyStyle={cardStyle("4px solid #722ed1")} hoverable style={{ flex: 1 }}>
-            <Text strong style={{ marginBottom: 15, marginTop: 0 }}>Cost Breakdown</Text>
-
-            {renderGradientProgress("Tagged Cost", compliance.tagged_cost, "#722ed1", <TagOutlined />)}
-            {renderGradientProgress("Untagged Cost", compliance.untagged_cost, "#fa8c16", <UnorderedListOutlined />)}
-            {renderGradientProgress("Non-Taggable Cost", compliance.non_taggable_cost, "#52c41a", <DollarCircleOutlined />)}
+        <Card 
+            styles={cardStyles("4px solid #722ed1")} 
+            hoverable 
+            style={{ flex: 1 }}
+        >
+            <Text strong style={{ marginBottom: 15, marginTop: 0 }}>Tag Compliance</Text>
+            {renderGradientProgress("Total Resources", compliance.resource, "#722ed1", <TagOutlined />)}
+            {renderGradientProgress("Fully Tagged", compliance.tagged_cost, "#722ed1", <TagOutlined />)}
+            {renderGradientProgress("Partially-Tagged", compliance.untagged_cost, "#fa8c16", <UnorderedListOutlined />)}
+            {renderGradientProgress("Non-Tagged", compliance.non_taggable_cost, "#52c41a", <DollarCircleOutlined />)}
         </Card>
     );
 
@@ -103,7 +115,13 @@ export const Complaincedashmain = () => {
 
         const pieOption = {
             tooltip: { trigger: "item", formatter: "{b}: ${c} ({d}%)" },
-            legend: { orient: "vertical", left: "left", textStyle: { fontSize: 12 } },
+            legend: { 
+                orient: "vertical", 
+                left: "left", 
+                textStyle: { fontSize: 12 },
+                type: 'scroll',
+                height: 200
+            },
             series: [
                 {
                     name: "Service Costs",
@@ -113,15 +131,27 @@ export const Complaincedashmain = () => {
                     label: { show: true, position: "inside", formatter: "{d}%" },
                     emphasis: { label: { show: true, fontSize: "14", fontWeight: "bold" } },
                     labelLine: { show: false },
-                    data: serviceData.map((item, index) => ({ ...item, itemStyle: { color: colors[index % colors.length] } })),
+                    data: serviceData.map((item, index) => ({
+                        ...item,
+                        value: item.value || 0, // Ensure value is defined
+                        itemStyle: { color: colors[index % colors.length] }
+                    })),
                 },
             ],
         };
 
         return (
-            <Card bodyStyle={cardStyle("4px solid #1890ff")} hoverable style={{ flex: 1 }}>
+            <Card 
+                styles={cardStyles("4px solid #1890ff")} 
+                hoverable 
+                style={{ flex: 1 }}
+            >
                 <Text strong style={{ marginBottom: 15, marginTop: 0 }}>Service Tagged Costs</Text>
-                <ReactECharts option={pieOption} style={{ height: 200, width: "100%" }} />
+                <ReactECharts 
+                    option={pieOption} 
+                    style={{ height: 200, width: "100%" }} 
+                    opts={{ renderer: 'svg' }}
+                />
             </Card>
         );
     };
