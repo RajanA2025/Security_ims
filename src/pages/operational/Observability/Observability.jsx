@@ -28,52 +28,97 @@ const header = { backgroundColor: "#4f46e5", color: "white" };
 
 const Observability = () => {
   const { Option } = Select;
-
   const [tabKey, setTabKey] = useState("1");
   const [loading, setLoading] = useState(false);
   const [securityData, setSecurityData] = useState([]);
   const [eipData, seteipData] = useState([]);
   const [volumeData, setVolumeData] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const [isModalOpen1, setIsModalOpen1] = useState(false);
-  const [selectedData, setSelectedData] = useState(null);
-  const [selectedData1, setSelectedData1] = useState(null);
   const [s3Data, setS3Data] = useState([]);
   const [ec2Data, setEC2Data] = useState([]);
-
   const [searchText, setSearchText] = useState("");
-  //test for search name id
   const [searchName, setSearchName] = useState("");
   const [searchId, setSearchId] = useState("");
 
+  // Separate modal states for each tab
+  const [isModalOpenKeyPair, setIsModalOpenKeyPair] = useState(false);
+  const [selectedKeyPair, setSelectedKeyPair] = useState(null);
+  const [isModalOpenEIP, setIsModalOpenEIP] = useState(false);
+  const [selectedEIP, setSelectedEIP] = useState(null);
+  const [isModalOpenVolume, setIsModalOpenVolume] = useState(false);
+  const [selectedVolume, setSelectedVolume] = useState(null);
+  const [isModalOpenS3, setIsModalOpenS3] = useState(false);
+  const [selectedS3, setSelectedS3] = useState(null);
+  const [isModalOpenEC2, setIsModalOpenEC2] = useState(false);
+  const [selectedEC2, setSelectedEC2] = useState(null);
 
+  // API base URL
+  const API_BASE_URL = "http://13.212.15.14:8016";
+  
   // Fetch data
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        if (tabKey === "1") {
-          const res = await axios.get("http://13.212.15.14:8016/keypairs2");
-          setSecurityData(res.data);
-        } else if (tabKey === "2") {
-          const res = await axios.get("http://13.212.15.14:8016/orphaned-eip");
-          seteipData(res.data);
+        let endpoint = '';
+        let response = null;
+        
+        switch(tabKey) {
+          case "1":
+            endpoint = `${API_BASE_URL}/keypairs2`;
+            console.log('Fetching keypairs from:', endpoint);
+            response = await axios.get(endpoint);
+            setSecurityData(response.data);
+            break;
+          case "2":
+            endpoint = `${API_BASE_URL}/orphaned-eip`;
+            console.log('Fetching EIP data from:', endpoint);
+            response = await axios.get(endpoint);
+            seteipData(response.data);
+            break;
+          case "3":
+            endpoint = `${API_BASE_URL}/orphaned-volumes`;
+            console.log('Fetching volumes from:', endpoint);
+            response = await axios.get(endpoint);
+            setVolumeData(response.data);
+            break;
+          case "4":
+            endpoint = `${API_BASE_URL}/s3`;
+            console.log('Fetching S3 data from:', endpoint);
+            response = await axios.get(endpoint);
+            setS3Data(response.data);
+            break;
+          case "5":
+            endpoint = `${API_BASE_URL}/ec2`;
+            console.log('Fetching EC2 data from:', endpoint);
+            response = await axios.get(endpoint);
+            setEC2Data(response.data);
+            break;
+          default:
+            console.warn('Unknown tab key:', tabKey);
         }
-        else if (tabKey === "3") {
-          const res = await axios.get("http://13.212.15.14:8016/orphaned-volumes");
-          setVolumeData(res.data);
-        }
-        if (tabKey === "4") {
-          const res = await axios.get("http://13.212.15.14:8016/s3");
-          setS3Data(res.data);
-        } else if (tabKey === "5") {
-          const res = await axios.get("http://13.212.15.14:8016/ec2");
-          setEC2Data(res.data);
-        }
-
+        
+        console.log(`Successfully fetched data for tab ${tabKey} from ${endpoint}`);
       } catch (err) {
-        console.error("Error fetching data:", err);
+        console.error("Error fetching data:", {
+          message: err.message,
+          response: err.response ? {
+            status: err.response.status,
+            statusText: err.response.statusText,
+            data: err.response.data
+          } : 'No response',
+          config: {
+            url: err.config?.url,
+            method: err.config?.method,
+            headers: err.config?.headers
+          }
+        });
+        
+        // Set empty data to prevent UI from breaking
+        if (tabKey === "1") setSecurityData([]);
+        else if (tabKey === "2") seteipData([]);
+        else if (tabKey === "3") setVolumeData([]);
+        else if (tabKey === "4") setS3Data([]);
+        else if (tabKey === "5") setEC2Data([]);
       } finally {
         setLoading(false);
       }
@@ -81,19 +126,37 @@ const Observability = () => {
     fetchData();
   }, [tabKey]);
 
-  const handleSearch = e => setSearchText(e.target.value);
+  // Handler functions for each modal type
+  const handleOpenKeyPair = record => {
+    setSelectedKeyPair(record);
+    setIsModalOpenKeyPair(true);
+  };
 
-  const handleOpenModal = record => {
-    setSelectedData(record);
-    setIsModalOpen(true);
+  const handleOpenEIP = record => {
+    setSelectedEIP(record);
+    setIsModalOpenEIP(true);
   };
-  const handleOpenModal1 = record => {
-    setSelectedData1(record);
-    setIsModalOpen1(true);
+
+  const handleOpenVolume = record => {
+    setSelectedVolume(record);
+    setIsModalOpenVolume(true);
   };
+
+  const handleOpenS3 = record => {
+    setSelectedS3(record);
+    setIsModalOpenS3(true);
+  };
+
+  const handleOpenEC2 = record => {
+    setSelectedEC2(record);
+    setIsModalOpenEC2(true);
+  };
+
+  const handleSearch = e => setSearchText(e.target.value);
 
   const accountIds = [...new Set(securityData.map(item => item.account_id))];
   const statusIds = [...new Set(securityData.map(item => item.status))];
+
   const getUniqueOptions = (data, key) => {
     const unique = [...new Set(data.map(item => item[key]))];
     return unique.map(value => ({ text: String(value), value }));
@@ -153,7 +216,6 @@ const Observability = () => {
       dataIndex: "status",
       key: "status",
       filters: statusIds.map(id => ({ text: id, value: id })),
-      // onFilter: (value, record) => record.account_id === value
       onFilter: (value, record) => record.status === value,
       render: value => (
         <Tag color={value === "Disabled" ? "red" : "green"}>{value}</Tag>
@@ -166,7 +228,7 @@ const Observability = () => {
         <Tooltip title="View Details">
           <EyeOutlined
             style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
-            onClick={() => handleOpenModal(record)}
+            onClick={() => handleOpenKeyPair(record)}
           />
         </Tooltip>
       )
@@ -215,7 +277,7 @@ const Observability = () => {
         <Tooltip title="View Details">
           <EyeOutlined
             style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
-            onClick={() => handleOpenModal(record)}
+            onClick={() => handleOpenEIP(record)}
           />
         </Tooltip>
       )
@@ -232,7 +294,7 @@ const Observability = () => {
     {
       title: 'Account Name',
       dataIndex: 'account_name',
-      key: 'account_id',
+      key: 'account_name',
     },
     {
       title: 'Region',
@@ -256,135 +318,13 @@ const Observability = () => {
         <Tooltip title="View Details">
           <EyeOutlined
             style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
-            onClick={() => handleOpenModal(record)}
-          />
-        </Tooltip>
-      )
-    }
-
-  ];
-
-
-
-  // KMS Tab Columns
-  const kmsColumns = [
-    {
-      title: (
-        <span>
-          Account Id{" "}
-          <Tooltip title="The AWS account's ID.">
-            <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
-          </Tooltip>
-        </span>
-      ),
-      dataIndex: "account_id",
-      key: "account_id",
-      filters: getUniqueOptions(eipData, "account_id"),
-      onFilter: (value, record) => record.account_id === value
-    },
-    {
-      title: (
-        <span>
-          Account Name{" "}
-          <Tooltip title="The AWS account's name.">
-            <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
-          </Tooltip>
-        </span>
-      ),
-      dataIndex: "account_name",
-      key: "account_name"
-    },
-    {
-      title: (
-        <span>
-          Region{" "}
-          <Tooltip title="AWS region where the service is running.">
-            <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
-          </Tooltip>
-        </span>
-      ),
-      dataIndex: "last_accessed_service",
-      key: "last_accessed_service",
-
-    },
-    {
-      title: (
-        <span>
-           Public IP{" "}
-          <Tooltip title="Security Key used in AWS.">
-            <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
-          </Tooltip>
-        </span>
-      ),
-      dataIndex: "key_name",
-      key: "key_name",
-      filters: getUniqueOptions(securityData, "keyName"),
-      onFilter: (value, record) => record.key_name === value
-    },
-    {
-      title: (
-        <span>
-          allocation ID{" "}
-          <Tooltip title="The AWS account's name.">
-            <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
-          </Tooltip>
-        </span>
-      ),
-      dataIndex: "key_rotation_enabled",
-      key: "key_rotation_enabled",
-      filters: [
-        { text: "True", value: true },
-        { text: "False", value: false }
-      ],
-      onFilter: (value, record) => record.key_rotation_enabled === value,
-      render: value => (
-        <Tag color={value ? "green" : "red"}>{value ? "True" : "False"}</Tag>
-      )
-    },
-    {
-      title: (
-        <span>
-          Deletion Protection{" "}
-          <Tooltip title="The AWS account's name.">
-            <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
-          </Tooltip>
-        </span>
-      ),
-      dataIndex: "deletion_protection",
-      key: "deletion_protection",
-      filters: [
-        { text: "True", value: true },
-        { text: "False", value: false }
-      ],
-      onFilter: (value, record) => record.deletion_protection === value,
-      render: value => (
-        <Tag color={value ? "green" : "red"}>{value ? "True" : "False"}</Tag>
-      )
-    },
-    {
-      title: "LastUsed Date",
-      dataIndex: "last_used_date",
-      key: "last_used_date",
-
-    },
-    // {
-    //   title: "Creation Date",
-    //   dataIndex: "creation_date",
-    //   key: "creation_date"
-    // },
-    {
-      title: "More Details",
-      key: "action",
-      render: (_, record) => (
-        <Tooltip title="View Details">
-          <EyeOutlined
-            style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
-            onClick={() => handleOpenModal1(record)}
+            onClick={() => handleOpenVolume(record)}
           />
         </Tooltip>
       )
     }
   ];
+
   const s3Columns = [
     {
       title: "Account ID", dataIndex: "account_id", key: "account_id"
@@ -397,7 +337,6 @@ const Observability = () => {
       key: "versioning_status",
       render: value => {
         if (!value) {
-          // Bucket never had versioning enabled
           return <Tag color="default">Unversioned</Tag>;
         }
         if (value.toLowerCase() === "enabled") {
@@ -406,7 +345,7 @@ const Observability = () => {
         if (value.toLowerCase() === "suspended") {
           return <Tag color="orange">Suspended</Tag>;
         }
-        return <Tag color="default">{value}</Tag>; // fallback for unexpected values
+        return <Tag color="default">{value}</Tag>;
       }
     },
     {
@@ -419,7 +358,6 @@ const Observability = () => {
         </Tag>
       )
     },
-
     { title: "Region", dataIndex: "region", key: "region" },
     {
       title: "replication_status",
@@ -437,7 +375,6 @@ const Observability = () => {
       key: "mfa_delete",
       render: value => (value ? "✅" : "❌")
     },
-
     { title: "object_count", dataIndex: "object_count", key: "object_count" },
     { title: "bucket_size_gb", dataIndex: "bucket_size_gb", key: "bucket_size_gb" },
     {
@@ -447,17 +384,37 @@ const Observability = () => {
         <Tooltip title="View Details">
           <EyeOutlined
             style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
-            onClick={() => handleOpenModal(record)}
+            onClick={() => handleOpenS3(record)}
           />
         </Tooltip>
       )
     }
   ];
+
   const ec2Columns = [
     { title: "Account ID", dataIndex: "account_id", key: "account_id" },
     { title: "Account Name", dataIndex: "account_name", key: "account_name" },
     { title: "Instance ID", dataIndex: "instance_id", key: "instance_id" },
+    { title: "Instance Name", dataIndex: "instance_name", key: "instance_name" },
     { title: "Type", dataIndex: "instance_type", key: "instance_type" },
+    { title: "region", dataIndex: "region", key: "region" },
+    { title: "cpu_avg_7d", dataIndex: "cpu_avg_7d", key: "cpu_avg_7d" },
+    {
+      title: "status_checks_ok",
+      dataIndex: "status_checks_ok",
+      key: "status_checks_ok",
+      render: value => (value ? "✅" : "❌")
+    },
+    {
+      title: "underutilized",
+      dataIndex: "underutilized",
+      key: "underutilized",
+      render: value => (
+        <Tag color={value ? "green" : "red"}>
+          {value ? "true" : "false"}
+        </Tag>
+      )
+    },
     {
       title: "State",
       dataIndex: "state",
@@ -466,7 +423,6 @@ const Observability = () => {
         <Tag color={value === "running" ? "green" : "red"}>{value}</Tag>
       )
     },
-    
     {
       title: "More Details",
       key: "action",
@@ -474,21 +430,17 @@ const Observability = () => {
         <Tooltip title="View Details">
           <EyeOutlined
             style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
-            onClick={() => handleOpenModal(record)}
+            onClick={() => handleOpenEC2(record)}
           />
         </Tooltip>
       )
     }
   ];
 
-
-
   return (
     <>
-
-
-      <Row justify="space-between" align="middle" style={{ marginBottom: 4 }}>
-        <Col>
+      <Row gutter={[16, 16]} style={{ justifyContent: "flex-end" }}>
+        <Col md={20}>
           <Typography.Title
             level={4}
             style={{
@@ -522,8 +474,17 @@ const Observability = () => {
             />
           </Space>
         </Col>
+        <Col md={4}>
+          <Input
+            placeholder="Search by Account ID"
+            prefix={<SearchOutlined />}
+            value={searchId}
+            onChange={e => setSearchId(e.target.value)}
+            allowClear
+          />
+        </Col>
       </Row>
-
+      
       <Tabs
         defaultActiveKey="1"
         onChange={key => setTabKey(key)}
@@ -539,7 +500,6 @@ const Observability = () => {
               (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
               (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
             )}
-
             loading={loading}
             rowKey={(record) => record.allocation_id || record.volume_id || record.key_id || 'key'}
             pagination={{ pageSize: 8 }}
@@ -548,11 +508,10 @@ const Observability = () => {
         <Tabs.TabPane tab="Unassociated Elastic IP" key="2">
           <Table
             columns={eipColumns}
-            dataSource={securityData.filter(item =>
-  (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
-  (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
-)}
-
+            dataSource={eipData.filter(item =>
+              (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
+              (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
+            )}
             loading={loading}
             rowKey={(record) => record.allocation_id || 'eip-key'}
             pagination={{ pageSize: 8 }}
@@ -562,8 +521,8 @@ const Observability = () => {
           <Table
             columns={volumeColumns}
             dataSource={volumeData.filter(item =>
-              (item.aws_account?.toLowerCase() || '').includes(searchText.toLowerCase()) ||
-              (item.volume_id?.toLowerCase() || '').includes(searchText.toLowerCase())
+              (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
+              (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
             )}
             loading={loading}
             rowKey={(record) => record.volume_id || 'volume-key'}
@@ -571,82 +530,246 @@ const Observability = () => {
           />
         </Tabs.TabPane>
         <Tabs.TabPane tab="S3 Details" key="4">
-  <Table
-    columns={s3Columns}
-    dataSource={s3Data.filter(item =>
-      (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
-      (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
-    )}
-    loading={loading}
-    rowKey={record => record.bucket_name || 's3-key'}
-    pagination={{ pageSize: 8 }}
-  />
-</Tabs.TabPane>
-
-
+          <Table
+            columns={s3Columns}
+            dataSource={s3Data.filter(item =>
+              (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
+              (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
+            )}
+            loading={loading}
+            rowKey={record => record.bucket_name || 's3-key'}
+            pagination={{ pageSize: 8 }}
+          />
+        </Tabs.TabPane>
         <Tabs.TabPane tab="EC2 Details" key="5">
-  <Table
-    columns={ec2Columns}
-    dataSource={ec2Data.filter(item =>
-      (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
-      (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
-    )}
-    loading={loading}
-    rowKey={record => record.instance_id || 'ec2-key'}
-    pagination={{ pageSize: 8 }}
-  />
-</Tabs.TabPane>
-
-
+          <Table
+            columns={ec2Columns}
+            dataSource={ec2Data.filter(item =>
+              (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
+              (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
+            )}
+            loading={loading}
+            rowKey={record => record.instance_id || 'ec2-key'}
+            pagination={{ pageSize: 8 }}
+          />
+        </Tabs.TabPane>
       </Tabs>
 
+      {/* Key Pair Modal */}
       <Modal
-        title={`${selectedData?.account_name || selectedData?.account_id || ""} - Account Details`}
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
+        title={`${selectedKeyPair?.account_name || selectedKeyPair?.account_id || ""} - Key Pair Details`}
+        open={isModalOpenKeyPair}
+        onCancel={() => setIsModalOpenKeyPair(false)}
         footer={null}
         width={900}
       >
-        {selectedData && (
-          <Card size="small" title="Information" style={{ marginBottom: 16 }} headStyle={header}>
+        {selectedKeyPair && (
+          <Card
+            size="small"
+            title="Information"
+            style={{ marginBottom: 16 }}
+            headStyle={header}
+          >
             <Descriptions bordered column={2} size="small">
-              <Descriptions.Item label="Account ID">{selectedData.account_id}</Descriptions.Item>
-              <Descriptions.Item label="Account Name">{selectedData.account_name}</Descriptions.Item>
-              <Descriptions.Item label="Status">{selectedData.status}</Descriptions.Item>
-              <Descriptions.Item label="Created On">{selectedData.create_time}</Descriptions.Item>
-              <Descriptions.Item label="Instance ID">{selectedData.instance_id || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Instance Name">{selectedData.instance_name || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Status">{selectedData.status}</Descriptions.Item>
-              <Descriptions.Item label="Key Name">{selectedData.key_name || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Key Type">{selectedData.key_type || "-"}</Descriptions.Item>
-              <Descriptions.Item label="FingerPrint Key">{selectedData.key_fingerprint || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Account ID">{selectedKeyPair.account_id}</Descriptions.Item>
+              <Descriptions.Item label="Account Name">{selectedKeyPair.account_name}</Descriptions.Item>
+              <Descriptions.Item label="Region">{selectedKeyPair.region}</Descriptions.Item>
+              <Descriptions.Item label="Key Name">{selectedKeyPair.key_name}</Descriptions.Item>
+              <Descriptions.Item label="Key Pair ID">{selectedKeyPair.key_pair_id}</Descriptions.Item>
+              <Descriptions.Item label="Key Type">{selectedKeyPair.key_type}</Descriptions.Item>
+              <Descriptions.Item label="Key Fingerprint">{selectedKeyPair.key_fingerprint}</Descriptions.Item>
+              <Descriptions.Item label="Created On">{selectedKeyPair.create_time}</Descriptions.Item>
+              <Descriptions.Item label="Status">{selectedKeyPair.status}</Descriptions.Item>
+              <Descriptions.Item label="Instance Name">{selectedKeyPair.instance_name || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Instance ID">{selectedKeyPair.instance_id || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Tags">
+                {Object.keys(selectedKeyPair.tags || {}).length > 0
+                  ? JSON.stringify(selectedKeyPair.tags)
+                  : "-"}
+              </Descriptions.Item>
             </Descriptions>
           </Card>
         )}
       </Modal>
 
+      {/* EIP Modal */}
       <Modal
-        title={`Account Details`}
-        open={isModalOpen1}
-        onCancel={() => setIsModalOpen1(false)}
+        title={`${selectedEIP?.account_name || selectedEIP?.account_id || ""} - Elastic IP Details`}
+        open={isModalOpenEIP}
+        onCancel={() => setIsModalOpenEIP(false)}
         footer={null}
         width={900}
       >
-        {selectedData1 && (
+        {selectedEIP && (
           <Card size="small" title="Information" style={{ marginBottom: 16 }} headStyle={header}>
             <Descriptions bordered column={2} size="small">
-              <Descriptions.Item label="Account ID">{selectedData1.account_id}</Descriptions.Item>
-              <Descriptions.Item label="Key Id">{selectedData1.key_id}</Descriptions.Item>
-              <Descriptions.Item label="key ARN">{selectedData1.key_arn}</Descriptions.Item>
-              <Descriptions.Item label="Origin">{selectedData1.origin}</Descriptions.Item>
-              <Descriptions.Item label="Key Type">{selectedData1.key_type}</Descriptions.Item>
-              <Descriptions.Item label="Usage Key">{selectedData1.key_usage}</Descriptions.Item>
-              {/* <Descriptions.Item label="Status">{selectedData1.creation_date}</Descriptions.Item> */}
-              <Descriptions.Item label="Rotation Age">{selectedData1.rotation_age_days}</Descriptions.Item>
-              <Descriptions.Item label="created On">{selectedData1.creation_date}</Descriptions.Item>
-              <Descriptions.Item label="Multi Region">{selectedData1.multi_region}</Descriptions.Item>
-              <Descriptions.Item label="Acoount Access">{selectedData1.cross_account_access}</Descriptions.Item>
-              <Descriptions.Item label="Description">{selectedData1.description}</Descriptions.Item>
+              <Descriptions.Item label="Account ID">{selectedEIP.account_id}</Descriptions.Item>
+              <Descriptions.Item label="Account Name">{selectedEIP.account_name}</Descriptions.Item>
+              <Descriptions.Item label="Region">{selectedEIP.region}</Descriptions.Item>
+              <Descriptions.Item label="Public IP">{selectedEIP.public_ip}</Descriptions.Item>
+              <Descriptions.Item label="Allocation ID">{selectedEIP.allocation_id}</Descriptions.Item>
+              <Descriptions.Item label="ARN">{selectedEIP.arn}</Descriptions.Item>
+              <Descriptions.Item label="Month">{selectedEIP.months}</Descriptions.Item>
+              <Descriptions.Item label="Cost Savings">{selectedEIP.cost_savings || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Status">{selectedEIP.status}</Descriptions.Item>
+            </Descriptions>
+          </Card>
+        )}
+      </Modal>
+
+      {/* Volume Modal */}
+      <Modal
+        title={`${selectedVolume?.account_name || selectedVolume?.account_id || ""} - Orphaned Volume Details`}
+        open={isModalOpenVolume}
+        onCancel={() => setIsModalOpenVolume(false)}
+        footer={null}
+        width={900}
+      >
+        {selectedVolume && (
+          <Card size="small" title="Information" style={{ marginBottom: 16 }} headStyle={header}>
+            <Descriptions bordered column={2} size="small">
+              <Descriptions.Item label="Account ID">{selectedVolume.account_id}</Descriptions.Item>
+              <Descriptions.Item label="Account Name">{selectedVolume.account_name}</Descriptions.Item>
+              <Descriptions.Item label="Region">{selectedVolume.region}</Descriptions.Item>
+              <Descriptions.Item label="Availability Zone">{selectedVolume.availability_zone}</Descriptions.Item>
+              <Descriptions.Item label="Volume ID">{selectedVolume.volume_id}</Descriptions.Item>
+              <Descriptions.Item label="Volume Name">{selectedVolume.volume_name || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Size (GB)">{selectedVolume.size}</Descriptions.Item>
+              <Descriptions.Item label="State">{selectedVolume.state}</Descriptions.Item>
+              <Descriptions.Item label="Throughput">{selectedVolume.throughput || "-"}</Descriptions.Item>
+              <Descriptions.Item label="IOPS">{selectedVolume.iops || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Snapshot ID">{selectedVolume.snapshot_id || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Create Time">{selectedVolume.create_time}</Descriptions.Item>
+              <Descriptions.Item label="Created At">{selectedVolume.created_at}</Descriptions.Item>
+              <Descriptions.Item label="Tags">
+                {Array.isArray(selectedVolume.tags) && selectedVolume.tags.length > 0
+                  ? selectedVolume.tags.map(tag => `${tag.Key}: ${tag.Value}`).join(", ")
+                  : "-"}
+              </Descriptions.Item>
+            </Descriptions>
+          </Card>
+        )}
+      </Modal>
+
+      {/* S3 Modal */}
+      <Modal
+        title={`${selectedS3?.account_name || selectedS3?.account_id || ""} - S3 Bucket Details`}
+        open={isModalOpenS3}
+        onCancel={() => setIsModalOpenS3(false)}
+        footer={null}
+        width={1000}
+      >
+        {selectedS3 && (
+          <>
+            {/* Main Bucket Information */}
+            <Card size="small" title="Bucket Information" style={{ marginBottom: 16 }} headStyle={header}>
+              <Descriptions bordered column={2} size="small">
+                <Descriptions.Item label="Account ID">{selectedS3.account_id}</Descriptions.Item>
+                <Descriptions.Item label="Account Name">{selectedS3.account_name}</Descriptions.Item>
+                <Descriptions.Item label="Region">{selectedS3.region}</Descriptions.Item>
+                <Descriptions.Item label="Bucket Name">{selectedS3.bucket_name}</Descriptions.Item>
+                <Descriptions.Item label="Bucket ARN">{selectedS3.bucket_arn}</Descriptions.Item>
+                <Descriptions.Item label="Owner">{selectedS3.owner}</Descriptions.Item>
+                <Descriptions.Item label="Created On">{selectedS3.creation_date}</Descriptions.Item>
+                <Descriptions.Item label="Last Modified">{selectedS3.last_modified_date}</Descriptions.Item>
+                <Descriptions.Item label="Versioning Status">
+                  {selectedS3.versioning_status ?? "-"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Encryption">{selectedS3.encryption || "-"}</Descriptions.Item>
+                <Descriptions.Item label="KMS Key ID">{selectedS3.kms_key_id || "-"}</Descriptions.Item>
+                <Descriptions.Item label="MFA Delete">{selectedS3.mfa_delete ? "✅" : "❌"}</Descriptions.Item>
+                <Descriptions.Item label="Public Access Block">{selectedS3.public_access_block ? "✅" : "❌"}</Descriptions.Item>
+                <Descriptions.Item label="Replication Status">{selectedS3.replication_status || "-"}</Descriptions.Item>
+                <Descriptions.Item label="Logging Status">{selectedS3.logging_status || "-"}</Descriptions.Item>
+                <Descriptions.Item label="Object Count">{selectedS3.object_count}</Descriptions.Item>
+                <Descriptions.Item label="Bucket Size (GB)">{selectedS3.bucket_size_gb}</Descriptions.Item>
+                <Descriptions.Item label="Tags">
+                  {selectedS3.tags ? JSON.stringify(selectedS3.tags) : "-"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Checked On">{selectedS3.checked_on}</Descriptions.Item>
+              </Descriptions>
+            </Card>
+            
+            {/* Risk Indicators */}
+            <Card size="small" title="Risk Indicators" style={{ marginBottom: 16 }} headStyle={header}>
+              <Descriptions bordered column={2} size="small">
+                <Descriptions.Item label="Public">{selectedS3.risk_indicators?.public ? "⚠️ Yes" : "✅ No"}</Descriptions.Item>
+                <Descriptions.Item label="Unencrypted">{selectedS3.risk_indicators?.unencrypted ? "⚠️ Yes" : "✅ No"}</Descriptions.Item>
+                <Descriptions.Item label="No Versioning">{selectedS3.risk_indicators?.no_versioning ? "⚠️ Yes" : "✅ No"}</Descriptions.Item>
+                <Descriptions.Item label="Replication Disabled">{selectedS3.risk_indicators?.replication_disabled ? "⚠️ Yes" : "✅ No"}</Descriptions.Item>
+              </Descriptions>
+            </Card>
+            
+            {/* CORS Configuration Table */}
+            {Array.isArray(selectedS3.cors_configuration) && selectedS3.cors_configuration.length > 0 && (
+              <Card size="small" title="CORS Configuration" style={{ marginBottom: 16 }} headStyle={header}>
+                <Table
+                  bordered
+                  size="small"
+                  rowKey={(record, idx) => idx}
+                  pagination={false}
+                  columns={[
+                    { title: "Max Age Seconds", dataIndex: "MaxAgeSeconds", key: "MaxAgeSeconds" },
+                    { title: "Allowed Headers", dataIndex: "AllowedHeaders", key: "AllowedHeaders", render: v => v.join(", ") },
+                    { title: "Allowed Methods", dataIndex: "AllowedMethods", key: "AllowedMethods", render: v => v.join(", ") },
+                    { title: "Allowed Origins", dataIndex: "AllowedOrigins", key: "AllowedOrigins", render: v => v.join(", ") },
+                  ]}
+                  dataSource={selectedS3.cors_configuration}
+                />
+              </Card>
+            )}
+            
+            {/* Lifecycle Rules Table */}
+            {Array.isArray(selectedS3.lifecycle_rules) && selectedS3.lifecycle_rules.length > 0 && (
+              <Card size="small" title="Lifecycle Rules" headStyle={header}>
+                <Table
+                  bordered
+                  size="small"
+                  rowKey={(record, idx) => idx}
+                  pagination={false}
+                  columns={[
+                    { title: "Rule ID", dataIndex: "ID", key: "ID" },
+                    { title: "Prefix", dataIndex: ["Filter", "Prefix"], key: "Prefix" },
+                    { title: "Status", dataIndex: "Status", key: "Status" },
+                    { title: "Expiration (Days)", dataIndex: ["Expiration", "Days"], key: "Days" },
+                  ]}
+                  dataSource={selectedS3.lifecycle_rules}
+                />
+              </Card>
+            )}
+          </>
+        )}
+      </Modal>
+
+      {/* EC2 Modal */}
+      <Modal
+        title={`${selectedEC2?.account_name || selectedEC2?.account_id || ""} - EC2 Instance Details`}
+        open={isModalOpenEC2}
+        onCancel={() => setIsModalOpenEC2(false)}
+        footer={null}
+        width={900}
+      >
+        {selectedEC2 && (
+          <Card size="small" title="Information" style={{ marginBottom: 16 }} headStyle={header}>
+            <Descriptions bordered column={2} size="small">
+              <Descriptions.Item label="Account ID">{selectedEC2.account_id}</Descriptions.Item>
+              <Descriptions.Item label="Account Name">{selectedEC2.account_name}</Descriptions.Item>
+              <Descriptions.Item label="Instance ID">{selectedEC2.instance_id}</Descriptions.Item>
+              <Descriptions.Item label="Instance Name">{selectedEC2.instance_name}</Descriptions.Item>
+              <Descriptions.Item label="Instance Type">{selectedEC2.instance_type}</Descriptions.Item>
+              <Descriptions.Item label="Region">{selectedEC2.region}</Descriptions.Item>
+              <Descriptions.Item label="CPU Average (7d)">{selectedEC2.cpu_avg_7d}%</Descriptions.Item>
+              <Descriptions.Item label="Status Checks OK">{selectedEC2.status_checks_ok ? "✅" : "❌"}</Descriptions.Item>
+              <Descriptions.Item label="Underutilized">{selectedEC2.underutilized ? "Yes" : "No"}</Descriptions.Item>
+              <Descriptions.Item label="State">{selectedEC2.state}</Descriptions.Item>
+              <Descriptions.Item label="Launch Time">{selectedEC2.launch_time || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Private IP">{selectedEC2.private_ip || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Public IP">{selectedEC2.public_ip || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Security Groups">{selectedEC2.security_groups || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Key Name">{selectedEC2.key_name || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Tags">
+                {selectedEC2.tags ? JSON.stringify(selectedEC2.tags) : "-"}
+              </Descriptions.Item>
             </Descriptions>
           </Card>
         )}

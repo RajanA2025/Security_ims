@@ -19,6 +19,7 @@ import Ami from './pages/operational/Amis';
 import Observability from './pages/operational/Observability/Observability';
 import Monitoring from './pages/operational/Monitoring/Monitoring';
 import RightSizing from './pages/operational/RightSizing/RightSizing';
+import CloudWatch from './pages/operational/cloudWatch/cloudWatch'
 
 // Cost
 import Dashboard2 from './pages/CostPages/Dashboard';
@@ -29,7 +30,7 @@ import { Complaince } from './pages/CostPages/Complaince';
 
 // Landing
 import LandingHome from './landing/pages/Home';
-import Header from './landing/Components/Header';
+import Header from './landing/Components/Hearder';
 
 function App() {
   const [isExpanded, setIsExpanded] = useState(false);
