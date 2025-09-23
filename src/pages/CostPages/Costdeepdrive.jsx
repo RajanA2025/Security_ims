@@ -1,18 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Row, Space, Select, Checkbox, Button, DatePicker } from "antd";
 import { DownOutlined } from "@ant-design/icons";
-import CollapsibleTable from "../../components/CostComponents/Costdeepdrive";
+import CollapsibleTable from "../../components/CostComponents/CollapsibleTable";
 
 const { RangePicker } = DatePicker;
 
 export const Costdeepdrive = () => {
   const [context, setContext] = useState([]);
   const [dates, setDates] = useState([]);
+  const [accounts, setAccounts] = useState([]);
+  const [apps, setApps] = useState([]);
 
-  // Example data arrays for dropdowns
-  const accounts = ["Account1", "Account2", "Account3"];
-  const environments = ["Production", "Non-Production"];
-  const apps = ["App1", "App2", "App3"];
+  // Fetch unique accounts and apps from API
+  useEffect(() => {
+    fetch("http://13.212.15.14:8002/instances")
+      .then((res) => res.json())
+      .then((res) => {
+        const uniqueAccounts = [...new Set(res.results.map((inst) => inst.account_id))];
+        const uniqueApps = [...new Set(res.results.map((inst) => inst.instance_name))];
+        setAccounts(uniqueAccounts);
+        setApps(uniqueApps);
+      })
+      .catch((err) => console.error(err));
+  }, []);
 
   const handleReset = () => {
     setContext([]);
@@ -22,7 +32,7 @@ export const Costdeepdrive = () => {
   return (
     <div style={{ margin: "16px" }}>
       {/* Filter Panel */}
-      <Row justify="end" style={{ margin: "0 0 1% 0" }}>
+      <Row justify="end" style={{ marginBottom: "1%" }}>
         <Space wrap>
           <Select
             mode="multiple"
@@ -35,9 +45,7 @@ export const Costdeepdrive = () => {
             dropdownRender={(menu) => (
               <>
                 {accounts.length > 0 && (
-                  <div style={{ padding: "4px 8px", fontWeight: 500 }}>
-                    Accounts
-                  </div>
+                  <div style={{ padding: "4px 8px", fontWeight: 500 }}>Accounts</div>
                 )}
                 {accounts.map((acc) => (
                   <Select.Option key={acc} value={acc}>
@@ -46,9 +54,7 @@ export const Costdeepdrive = () => {
                 ))}
 
                 {apps.length > 0 && (
-                  <div style={{ padding: "4px 8px", fontWeight: 500 }}>
-                    Apps
-                  </div>
+                  <div style={{ padding: "4px 8px", fontWeight: 500 }}>Apps</div>
                 )}
                 {apps.map((app) => (
                   <Select.Option key={app} value={app}>
@@ -65,15 +71,15 @@ export const Costdeepdrive = () => {
             value={dates}
             onChange={setDates}
             size="middle"
-            style={{ width: "100%", maxWidth: 220 }}
+            style={{ width: 220 }}
           />
 
           <Button onClick={handleReset}>Reset</Button>
         </Space>
       </Row>
 
-      {/* Collapsible Table */}
-      <CollapsibleTable />
+      {/* Pass selected filters to table */}
+      <CollapsibleTable selectedFilters={context} selectedDates={dates} />
     </div>
   );
 };

@@ -2,9 +2,9 @@
 import React, { useEffect, useRef, useState, useContext } from "react";
 import * as echarts from "echarts";
 import dayjs from "dayjs";
-import { Card, Typography, Select, Button, Modal } from "antd";
+import { Card, Typography, Select, Button, Modal, Spin } from "antd";
 import { FaExpandArrowsAlt } from "react-icons/fa";
-import { CostContext } from "../../Context/CostContext";  // ⬅️ import context
+import { CostContext } from "../../Context/CostContext";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -23,12 +23,13 @@ const BarChart = () => {
   const modalChartRef = useRef(null);
   const chartInstanceRef = useRef(null);
   const modalChartInstanceRef = useRef(null);
+
   const [range, setRange] = useState("3M");
   const [showModal, setShowModal] = useState(false);
 
-  // 👇 get data from global context
   const { costData, loading, error } = useContext(CostContext);
 
+  // Initialize or get ECharts instance
   const initChart = (ref) => {
     if (!ref.current) return null;
     let chart = echarts.getInstanceByDom(ref.current);
@@ -36,27 +37,23 @@ const BarChart = () => {
     return chart;
   };
 
-  const updateChart = async (ref) => {
+  // Update chart with latest data
+  const updateChart = (ref) => {
     if (!costData || !costData.daily_service_costs) return;
 
     const apiData = costData.daily_service_costs;
-
     const grouped = {};
     const allServices = new Set();
 
-    apiData.forEach((item) => {
-      const date = item.usage_date;
-      const service = item.service_name;
-      const cost = item.total_cost || 0;
-
-      if (!grouped[date]) grouped[date] = {};
-      grouped[date][service] = cost;
-      allServices.add(service);
+    apiData.forEach(({ usage_date, service_name, total_cost }) => {
+      if (!grouped[usage_date]) grouped[usage_date] = {};
+      grouped[usage_date][service_name] = total_cost || 0;
+      allServices.add(service_name);
     });
 
     const services = Array.from(allServices).sort();
 
-    // assign stable colors
+    // Assign stable colors
     services.forEach((service) => {
       if (!serviceColors[service]) {
         serviceColors[service] =
@@ -129,13 +126,9 @@ const BarChart = () => {
     return chart;
   };
 
-  // Update main chart when data/range changes
+  // Main chart update
   useEffect(() => {
-    if (!loading && costData) {
-      (async () => {
-        chartInstanceRef.current = await updateChart(chartRef);
-      })();
-    }
+    if (!loading && costData) chartInstanceRef.current = updateChart(chartRef);
 
     const resizeObserver = new ResizeObserver(() => {
       chartInstanceRef.current?.resize();
@@ -143,22 +136,10 @@ const BarChart = () => {
     });
 
     if (chartRef.current) resizeObserver.observe(chartRef.current);
-
     return () => resizeObserver.disconnect();
   }, [range, costData, loading]);
 
-  // Update modal chart
-  useEffect(() => {
-    if (showModal && costData) {
-      (async () => {
-        modalChartInstanceRef.current = await updateChart(modalChartRef);
-      })();
-    } else {
-      modalChartInstanceRef.current?.dispose?.();
-    }
-  }, [showModal, range, costData]);
-
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <Spin tip="Loading..." />;
   if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
 
   return (
@@ -173,7 +154,7 @@ const BarChart = () => {
           boxShadow: "0px 2px 6px rgba(0,0,0,0.2)",
           borderRadius: "8px",
         }}
-        bodyStyle={{ padding: "0" }}
+        styles={{ body: { padding: 0 } }} // v5 fix
       >
         {/* Header */}
         <div
@@ -183,7 +164,6 @@ const BarChart = () => {
             flexWrap: "wrap",
             gap: "1rem",
             padding: "8px 12px",
-            
           }}
         >
           <Title level={5} style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>
@@ -214,11 +194,7 @@ const BarChart = () => {
         {/* Chart */}
         <div
           ref={chartRef}
-          style={{
-            flexGrow: 1,
-            width: "100%",
-            minHeight: 465,
-          }}
+          style={{ flexGrow: 1, width: "100%", minHeight: 465 }}
         />
       </Card>
 
@@ -229,9 +205,47 @@ const BarChart = () => {
         footer={null}
         width="95%"
         style={{ top: 20 }}
-        bodyStyle={{ height: "80vh", padding: 0 }}
-        destroyOnClose
+        styles={{ body: { height: "80vh", padding: 0 } }}
+        destroyOnHidden
+        afterOpenChange={(open) => {
+          if (open && costData) {
+            setTimeout(() => {
+              modalChartInstanceRef.current = updateChart(modalChartRef);
+              modalChartInstanceRef.current?.resize();
+            }, 50); // ensures modal DOM is visible
+          } else {
+            modalChartInstanceRef.current?.dispose?.();
+          }
+        }}
       >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "1rem",
+            padding: "8px 40px 10px 0px ",
+          }}
+        >
+          <Title level={5} style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>
+            Daily Cost
+          </Title>
+
+          <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+            <Select
+              value={range}
+              onChange={(v) => setRange(v)}
+              size="small"
+              style={{ width: 140 }}
+            >
+              <Option value="3M">Last 3 Months</Option>
+              <Option value="6M">Last 6 Months</Option>
+              <Option value="YTD">Year to Date</Option>
+            </Select>
+           
+          </div>
+        </div>
+
         <div ref={modalChartRef} style={{ width: "100%", height: "100%" }} />
       </Modal>
     </>

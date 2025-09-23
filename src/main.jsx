@@ -8,20 +8,18 @@ import { CostProvider } from "./Context/CostContext";
 // import "../dist/output.css"
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    
-    <ConfigProvider
-      theme={{
-        token: {
-          fontFamily: " Roboto, sans-serif",
-          fontSize: 16
-        }
-      }}
-    >
+
+  <ConfigProvider
+    theme={{
+      token: {
+        fontFamily: " Roboto, sans-serif",
+        fontSize: 16
+      }
+    }}
+  >
     <CostProvider>
       <App />
-      </CostProvider>
-    </ConfigProvider>
-    
-  </StrictMode>,
+    </CostProvider>
+  </ConfigProvider>
+
 )

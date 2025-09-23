@@ -1,25 +1,27 @@
+// Top5.jsx
 import React, { useEffect, useState, useMemo, useRef, useContext } from "react";
 import ReactECharts from "echarts-for-react";
 import { Card, Typography, Checkbox, Row, Col } from "antd";
-import { CostContext } from "../../Context/CostContext";  // ⬅️ import context
+import { CostContext } from "../../Context/CostContext";
 import "../../stylecss/App.css";
 
 const { Title } = Typography;
 
+// ✅ Use actual keys from API
 const optionsList = [
-  { label: "App", name: "top_apps_current_month" },
-  { label: "A/C", name: "top_accounts_current_month" },
-  { label: "Srv", name: "top_services_current_month" },
+  { label: "App", name: "top_apps" },
+  { label: "A/C", name: "top_accounts" },
+  { label: "Srv", name: "top_services" },
 ];
 
 const Top5 = () => {
-  const { costData, loading } = useContext(CostContext);   // ✅ use costData
-  const [selectedGroups, setSelectedGroups] = useState(["top_services_current_month"]);
+  const { costData, loading } = useContext(CostContext);
+  const [selectedGroups, setSelectedGroups] = useState(["top_services"]);
   const [isSmall, setIsSmall] = useState(false);
   const [isMedium, setIsMedium] = useState(false);
   const chartRef = useRef(null);
 
-  // Handle responsiveness
+  // Responsiveness
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
@@ -31,6 +33,7 @@ const Top5 = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Checkbox change
   const handleCheckboxChange = (e) => {
     const { value, checked } = e.target;
     setSelectedGroups((prev) =>
@@ -42,20 +45,20 @@ const Top5 = () => {
   const displayedData = useMemo(() => {
     return selectedGroups
       .flatMap((groupKey) => {
-        const groupData = costData?.top_5?.[groupKey] || [];  // ✅ use costData
+        const groupData = costData?.top_5?.[groupKey] || [];
         return groupData
           .map((item) => {
             const name = item.name || item.account_id || item.app_name || "Unknown";
             return {
               name,
-              values: Array(7).fill(item.total_cost),
+              values: Array(7).fill(item.total_cost), // keep same as before
               total: item.total_cost,
             };
           })
           .sort((a, b) => b.total - a.total)
           .slice(0, 5);
       });
-  }, [selectedGroups, costData]);  // ✅ dependency changed
+  }, [selectedGroups, costData]);
 
   const categories = Array(7).fill("");
 
@@ -65,7 +68,7 @@ const Top5 = () => {
         trigger: "axis",
         axisPointer: { type: "cross" },
         formatter: (params) =>
-          params.map(item => `${item.marker} ${item.seriesName} <strong>₹${item.data}</strong>`).join("<br/>"),
+          params.map((item) => `${item.marker} ${item.seriesName} <strong>₹${item.data}</strong>`).join("<br/>"),
         textStyle: { fontSize: 10, fontWeight: 500, color: "#333" },
       },
       legend: {
@@ -76,13 +79,24 @@ const Top5 = () => {
         top: isSmall ? 30 : "auto",
         data: displayedData.map(({ name }) => name),
         textStyle: {
-          fontSize: isSmall ? 8 : isMedium ? 11 : 12,
+          fontSize: isSmall ? 8 : isMedium ? 11 : 8,
           fontWeight: 600,
           color: "#333",
         },
       },
       grid: { left: "2%", right: "2%", bottom: "15%", top: "10%", containLabel: true },
-      xAxis: [{ type: "category", data: categories, axisLabel: { show: false } }],
+      xAxis: [{
+        type: "category",
+        data: categories,
+        axisLabel: { show: false },
+        name: "Current Month",
+        nameLocation: "middle",      // positions the name
+        nameGap: 10,                 // distance from axis
+        nameTextStyle: {
+          fontSize: 12,
+          fontWeight: 600,
+        },
+      }],
       yAxis: [{
         type: "log",
         name: "USD ($)",
@@ -126,7 +140,7 @@ const Top5 = () => {
       {/* Header */}
       <Row justify="space-between" align={isSmall ? "top" : "middle"} gutter={[8, 8]} style={{ marginBottom: 12 }}>
         <Col>
-          <Title level={5} style={{ fontWeight: 500, fontSize: isSmall ? 13 : 14, margin: 0, marginTop: 2 }}>
+          <Title level={5} style={{ fontWeight: 600, fontSize: isSmall ? 13 : 14, margin: 0, marginTop: 2 }}>
             Top'5'
           </Title>
         </Col>

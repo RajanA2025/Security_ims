@@ -1,62 +1,87 @@
-// File: src/components/DonutChart.jsx
+// src/components/DonutChart.jsx
 import React, { useEffect, useState, useRef, useContext } from "react";
 import ReactECharts from "echarts-for-react";
 import { Card, Typography } from "antd";
-import { CostContext } from "../../Context/CostContext";  // ⬅️ import context
+import { CostContext } from "../../Context/CostContext";
 
 const { Title } = Typography;
 
 const DonutChart = () => {
-  const { costData, loading } = useContext(CostContext); // ✅ use costData
+  const { costData, loading, filters } = useContext(CostContext);
   const [data, setData] = useState([]);
   const [total, setTotal] = useState(0);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const chartRef = useRef(null);
 
-  // Responsive breakpoints
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  // ===== Handle window resize =====
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+
+    // ResizeObserver for sidebar toggle
+    let resizeTimeout;
+    const resizeObserver = new ResizeObserver(() => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        chartRef.current?.getEchartsInstance()?.resize();
+      }, 200); // debounce
+    });
+
+    if (chartRef.current?.ele) resizeObserver.observe(chartRef.current.ele);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      resizeObserver.disconnect();
+      clearTimeout(resizeTimeout);
+    };
   }, []);
 
-  const isSmall = windowWidth < 576; // xs
-  const isMedium = windowWidth >= 576 && windowWidth < 992; // sm-md
-
+  // ===== Responsive font sizes =====
+  const isSmall = windowWidth < 576;
+  const isMedium = windowWidth >= 576 && windowWidth < 992;
   const centerTitleSize = isSmall ? 12 : isMedium ? 14 : 16;
   const centerValueSize = isSmall ? 20 : isMedium ? 26 : 30;
   const labelFontSize = isSmall ? 10 : 14;
 
-  // 🔹 Transform API data into chart data
+  // ===== Process cost data =====
   useEffect(() => {
-    if (!costData?.monthly_summary?.service_wise_costs) return;
+    if (!costData) return;
 
-    const servicesData = costData.monthly_summary.service_wise_costs
-      .filter(
-        (s) =>
-          s.total_cost > 0 && s.service_name.toLowerCase() !== "tax"
-      )
-      .map((s) => ({ value: s.total_cost, name: s.service_name }));
+    const dailyCosts = costData.daily_service_costs || [];
+    const currentMonth = costData.monthly_summary?.current_month;
 
-    const totalValue = servicesData.reduce(
-      (acc, item) => acc + item.value,
-      0
-    );
+    const agg = {};
+    dailyCosts.forEach((item) => {
+      if (!item.service_name || !item.usage_date) return;
+      const month = new Date(item.usage_date).toLocaleString("default", {
+        month: "long",
+        year: "numeric",
+      });
+      if (month !== currentMonth) return;
 
-    // Merge <5% into "Others"
+      agg[item.service_name] = (agg[item.service_name] || 0) + (item.total_cost || 0);
+    });
+
+    let servicesData = Object.entries(agg)
+      .map(([name, value]) => ({ name, value }))
+      .filter((s) => s.value > 0 && s.name.toLowerCase() !== "tax");
+
+    const totalValue = servicesData.reduce((acc, item) => acc + item.value, 0);
+
+    // Merge services <5% into "Others"
     const majorServices = [];
     let othersValue = 0;
     servicesData.forEach((item) => {
       if ((item.value / totalValue) * 100 < 5) othersValue += item.value;
       else majorServices.push(item);
     });
-    if (othersValue > 0)
-      majorServices.push({ name: "Others", value: othersValue });
+    if (othersValue > 0) majorServices.push({ name: "Others", value: othersValue });
 
     setData(majorServices);
     setTotal(totalValue);
-  }, [costData]);
+  }, [costData, filters.account_id]);
 
+  // ===== Chart option =====
   const option = {
     tooltip: {
       trigger: "item",
@@ -78,16 +103,12 @@ const DonutChart = () => {
         radius: ["50%", "90%"],
         center: ["50%", "45%"],
         avoidLabelOverlap: false,
-        itemStyle: {
-          borderRadius: 6,
-          borderColor: "#fff",
-          borderWidth: 2,
-        },
+        itemStyle: { borderRadius: 6, borderColor: "#fff", borderWidth: 2 },
         label: {
           show: true,
           position: "inside",
           formatter: "{d}%",
-          color: "#000000ff",
+          color: "#000",
           fontWeight: "bold",
           fontSize: labelFontSize,
         },
@@ -134,16 +155,7 @@ const DonutChart = () => {
     ],
   };
 
-  // 🟢 ResizeObserver to handle sidebar toggle
-  useEffect(() => {
-    const resizeObserver = new ResizeObserver(() => {
-      chartRef.current?.getEchartsInstance()?.resize();
-    });
-    if (chartRef.current?.ele) resizeObserver.observe(chartRef.current.ele);
-
-    return () => resizeObserver.disconnect();
-  }, []);
-
+  // ===== Render =====
   if (loading) {
     return (
       <Card
@@ -173,19 +185,28 @@ const DonutChart = () => {
         Service & Cloud Spend Breakdown
       </Title>
 
-      <div
-        style={{
-          width: "100%",
-          height: isSmall ? 280 : isMedium ? 350 : 470,
-        }}
-      >
-        <ReactECharts
-          ref={chartRef}
-          option={option}
-          style={{ height: "100%", width: "100%" }}
-          opts={{ renderer: "svg" }}
-        />
-      </div>
+      {data.length === 0 ? (
+        <div
+          style={{
+            height: isSmall ? 280 : isMedium ? 350 : 470,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#64748b",
+          }}
+        >
+          No cost data available
+        </div>
+      ) : (
+        <div style={{ width: "100%", height: isSmall ? 280 : isMedium ? 350 : 470 }}>
+          <ReactECharts
+            ref={chartRef}
+            option={option}
+            style={{ height: "100%", width: "100%" }}
+            opts={{ renderer: "svg" }}
+          />
+        </div>
+      )}
     </Card>
   );
 };
