@@ -87,7 +87,7 @@ const BarChart = () => {
         bottom: "5%",
         orient: "horizontal",
         data: services,
-        textStyle: { fontSize: 8, fontWeight: 600, color: "#333" },
+        textStyle: { fontSize: 8, fontWeight: 600, color: "#333",fontFamily: " Roboto, sans-serif",},
         padding: [5, 100, 0, 100],
       },
       grid: { top: "15%", left: "5%", right: "3%", bottom: "12%", containLabel: true },

@@ -53,7 +53,7 @@ const costUrl = `http://13.212.15.14:8010/cost-summary?${params.toString()}`;
 
         const [costRes, resourcesRes, tagRes] = await Promise.all([
           fetch(costUrl),
-          fetch("http://13.212.15.14:8003/resources"),
+            fetch("http://13.212.15.14:8003/resources"),
           fetch("http://13.212.15.14:8007/tags"),
         ]);
 

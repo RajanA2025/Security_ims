@@ -79,13 +79,18 @@ const DonutChart = () => {
     tooltip: {
       trigger: "item",
       textStyle: { fontSize: 10, fontWeight: 500, color: "#333" },
+      formatter: (params) => {
+        // params.value can be number or array depending on chart type
+        const value = Array.isArray(params.value) ? params.value[1] : params.value;
+        return `${params.name}: ${Number(value).toFixed(2)}`;
+      },
     },
     legend: {
       type: "scroll",
       bottom: "0%",
       left: "center",
       orient: isSmall ? "vertical" : "vertical",
-      textStyle: { fontSize: 8, fontWeight: 600 },
+      textStyle: { fontSize: 8, fontWeight: 600, fontFamily: " Roboto, sans-serif", },
       icon: "circle",
       padding: [0, 10],
       itemGap: 4,
@@ -179,7 +184,7 @@ const DonutChart = () => {
 
       <div
         ref={containerRef}
-        style={{ width: "100%", height: isSmall ? 450 : isMedium ? 350 : 470 }}
+        style={{ width: "100%", height: isSmall ? 480 : isMedium ? 350 : 470 }}
       >
         <ReactECharts
           ref={chartRef}
