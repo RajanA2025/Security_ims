@@ -153,15 +153,35 @@ const Dashboard = () => {
                   boxShadow: "0px 2px 6px rgba(0,0,0,0.2)",
                   borderRadius: "8px",
                   minHeight: 140,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
                 }}
               >
                 <Text strong>Current Month Cost</Text>
-                <Title level={4} style={{ margin: "15px 0", textAlign: "center" }}>
+                <Title
+                  level={4}
+                  style={{
+                    margin: "15px 0",
+                    textAlign: "center",
+                    wordBreak: "break-word",
+                  }}
+                >
                   ${currentMonthCost?.toLocaleString()}
                 </Title>
 
                 {change !== null && (
-                  <Space style={{ marginTop: 8 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap", // ✅ responsive wrapping
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
+                      marginTop: 8,
+                      textAlign: "center",
+                    }}
+                  >
                     {change < 0 ? (
                       <LuTrendingDown style={{ fontSize: 20, color: "#16a34a" }} />
                     ) : (
@@ -170,8 +190,10 @@ const Dashboard = () => {
                     <Text strong style={{ color: change < 0 ? "#16a34a" : "#dc2626" }}>
                       {Math.abs(change).toFixed(1)}%
                     </Text>
-                    <Text type="secondary">vs Previous Month</Text>
-                  </Space>
+                    <Text type="secondary" style={{ whiteSpace: "nowrap" }}>
+                      from last month.
+                    </Text>
+                  </div>
                 )}
               </Card>
             </Col>
@@ -184,14 +206,31 @@ const Dashboard = () => {
                   boxShadow: "0px 2px 6px rgba(0,0,0,0.2)",
                   borderRadius: "8px",
                   minHeight: 140,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
                 }}
               >
                 <Text strong>Forecast Cost</Text>
-                <Title level={4} style={{ margin: "15px 0 0", textAlign: "center" }}>
+                <Title
+                  level={4}
+                  style={{
+                    margin: "15px 0 0",
+                    textAlign: "center",
+                    wordBreak: "break-word",
+                  }}
+                >
                   ${forecastAmount?.toLocaleString()}
                 </Title>
 
-                <div style={{ display: "flex", justifyContent: "center", flex: 1 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    flex: 1,
+                  }}
+                >
                   <img src={forecastImg} alt="forecast" width={55} />
                 </div>
               </Card>
@@ -205,6 +244,7 @@ const Dashboard = () => {
             </Col>
           </Row>
         </Col>
+
 
         {/* Donut Chart */}
         <Col xs={24} md={12} lg={6} style={{ display: "flex", justifyContent: "center" }}>

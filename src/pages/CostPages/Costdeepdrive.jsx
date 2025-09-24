@@ -5,24 +5,21 @@ import CollapsibleTable from "../../components/CostComponents/CollapsibleTable";
 
 const { RangePicker } = DatePicker;
 
-export const Costdeepdrive = () => {
+export const Costdeepdrive = ({ allInstances }) => {
   const [context, setContext] = useState([]);
   const [dates, setDates] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [apps, setApps] = useState([]);
 
-  // Fetch unique accounts and apps from API
+  // Compute unique accounts and apps dynamically
   useEffect(() => {
-    fetch("http://13.212.15.14:8002/instances")
-      .then((res) => res.json())
-      .then((res) => {
-        const uniqueAccounts = [...new Set(res.results.map((inst) => inst.account_id))];
-        const uniqueApps = [...new Set(res.results.map((inst) => inst.instance_name))];
-        setAccounts(uniqueAccounts);
-        setApps(uniqueApps);
-      })
-      .catch((err) => console.error(err));
-  }, []);
+    if (allInstances?.length) {
+      const uniqueAccounts = [...new Set(allInstances.map((inst) => inst.account_id))];
+      const uniqueApps = [...new Set(allInstances.map((inst) => inst.instance_name))];
+      setAccounts(uniqueAccounts);
+      setApps(uniqueApps);
+    }
+  }, [allInstances]);
 
   const handleReset = () => {
     setContext([]);
@@ -66,20 +63,13 @@ export const Costdeepdrive = () => {
               </>
             )}
           />
-
-          <RangePicker
-            value={dates}
-            onChange={setDates}
-            size="middle"
-            style={{ width: 220 }}
-          />
-
           <Button onClick={handleReset}>Reset</Button>
         </Space>
       </Row>
 
       {/* Pass selected filters to table */}
-      <CollapsibleTable selectedFilters={context} selectedDates={dates} />
+      <CollapsibleTable selectedFilters={context} selectedDates={dates} allInstances={allInstances} />
     </div>
   );
 };
+  

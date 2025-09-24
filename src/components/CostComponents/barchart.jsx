@@ -147,7 +147,7 @@ const BarChart = () => {
       <Card
         style={{
           width: "100%",
-          minHeight: 300,
+          minHeight: 520,
           background: "#fff",
           display: "flex",
           flexDirection: "column",
@@ -194,7 +194,7 @@ const BarChart = () => {
         {/* Chart */}
         <div
           ref={chartRef}
-          style={{ flexGrow: 1, width: "100%", minHeight: 465 }}
+          style={{ flexGrow: 1, width: "100%", minHeight: 475 }}
         />
       </Card>
 

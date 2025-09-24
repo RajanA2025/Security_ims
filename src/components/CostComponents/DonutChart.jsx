@@ -1,4 +1,3 @@
-// src/components/DonutChart.jsx
 import React, { useEffect, useState, useRef, useContext } from "react";
 import ReactECharts from "echarts-for-react";
 import { Card, Typography } from "antd";
@@ -10,38 +9,10 @@ const DonutChart = () => {
   const { costData, loading, filters } = useContext(CostContext);
   const [data, setData] = useState([]);
   const [total, setTotal] = useState(0);
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
   const chartRef = useRef(null);
-
-  // ===== Handle window resize =====
-  useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-
-    // ResizeObserver for sidebar toggle
-    let resizeTimeout;
-    const resizeObserver = new ResizeObserver(() => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        chartRef.current?.getEchartsInstance()?.resize();
-      }, 200); // debounce
-    });
-
-    if (chartRef.current?.ele) resizeObserver.observe(chartRef.current.ele);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      resizeObserver.disconnect();
-      clearTimeout(resizeTimeout);
-    };
-  }, []);
-
-  // ===== Responsive font sizes =====
-  const isSmall = windowWidth < 576;
-  const isMedium = windowWidth >= 576 && windowWidth < 992;
-  const centerTitleSize = isSmall ? 12 : isMedium ? 14 : 16;
-  const centerValueSize = isSmall ? 20 : isMedium ? 26 : 30;
-  const labelFontSize = isSmall ? 10 : 14;
+  const containerRef = useRef(null);
+  const [containerWidth, setContainerWidth] = useState(0);
 
   // ===== Process cost data =====
   useEffect(() => {
@@ -81,6 +52,28 @@ const DonutChart = () => {
     setTotal(totalValue);
   }, [costData, filters.account_id]);
 
+  // ===== ResizeObserver on container =====
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const observer = new ResizeObserver(() => {
+      setContainerWidth(containerRef.current.offsetWidth);
+      if (chartRef.current) {
+        chartRef.current.getEchartsInstance().resize();
+      }
+    });
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // ===== Responsive font sizes based on container width =====
+  const isSmall = containerWidth < 576;
+  const isMedium = containerWidth >= 576 && containerWidth < 992;
+  const centerTitleSize = isSmall ? 12 : isMedium ? 14 : 16;
+  const centerValueSize = isSmall ? 20 : isMedium ? 26 : 30;
+  const labelFontSize = isSmall ? 14 : 14;
+
   // ===== Chart option =====
   const option = {
     tooltip: {
@@ -89,12 +82,12 @@ const DonutChart = () => {
     },
     legend: {
       type: "scroll",
-      bottom: "1%",
+      bottom: "0%",
       left: "center",
-      orient: isSmall ? "horizontal" : "vertical",
+      orient: isSmall ? "vertical" : "vertical",
       textStyle: { fontSize: 8, fontWeight: 600 },
       icon: "circle",
-      padding: [5, 10],
+      padding: [0, 10],
       itemGap: 4,
     },
     series: [
@@ -155,7 +148,6 @@ const DonutChart = () => {
     ],
   };
 
-  // ===== Render =====
   if (loading) {
     return (
       <Card
@@ -175,7 +167,7 @@ const DonutChart = () => {
     <Card
       bodyStyle={{ padding: "8px 12px" }}
       style={{
-        minHeight: 492,
+        minHeight: 520,
         boxShadow: "0px 2px 6px rgba(0,0,0,0.2)",
         borderRadius: "8px",
         background: "#fff",
@@ -185,28 +177,17 @@ const DonutChart = () => {
         Service & Cloud Spend Breakdown
       </Title>
 
-      {data.length === 0 ? (
-        <div
-          style={{
-            height: isSmall ? 280 : isMedium ? 350 : 470,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#64748b",
-          }}
-        >
-          No cost data available
-        </div>
-      ) : (
-        <div style={{ width: "100%", height: isSmall ? 280 : isMedium ? 350 : 470 }}>
-          <ReactECharts
-            ref={chartRef}
-            option={option}
-            style={{ height: "100%", width: "100%" }}
-            opts={{ renderer: "svg" }}
-          />
-        </div>
-      )}
+      <div
+        ref={containerRef}
+        style={{ width: "100%", height: isSmall ? 450 : isMedium ? 350 : 470 }}
+      >
+        <ReactECharts
+          ref={chartRef}
+          option={option}
+          style={{ height: "100%", width: "100%" }}
+          opts={{ renderer: "svg" }}
+        />
+      </div>
     </Card>
   );
 };
