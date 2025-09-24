@@ -49,6 +49,12 @@ const actionStatus = {
   realized: "Realized",
 };
 
+const calculateTotal = (data, field = "costing") =>
+  (data || []).reduce(
+    (sum, item) => sum + parseFloat((item[field] || "0").toString().replace("$", "")),
+    0
+  );
+
 const calculateTotalCost = (data) =>
   data.reduce((sum, item) => sum + parseFloat(item.costing?.replace("$", "") || 0), 0);
 
@@ -101,11 +107,12 @@ const SavingsChild = () => {
             volumeName: item.allocation_id,
             volumeType: "Elastic IP",
             volumeSize: "-",
-            costing: `$${item.cost_savings}`,
+            costing: `$${item.cost ?? 0}`, // <-- use cost here
             recommendation: "-",
             Action: item.status,
           }))
         );
+
 
         setOrphanedSnapshots(
           data.orphaned_snapshots.map((item, i) => ({
@@ -534,7 +541,7 @@ const SavingsChild = () => {
                 <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: 8 }}>
                   <Tag color="cyan">{rightsizing[rightsizingFilter]?.length || 0}</Tag>
                   <Text strong style={{ color: "cyan" }}>
-                    Total Savings: ${calculateTotalCost(rightsizing[rightsizingFilter] || []).toFixed(2)}
+                    Total Savings: ${calculateTotal(rightsizing[rightsizingFilter], "costSaving").toFixed(2)}
                   </Text>
                 </div>
               </Card>

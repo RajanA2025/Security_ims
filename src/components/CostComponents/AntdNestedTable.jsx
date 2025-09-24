@@ -159,7 +159,7 @@ export default function AntdNestedTable({ selectedAccount }) {
             children: [
               {
                 key: "AWS",
-                name: "AWS",
+                name: "AWS/EC2",
                 children: Object.entries(map).map(([name, rows], idx) => ({ key: `node-${idx}`, name, children: rows })),
               },
             ],
