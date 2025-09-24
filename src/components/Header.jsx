@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from "react-router-dom";
 import logo from '../assets/logo.png';
 import {
   AppBar,
@@ -54,7 +54,7 @@ const Header = ({ onDateChange }) => {
     setStartDate('');
     setEndDate('');
   };
-
+  const navigate = useNavigate();
   return (
     <AppBar
       position="static"
@@ -66,12 +66,12 @@ const Header = ({ onDateChange }) => {
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <img src={logo} alt="logo" style={{ height: 70, marginRight: 25 }} />
+        <Box sx={{ display: 'flex', alignItems: 'center' }} >
+          <img src={logo} alt="logo" style={{ height: 70, marginRight: 25 }}  onClick={() => navigate('/')} />
           <Typography.Title 
   level={3}
   style={{
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
+    fontFamily: "Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
     fontSize: "23px",
     fontWeight: 700,
     color: "black",

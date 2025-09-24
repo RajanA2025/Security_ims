@@ -22,19 +22,20 @@ import {
   FilterOutlined,
   InfoCircleOutlined
 } from "@ant-design/icons";
-import axios from "axios";
+
 
 const header = { backgroundColor: "#4f46e5", color: "white" };
+import { useObservability } from "../../../Context/ObservabilityContext";
 
 const Observability = () => {
   const { Option } = Select;
   const [tabKey, setTabKey] = useState("1");
   const [loading, setLoading] = useState(false);
-  const [securityData, setSecurityData] = useState([]);
-  const [eipData, seteipData] = useState([]);
-  const [volumeData, setVolumeData] = useState([]);
-  const [s3Data, setS3Data] = useState([]);
-  const [ec2Data, setEC2Data] = useState([]);
+  // const [securityData, setSecurityData] = useState([]);
+  // const [eipData, seteipData] = useState([]);
+  // const [volumeData, setVolumeData] = useState([]);
+  // const [s3Data, setS3Data] = useState([]);
+  // const [ec2Data, setEC2Data] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [searchName, setSearchName] = useState("");
   const [searchId, setSearchId] = useState("");
@@ -50,81 +51,88 @@ const Observability = () => {
   const [selectedS3, setSelectedS3] = useState(null);
   const [isModalOpenEC2, setIsModalOpenEC2] = useState(false);
   const [selectedEC2, setSelectedEC2] = useState(null);
-
+  const {
+    // loading,
+    securityData,
+    eipData,
+    volumeData,
+    s3Data,
+    ec2Data,
+  } = useObservability();
   // API base URL
   const API_BASE_URL = "http://13.212.15.14:8016";
   
   // Fetch data
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        let endpoint = '';
-        let response = null;
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     setLoading(true);
+  //     try {
+  //       let endpoint = '';
+  //       let response = null;
         
-        switch(tabKey) {
-          case "1":
-            endpoint = `${API_BASE_URL}/keypairs2`;
-            console.log('Fetching keypairs from:', endpoint);
-            response = await axios.get(endpoint);
-            setSecurityData(response.data);
-            break;
-          case "2":
-            endpoint = `${API_BASE_URL}/orphaned-eip`;
-            console.log('Fetching EIP data from:', endpoint);
-            response = await axios.get(endpoint);
-            seteipData(response.data);
-            break;
-          case "3":
-            endpoint = `${API_BASE_URL}/orphaned-volumes`;
-            console.log('Fetching volumes from:', endpoint);
-            response = await axios.get(endpoint);
-            setVolumeData(response.data);
-            break;
-          case "4":
-            endpoint = `${API_BASE_URL}/s3`;
-            console.log('Fetching S3 data from:', endpoint);
-            response = await axios.get(endpoint);
-            setS3Data(response.data);
-            break;
-          case "5":
-            endpoint = `${API_BASE_URL}/ec2`;
-            console.log('Fetching EC2 data from:', endpoint);
-            response = await axios.get(endpoint);
-            setEC2Data(response.data);
-            break;
-          default:
-            console.warn('Unknown tab key:', tabKey);
-        }
+  //       switch(tabKey) {
+  //         case "1":
+  //           endpoint = `${API_BASE_URL}/keypairs2`;
+  //           console.log('Fetching keypairs from:', endpoint);
+  //           response = await axios.get(endpoint);
+  //           setSecurityData(response.data);
+  //           break;
+  //         case "2":
+  //           endpoint = `${API_BASE_URL}/orphaned-eip`;
+  //           console.log('Fetching EIP data from:', endpoint);
+  //           response = await axios.get(endpoint);
+  //           seteipData(response.data);
+  //           break;
+  //         case "3":
+  //           endpoint = `${API_BASE_URL}/orphaned-volumes`;
+  //           console.log('Fetching volumes from:', endpoint);
+  //           response = await axios.get(endpoint);
+  //           setVolumeData(response.data);
+  //           break;
+  //         case "4":
+  //           endpoint = `${API_BASE_URL}/s3`;
+  //           console.log('Fetching S3 data from:', endpoint);
+  //           response = await axios.get(endpoint);
+  //           setS3Data(response.data);
+  //           break;
+  //         case "5":
+  //           endpoint = `${API_BASE_URL}/ec2`;
+  //           console.log('Fetching EC2 data from:', endpoint);
+  //           response = await axios.get(endpoint);
+  //           setEC2Data(response.data);
+  //           break;
+  //         default:
+  //           console.warn('Unknown tab key:', tabKey);
+  //       }
         
-        console.log(`Successfully fetched data for tab ${tabKey} from ${endpoint}`);
-      } catch (err) {
-        console.error("Error fetching data:", {
-          message: err.message,
-          response: err.response ? {
-            status: err.response.status,
-            statusText: err.response.statusText,
-            data: err.response.data
-          } : 'No response',
-          config: {
-            url: err.config?.url,
-            method: err.config?.method,
-            headers: err.config?.headers
-          }
-        });
+  //       console.log(`Successfully fetched data for tab ${tabKey} from ${endpoint}`);
+  //     } catch (err) {
+  //       console.error("Error fetching data:", {
+  //         message: err.message,
+  //         response: err.response ? {
+  //           status: err.response.status,
+  //           statusText: err.response.statusText,
+  //           data: err.response.data
+  //         } : 'No response',
+  //         config: {
+  //           url: err.config?.url,
+  //           method: err.config?.method,
+  //           headers: err.config?.headers
+  //         }
+  //       });
         
-        // Set empty data to prevent UI from breaking
-        if (tabKey === "1") setSecurityData([]);
-        else if (tabKey === "2") seteipData([]);
-        else if (tabKey === "3") setVolumeData([]);
-        else if (tabKey === "4") setS3Data([]);
-        else if (tabKey === "5") setEC2Data([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [tabKey]);
+  //       // Set empty data to prevent UI from breaking
+  //       if (tabKey === "1") setSecurityData([]);
+  //       else if (tabKey === "2") seteipData([]);
+  //       else if (tabKey === "3") setVolumeData([]);
+  //       else if (tabKey === "4") setS3Data([]);
+  //       else if (tabKey === "5") setEC2Data([]);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   fetchData();
+  // }, [tabKey]);
 
   // Handler functions for each modal type
   const handleOpenKeyPair = record => {
@@ -241,6 +249,9 @@ const Observability = () => {
       title: 'Account ID',
       dataIndex: 'account_id',
       key: 'account_id',
+      filters: accountIds.map(id => ({ text: id, value: id })),
+      onFilter: (value, record) => record.account_id === value,
+      filterSearch: true,
     },
     {
       title: 'Account Name',
@@ -251,6 +262,9 @@ const Observability = () => {
       title: 'Region',
       dataIndex: 'region',
       key: 'region',
+      filters: getUniqueOptions(eipData, "region"),
+      onFilter: (value, record) => record.region === value,
+      filterSearch: true,
     },
     {
       title: 'Allocation ID',
@@ -258,16 +272,21 @@ const Observability = () => {
       key: 'allocation_id',
     },
     {
-      title: 'arn',
-      dataIndex: 'arn',
-      key: 'arn',
+      title: 'Public IP',
+      dataIndex: 'public_ip',
+      key: 'public_ip',
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
+      filters: [
+        { text: "in-use", value: "in-use" },
+        { text: "available", value: "available" }
+      ],
+      onFilter: (value, record) => record.status === value,
       render: status => (
-        <Tag color={status === 'in-use' ? 'green' : 'red'}>{status}</Tag>
+        <Tag color={status === 'in-use' ? 'green' : 'red'}>{"Orphaned"}</Tag>
       )
     },
     {
@@ -283,6 +302,7 @@ const Observability = () => {
       )
     }
   ];
+  
 
   // Volume Tab Columns
   const volumeColumns = [
@@ -290,6 +310,8 @@ const Observability = () => {
       title: 'Account ID',
       dataIndex: 'account_id',
       key: 'account_id',
+      filters: accountIds.map(id => ({ text: id, value: id })),
+      onFilter: (value, record) => record.account_id === value,
     },
     {
       title: 'Account Name',
@@ -300,6 +322,8 @@ const Observability = () => {
       title: 'Region',
       dataIndex: 'region',
       key: 'region',
+      filters: getUniqueOptions(volumeData, "region"),
+      onFilter: (value, record) => record.region === value,
     },
     {
       title: 'Volume ID',
@@ -310,6 +334,7 @@ const Observability = () => {
       title: 'Size (GB)',
       dataIndex: 'size',
       key: 'size',
+      sorter: (a, b) => a.size - b.size, // optional numeric sort
     },
     {
       title: "More Details",
@@ -324,10 +349,15 @@ const Observability = () => {
       )
     }
   ];
+  
 
   const s3Columns = [
     {
-      title: "Account ID", dataIndex: "account_id", key: "account_id"
+      title: "Account ID",
+      dataIndex: "account_id",
+      key: "account_id",
+      filters: accountIds.map(id => ({ text: id, value: id })),
+      onFilter: (value, record) => record.account_id === value,
     },
     { title: "Account Name", dataIndex: "account_name", key: "account_name" },
     { title: "Bucket Name", dataIndex: "bucket_name", key: "bucket_name" },
@@ -335,16 +365,16 @@ const Observability = () => {
       title: "Versioning",
       dataIndex: "versioning_status",
       key: "versioning_status",
+      filters: [
+        { text: "Enabled", value: "Enabled" },
+        { text: "Suspended", value: "Suspended" },
+        { text: "Unversioned", value: "" },
+      ],
+      onFilter: (value, record) => record.versioning_status === value,
       render: value => {
-        if (!value) {
-          return <Tag color="default">Unversioned</Tag>;
-        }
-        if (value.toLowerCase() === "enabled") {
-          return <Tag color="green">Enabled</Tag>;
-        }
-        if (value.toLowerCase() === "suspended") {
-          return <Tag color="orange">Suspended</Tag>;
-        }
+        if (!value) return <Tag color="default">Unversioned</Tag>;
+        if (value.toLowerCase() === "enabled") return <Tag color="green">Enabled</Tag>;
+        if (value.toLowerCase() === "suspended") return <Tag color="orange">Suspended</Tag>;
         return <Tag color="default">{value}</Tag>;
       }
     },
@@ -352,6 +382,11 @@ const Observability = () => {
       title: "Public Access Block",
       dataIndex: "public_access_block",
       key: "public_access_block",
+      filters: [
+        { text: "Enabled", value: true },
+        { text: "Disabled", value: false }
+      ],
+      onFilter: (value, record) => record.public_access_block === value,
       render: value => (
         <Tag color={value ? "green" : "red"}>
           {value ? "Enabled" : "Disabled"}
@@ -360,9 +395,14 @@ const Observability = () => {
     },
     { title: "Region", dataIndex: "region", key: "region" },
     {
-      title: "replication_status",
+      title: "Replication Status",
       dataIndex: "replication_status",
       key: "replication_status",
+      filters: [
+        { text: "Enabled", value: true },
+        { text: "Disabled", value: false }
+      ],
+      onFilter: (value, record) => record.replication_status === value,
       render: value => (
         <Tag color={value ? "green" : "red"}>
           {value ? "Enabled" : "Disabled"}
@@ -373,10 +413,15 @@ const Observability = () => {
       title: "MFA Delete",
       dataIndex: "mfa_delete",
       key: "mfa_delete",
-      render: value => (value ? "✅" : "❌")
+      filters: [
+        { text: "Enabled", value: true },
+        { text: "Disabled", value: false }
+      ],
+      onFilter: (value, record) => record.mfa_delete === value,
+      render: value => (value ? "✅" : "❌"),
     },
-    { title: "object_count", dataIndex: "object_count", key: "object_count" },
-    { title: "bucket_size_gb", dataIndex: "bucket_size_gb", key: "bucket_size_gb" },
+    { title: "Object Count", dataIndex: "object_count", key: "object_count" },
+    { title: "Bucket Size (GB)", dataIndex: "bucket_size_gb", key: "bucket_size_gb" },
     {
       title: "More Details",
       key: "action",
@@ -390,25 +435,48 @@ const Observability = () => {
       )
     }
   ];
+  
 
   const ec2Columns = [
-    { title: "Account ID", dataIndex: "account_id", key: "account_id" },
+    {
+      title: "Account ID",
+      dataIndex: "account_id",
+      key: "account_id",
+      filters: accountIds.map(id => ({ text: id, value: id })),
+      onFilter: (value, record) => record.account_id === value,
+    },
     { title: "Account Name", dataIndex: "account_name", key: "account_name" },
     { title: "Instance ID", dataIndex: "instance_id", key: "instance_id" },
     { title: "Instance Name", dataIndex: "instance_name", key: "instance_name" },
-    { title: "Type", dataIndex: "instance_type", key: "instance_type" },
-    { title: "region", dataIndex: "region", key: "region" },
-    { title: "cpu_avg_7d", dataIndex: "cpu_avg_7d", key: "cpu_avg_7d" },
+    // { title: "Type", dataIndex: "instance_type", key: "instance_type" },
     {
-      title: "status_checks_ok",
+      title: "Region",
+      dataIndex: "region",
+      key: "region",
+      filters: getUniqueOptions(ec2Data, "region"),
+      onFilter: (value, record) => record.region === value,
+    },
+    { title: "CPU Avg (7d)", dataIndex: "cpu_avg_7d", key: "cpu_avg_7d" },
+    {
+      title: "Status Checks OK",
       dataIndex: "status_checks_ok",
       key: "status_checks_ok",
-      render: value => (value ? "✅" : "❌")
+      filters: [
+        { text: "OK", value: true },
+        { text: "Failed", value: false }
+      ],
+      onFilter: (value, record) => record.status_checks_ok === value,
+      render: value => (value ? "✅" : "❌"),
     },
     {
-      title: "underutilized",
+      title: "Underutilized",
       dataIndex: "underutilized",
       key: "underutilized",
+      filters: [
+        { text: "True", value: true },
+        { text: "False", value: false }
+      ],
+      onFilter: (value, record) => record.underutilized === value,
       render: value => (
         <Tag color={value ? "green" : "red"}>
           {value ? "true" : "false"}
@@ -419,6 +487,11 @@ const Observability = () => {
       title: "State",
       dataIndex: "state",
       key: "state",
+      filters: [
+        { text: "running", value: "running" },
+        { text: "stopped", value: "stopped" }
+      ],
+      onFilter: (value, record) => record.state === value,
       render: value => (
         <Tag color={value === "running" ? "green" : "red"}>{value}</Tag>
       )
@@ -436,24 +509,25 @@ const Observability = () => {
       )
     }
   ];
+  
 
   return (
     <>
-      <Row gutter={[16, 16]} style={{ justifyContent: "flex-end" }}>
-        <Col md={20}>
-          <Typography.Title
-            level={4}
-            style={{
-              fontFamily: "'Roboto', 'Segoe UI', sans-serif",
-              fontSize: "20px",
-              fontWeight: 500,
-              color: "black",
-              margin: 0
-            }}
-          >
-            Observability
-          </Typography.Title>
-        </Col>
+      <Row gutter={[16, 8]} style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 16}} >
+      <Col xs={24} md={12} >
+            <Typography.Title 
+              level={4}
+              style={{
+                fontFamily: "'Roboto', 'Segoe UI', sans-serif",
+                fontSize: "20px",
+                fontWeight: 600,
+                color: "#1f2937",
+                margin: 0
+              }}
+            >
+              Observability
+            </Typography.Title>
+          </Col>
         <Col>
           <Space>
             <Input
@@ -462,27 +536,12 @@ const Observability = () => {
               value={searchName}
               onChange={e => setSearchName(e.target.value)}
               allowClear
-              style={{ width: 200 }}
+              // style={{ width: 200 }}
             />
-            <Input
-              placeholder="Search by Account ID"
-              prefix={<SearchOutlined />}
-              value={searchId}
-              onChange={e => setSearchId(e.target.value)}
-              allowClear
-              style={{ width: 200 }}
-            />
+            
           </Space>
         </Col>
-        <Col md={4}>
-          <Input
-            placeholder="Search by Account ID"
-            prefix={<SearchOutlined />}
-            value={searchId}
-            onChange={e => setSearchId(e.target.value)}
-            allowClear
-          />
-        </Col>
+       
       </Row>
       
       <Tabs
@@ -608,10 +667,9 @@ const Observability = () => {
               <Descriptions.Item label="Region">{selectedEIP.region}</Descriptions.Item>
               <Descriptions.Item label="Public IP">{selectedEIP.public_ip}</Descriptions.Item>
               <Descriptions.Item label="Allocation ID">{selectedEIP.allocation_id}</Descriptions.Item>
-              <Descriptions.Item label="ARN">{selectedEIP.arn}</Descriptions.Item>
-              <Descriptions.Item label="Month">{selectedEIP.months}</Descriptions.Item>
-              <Descriptions.Item label="Cost Savings">{selectedEIP.cost_savings || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Status">{selectedEIP.status}</Descriptions.Item>
+              <Descriptions.Item label="Public Ip">{selectedEIP.public_ip}</Descriptions.Item>
+              <Descriptions.Item label="Domain">{selectedEIP.domain || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Public ipv4 Pool">{selectedEIP.public_ipv4_pool}</Descriptions.Item>
             </Descriptions>
           </Card>
         )}

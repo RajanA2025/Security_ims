@@ -1,39 +1,58 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 
-const Chart = () => {
+const Chart = ({ labels, data }) => {
+  const chartRef = useRef(null);
+
   useEffect(() => {
-    const chartDom = document.getElementById('main');
-    const myChart = echarts.init(chartDom);
+    if (!chartRef.current) return;
+
+    const myChart = echarts.init(chartRef.current);
 
     const option = {
+       title: {
+          subtext: 'OverAll Count',
+          left: 'center'
+        },
       xAxis: {
         type: 'category',
-        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        data: labels,
+        axisLabel: {
+          interval: 0,   // force all labels to show
+          rotate: 20,    // rotate for readability
+        },
       },
       yAxis: {
         type: 'value',
       },
       series: [
         {
-          data: [120, 200, 150, 80, 70, 110, 130],
+          data: data,
           type: 'bar',
+          itemStyle: {
+            color: '#5470C6', // optional: custom bar color
+          },
         },
       ],
+      tooltip: {
+        show: true,
+        trigger: 'axis',
+      },
     };
+    
 
     myChart.setOption(option);
 
     return () => {
       myChart.dispose();
     };
-  }, []);
+  }, [labels, data]);
 
   return (
     <div
-      id="main"
-      style={{ width: '100%', height: '250px' }} // Required for chart display
-    ></div>
+      ref={chartRef}
+      style={{ width: '100%', height: '250px' }}
+    />
   );
 };
 

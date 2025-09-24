@@ -290,108 +290,102 @@ const Monitoring = () => {
     return 'success';
   };
 
-  // Table columns configuration with built-in filters
-  const columns = [
-    {
-      title: 'SI. No',
-      dataIndex: 'slNo',
-      key: 'slNo',
-      width: 80,
-      fixed: 'left',
-      render: (_, __, index) => index + 1,
-    },
-    {
-      title: 'Account ID',
-      dataIndex: 'accountId',
-      key: 'accountId',
-      width: 120,
-      fixed: 'left',
-      render: (text) => <Text strong>{text}</Text>,
-      sorter: (a, b) => a.accountId.localeCompare(b.accountId),
-      filters: uniqueAccountIds.map(accountId => ({
-        text: accountId,
-        value: accountId
-      })),
-      onFilter: (value, record) => record.accountId === value,
-      filterSearch: true,
-    },
-    {
-      title: 'Account Name',
-      dataIndex: 'accountName',
-      key: 'accountName',
-      width: 150,
-      ellipsis: true,
-      sorter: (a, b) => a.accountName.localeCompare(b.accountName),
-      filters: uniqueAccountNames.map(accountName => ({
-        text: accountName,
-        value: accountName
-      })),
-      onFilter: (value, record) => record.accountName === value,
-      filterSearch: true,
-    },
-    {
-      title: 'Region',
-      dataIndex: 'region',
-      key: 'region',
-      width: 120,
-      render: (text) => (
-        <Tag color="blue" style={{ fontSize: '12px' }}>
-          {text}
-        </Tag>
-      ),
-      sorter: (a, b) => a.region.localeCompare(b.region),
-      filters: uniqueRegions.map(region => ({
-        text: region,
-        value: region
-      })),
-      onFilter: (value, record) => record.region === value,
-      filterSearch: true,
-    },
-    {
-      title: 'Instance ID',
-      dataIndex: 'instanceId',
-      key: 'instanceId',
-      width: 180,
-      ellipsis: true,
-      render: (text) => <Text code>{text}</Text>,
-    },
-    {
-      title: 'CPU Usage',
-      dataIndex: 'cpuUsage',
-      key: 'cpuUsage',
-      width: 120,
-      render: (text) => (
-        <Tag color={getUsageColor(text)} style={{ minWidth: '60px', textAlign: 'center' }}>
-          {text}
-        </Tag>
-      ),
-      sorter: (a, b) => parseFloat(a.cpuUsage) - parseFloat(b.cpuUsage),
-    },
-    {
-      title: 'Memory Usage',
-      dataIndex: 'memoryUsage',
-      key: 'memoryUsage',
-      width: 120,
-      render: (text) => (
-        <Tag color={getUsageColor(text)} style={{ minWidth: '60px', textAlign: 'center' }}>
-          {text}
-        </Tag>
-      ),
-      sorter: (a, b) => parseFloat(a.memoryUsage) - parseFloat(b.memoryUsage),
-    },
-    {
-      title: 'Disk Usage',
-      dataIndex: 'diskUsage',
-      key: 'diskUsage',
-      width: 120,
-      render: (text) => (
-        <Tag color={getUsageColor(text)} style={{ minWidth: '60px', textAlign: 'center' }}>
-          {text}
-        </Tag>
-      ),
-      sorter: (a, b) => parseFloat(a.diskUsage) - parseFloat(b.diskUsage),
-    },
-  ];
+// Table columns configuration with filtering only
+const columns = [
+  {
+    title: 'SI. No',
+    dataIndex: 'slNo',
+    key: 'slNo',
+    width: 80,
+    fixed: 'left',
+    render: (_, __, index) => index + 1,
+  },
+  {
+    title: 'Account ID',
+    dataIndex: 'accountId',
+    key: 'accountId',
+    width: 120,
+    fixed: 'left',
+    render: (text) => <Text strong>{text}</Text>,
+    filters: uniqueAccountIds.map((accountId) => ({
+      text: accountId,
+      value: accountId,
+    })),
+    onFilter: (value, record) => record.accountId === value,
+    filterSearch: true,
+  },
+  {
+    title: 'Account Name',
+    dataIndex: 'accountName',
+    key: 'accountName',
+    width: 150,
+    ellipsis: true,
+    filters: uniqueAccountNames.map((accountName) => ({
+      text: accountName,
+      value: accountName,
+    })),
+    onFilter: (value, record) => record.accountName === value,
+    filterSearch: true,
+  },
+  {
+    title: 'Region',
+    dataIndex: 'region',
+    key: 'region',
+    width: 120,
+    render: (text) => (
+      <Tag color="blue" style={{ fontSize: '12px' }}>
+        {text}
+      </Tag>
+    ),
+    filters: uniqueRegions.map((region) => ({
+      text: region,
+      value: region,
+    })),
+    onFilter: (value, record) => record.region === value,
+    filterSearch: true,
+  },
+  {
+    title: 'Instance ID',
+    dataIndex: 'instanceId',
+    key: 'instanceId',
+    width: 180,
+    ellipsis: true,
+    render: (text) => <Text code>{text}</Text>,
+  },
+  {
+    title: 'CPU Usage',
+    dataIndex: 'cpuUsage',
+    key: 'cpuUsage',
+    width: 120,
+    render: (text) => (
+      <Tag color={getUsageColor(text)} style={{ minWidth: '60px', textAlign: 'center' }}>
+        {text}
+      </Tag>
+    ),
+  }
+  // {
+  //   title: 'Memory Usage',
+  //   dataIndex: 'memoryUsage',
+  //   key: 'memoryUsage',
+  //   width: 120,
+  //   render: (text) => (
+  //     <Tag color={getUsageColor(text)} style={{ minWidth: '60px', textAlign: 'center' }}>
+  //       {text}
+  //     </Tag>
+  //   ),
+  // },
+  // {
+  //   title: 'Disk Usage',
+  //   dataIndex: 'diskUsage',
+  //   key: 'diskUsage',
+  //   width: 120,
+  //   render: (text) => (
+  //     <Tag color={getUsageColor(text)} style={{ minWidth: '60px', textAlign: 'center' }}>
+  //       {text}
+  //     </Tag>
+  //   ),
+  // },
+];
 
   // Loading state
   if (loading) {
@@ -455,26 +449,7 @@ const Monitoring = () => {
           </Col>
           <Col xs={24} md={12}>
             <Row gutter={[8, 8]} justify="end">
-              <Col xs={8} sm={6}>
-                <Select
-                  showSearch
-                  placeholder="Select Account ID"
-                  style={{ width: '100%' }}
-                  value={filters.accountId || undefined}
-                  onChange={(value) => handleFilterChange('accountId', value)}
-                  allowClear
-                  size="middle"
-                  filterOption={(input, option) =>
-                    option?.children.toLowerCase().includes(input.toLowerCase())
-                  }
-                >
-                  {uniqueAccountIds.map((accountId) => (
-                    <Option key={accountId} value={accountId}>
-                      {accountId}
-                    </Option>
-                  ))}
-                </Select>
-              </Col>
+             
               <Col xs={8} sm={6}>
                 <Select
                   showSearch
@@ -579,7 +554,7 @@ const Monitoring = () => {
         </Row>
 
         {/* Chart Section */}
-        <Card style={{ marginBottom: 24, padding: '12px 16px' }}>
+        {/* <Card style={{ marginBottom: 24, padding: '12px 16px' }}>
           <Title level={5} style={{ 
             margin: '0 0 8px 0', 
             fontSize: '16px',
@@ -590,7 +565,7 @@ const Monitoring = () => {
           <div style={{ height: '250px', marginTop: '2px' }}>
             <CpuUsageChart data={filteredData} filters={filters} />
           </div>
-        </Card>
+        </Card> */}
 
         {/* Show error notification if API failed but we have mock data */}
         {error && performanceData.length > 0 && (

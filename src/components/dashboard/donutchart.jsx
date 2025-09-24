@@ -9,13 +9,16 @@ function DonutChart() {
     const option ={
    
         title: {
-          subtext: 'Orphaned Volume',
+          subtext: 'AMI Status',
           left: 'center'
         },
         tooltip: {
           trigger: 'item'
         },
+       
         legend: {
+          bottom: "5%",
+
           orient: 'horizontal',
           left: 'center'
         },
@@ -50,7 +53,7 @@ function DonutChart() {
     <div>
       <div
         ref={chartRef}
-        style={{ width: '100%', height: '250px' }} // Must set size
+        style={{ width: '100%', height: '250px' }}
       />
     </div>
   );

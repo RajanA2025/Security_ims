@@ -210,7 +210,7 @@ const Securitygrp = () => {
       width: 100
     },
     {
-        title: "Secuirty Name",
+        title: "Security Name",
         dataIndex: "sg_name",
         key: "sg_name",
         width: 100

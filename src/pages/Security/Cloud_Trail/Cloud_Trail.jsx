@@ -94,7 +94,7 @@ const Cloud_Trail = () => {
     {
       title: (
         <span>
-          User Name{" "}
+          Account Name{" "}
           <Tooltip title="AWS user or role that performed the action.">
             <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
           </Tooltip>

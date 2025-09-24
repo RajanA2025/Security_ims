@@ -321,9 +321,9 @@ const Insights = () => {
   // Calculate statistics
   const calculateStats = () => {
     const total = data.length;
-    const mfaEnabled = data.filter(item => item.mfa_status === "Enabled").length;
-    const passwordEnabled = data.filter(item => item.password_enabled).length;
-    const adminUsers = data.filter(item => item.is_admin).length;
+    const mfaEnabled = data.filter(item => item.mfa_enabled === true ).length;
+    const passwordEnabled = data.filter(item => item.password_created_on !== null || item.password_last_used !== null || item.password_age !== null).length;
+    const adminUsers = data.filter(item => item.has_admin_access).length;
     const consoleUsers = data.filter(item => item.console_access).length;
 
     const total1 = data1.length;

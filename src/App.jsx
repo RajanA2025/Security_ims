@@ -74,6 +74,7 @@ function App() {
       <Route path="/operational/observability" element={<Observability filters={filters} />} />
       <Route path="/operational/monitoring" element={<Monitoring filters={filters} />} />
       <Route path="/operational/rightsizing" element={<RightSizing filters={filters} />} />
+      <Route path="/operational/cloudWatch" element={<CloudWatch filters={filters} />} />
 
       {/* Cost */}
       <Route path="/cost" element={<Dashboard2 />} />

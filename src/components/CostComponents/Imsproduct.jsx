@@ -20,7 +20,7 @@ const Imsproduct = () => {
   return (
     <div
       style={{
-        padding: '50px',
+        padding: '150px',
         display: 'flex',
         justifyContent: 'center',
       }}
@@ -44,7 +44,7 @@ const Imsproduct = () => {
                 borderRadius: '15px',
                 overflow: 'hidden',
               }}
-              bodyStyle={{ padding: '20px', backgroundColor: '#f9f4e4' }}
+              bodyStyle={{ padding: '20px', backgroundColor: '#91caff' }}
             >
               <div style={{ textAlign: 'center' }}>
                 <div
@@ -57,7 +57,7 @@ const Imsproduct = () => {
                     borderRadius: '8px',
                   }}
                 >
-                  <img src="https://www.shutterstock.com/image-photo/cost-reduction-concept-wording-on-600nw-2405339143.jpg" alt="Cost Cloud" width="300px" height="230px" />
+                  <img src="https://www.shutterstock.com/image-photo/cost-reduction-concept-wording-on-600nw-2405339143.jpg" alt="Cost Cloud" width="500px" height="230px" />
                 </div>
                 <Title level={4} style={{ margin: '20px 0' }}>Cost</Title>
                 <Text>
@@ -87,7 +87,7 @@ const Imsproduct = () => {
                   borderRadius: '15px',
                   overflow: 'hidden',
                 }}
-                bodyStyle={{ padding: '20px', backgroundColor: '#f9f4e4' }}
+                bodyStyle={{ padding: '20px', backgroundColor: '#91caff' }}
               >
                 <div style={{ textAlign: 'center' }}>
                   <div
@@ -130,7 +130,7 @@ const Imsproduct = () => {
                   borderRadius: '15px',
                   overflow: 'hidden',
                 }}
-                bodyStyle={{ padding: '20px', backgroundColor: '#f9f4e4' }}
+                bodyStyle={{ padding: '20px', backgroundColor: '#91caff' }}
               >
                 <div style={{ textAlign: 'center' }}>
                   <div

@@ -1,5 +1,4 @@
-import { Col, Row, Card, Space, Typography, Statistic, Tooltip } from 'antd'
-import CpuAvg from '../../components/cpuavg';
+import { Col, Row, Card, Typography, Tooltip } from 'antd'
 import {
   BarChartOutlined,
   CheckCircleOutlined,
@@ -11,10 +10,11 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import DonutChart from '../../components/dashboard/donutchart'
 import Chart from "../../components/dashboard/chart"
-import Graph from "../../components/dashboard/graphchart"
+import HalfPieChart from "../../components/dashboard/halfpiechart"
+import Linechart from "../../components/dashboard/linechart"
 import axios from 'axios'
-// import ResourceBarChart from '../../components/dashboard/resourceBarChart'
-// Add this function before the Dashboard component
+import { useObservability } from "../../Context/ObservabilityContext";
+// Tooltip helper
 const getTooltipText = (title) => {
   const tooltips = {
     "Total Instances": "Total number of EC2 instances being monitored across all regions and accounts.",
@@ -24,101 +24,44 @@ const getTooltipText = (title) => {
   }
   return tooltips[title] || "Performance monitoring metric"
 }
-// const [resourceCounts, setResourceCounts] = useState({
-//   keyPairs: 0,
-//   elasticIPs: 0,
-//   volumes: 0,
-// });
-//testing code 
-// const fetchResourceCounts = async () => {
-//   try {
-//     const [keyPairRes, eipRes, volRes] = await Promise.all([
-//       axios.get("http://13.212.15.14:8016/keypairs2"),
-//       axios.get("http://13.212.15.14:8016/orphaned-eip"),
-//       axios.get("http://13.212.15.14:8016/orphaned-volumes"),
-//     ]);
-
-//     setResourceCounts({
-//       keyPairs: keyPairRes.data.filter(item => item.status === "Disabled").length, // orphaned count
-//       elasticIPs: eipRes.data.length,
-//       volumes: volRes.data.length,
-//     });
-//   } catch (err) {
-//     console.error("Error fetching resource counts:", err);
-//     // fallback mock
-//     setResourceCounts({
-//       keyPairs: 2,
-//       elasticIPs: 5,
-//       volumes: 3,
-
-//     });
-//   }
-// };//test code end 
 
 // Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2
-    }
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 }
   }
 }
 
 const cardVariants = {
-  hidden: {
-    opacity: 0,
-    y: 20,
-    scale: 0.95
-  },
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
   visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 12
-    }
+    opacity: 1, y: 0, scale: 1,
+    transition: { type: "spring", stiffness: 100, damping: 12 }
   },
   hover: {
-    y: -8,
-    scale: 1.02,
+    y: -8, scale: 1.02,
     boxShadow: "0 20px 40px rgba(0,0,0,0.12)",
-    transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 20
-    }
+    transition: { type: "spring", stiffness: 300, damping: 20 }
   }
 }
 
 const titleVariants = {
   hidden: { opacity: 0, x: -20 },
   visible: {
-    opacity: 1,
-    x: 0,
+    opacity: 1, x: 0,
     transition: { duration: 0.6, ease: "easeOut" }
   }
 }
 
 // Animated Statistic Card Component
-const AnimatedStatCard = ({
-  icon,
-  title,
-  value,
-  color,
-  index = 0,
-  loading = false
-}) => (
+const AnimatedStatCard = ({ icon, title, value, color, index = 0 }) => (
   <motion.div
     variants={cardVariants}
     initial="hidden"
     animate="visible"
     whileHover="hover"
-  // className="stat-card"
   >
     <Card
       hoverable={false}
@@ -135,27 +78,17 @@ const AnimatedStatCard = ({
         <motion.div
           initial={{ scale: 0, rotate: -90 }}
           animate={{ scale: 1, rotate: 0 }}
-          transition={{
-            delay: index * 0.1,
-            type: "spring",
-            stiffness: 200
-          }}
+          transition={{ delay: index * 0.1, type: "spring", stiffness: 200 }}
           style={{ marginBottom: '16px' }}
         >
-          {React.cloneElement(icon, {
-            style: { fontSize: 32, color: color }
-          })}
+          {React.cloneElement(icon, { style: { fontSize: 32, color: color } })}
         </motion.div>
 
-        {/* Custom animated value display */}
+        {/* Animated value */}
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{
-            delay: index * 0.1 + 0.3,
-            type: "spring",
-            stiffness: 300
-          }}
+          transition={{ delay: index * 0.1 + 0.3, type: "spring", stiffness: 300 }}
           style={{ marginBottom: '16px' }}
         >
           <motion.h1
@@ -170,18 +103,13 @@ const AnimatedStatCard = ({
               textAlign: 'center'
             }}
             animate={{ scale: [1, 1.05, 1] }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              repeatType: "reverse",
-              delay: index * 0.2
-            }}
+            transition={{ duration: 2, repeat: Infinity, repeatType: "reverse", delay: index * 0.2 }}
           >
             {value}
           </motion.h1>
         </motion.div>
 
-        {/* Title */}
+        {/* Title with tooltip */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -208,7 +136,7 @@ const AnimatedStatCard = ({
   </motion.div>
 )
 
-// Section title component
+// Section title
 const SectionTitle = ({ children, delay = 0 }) => (
   <motion.div
     variants={titleVariants}
@@ -219,7 +147,7 @@ const SectionTitle = ({ children, delay = 0 }) => (
     <Typography.Title
       level={4}
       style={{
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        fontFamily: " Roboto, sans-serif",
         fontSize: "20px",
         fontWeight: 600,
         color: "#1a1a1a",
@@ -243,7 +171,7 @@ const SectionTitle = ({ children, delay = 0 }) => (
   </motion.div>
 )
 
-// Loading component
+// Loading state
 const LoadingState = () => (
   <motion.div
     initial={{ opacity: 0 }}
@@ -259,10 +187,7 @@ const LoadingState = () => (
     }}
   >
     <motion.div
-      animate={{
-        rotate: 360,
-        scale: [1, 1.2, 1]
-      }}
+      animate={{ rotate: 360, scale: [1, 1.2, 1] }}
       transition={{
         rotate: { duration: 2, repeat: Infinity, ease: "linear" },
         scale: { duration: 1, repeat: Infinity }
@@ -287,57 +212,39 @@ const LoadingState = () => (
 function Dashboard() {
   const [performanceData, setPerformanceData] = useState([])
   const [loading, setLoading] = useState(true)
-  const [resourceCounts, setResourceCounts] = useState({
-    keyPairs: 0,
-    elasticIPs: 0,
-    volumes: 0,
-  });
-  const fetchResourceCounts = async () => {
-    try {
-      const [keyPairRes, eipRes, volRes] = await Promise.all([
-        axios.get("http://13.212.15.14:8016/keypairs2"),
-        axios.get("http://13.212.15.14:8016/orphaned-eip"),
-        axios.get("http://13.212.15.14:8016/orphaned-volumes"),
-      ]);
+  const { securityData,
+    eipData,
+    volumeData,
+    s3Data,
+    ec2Data, } = useObservability();
+    const labelss = ['OrphanedkeyPair','OrphanedEIP', 'Volume', 'S3', 'EC2']
+    const orphaned = securityData.filter(inst => inst.status =="Orphaned").length;
 
-      setResourceCounts({
-        keyPairs: keyPairRes.data.filter(item => item.status === "Disabled").length, // orphaned count
-        elasticIPs: eipRes.data.length,
-        volumes: volRes.data.length,
-      });
-    } catch (err) {
-      console.error("Error fetching resource counts:", err);
-      // fallback mock
-      setResourceCounts({
-        keyPairs: 2,
-        elasticIPs: 5,
-        volumes: 3,
+    const data = [
+      orphaned,
+      eipData?.length || 0,
+      volumeData?.length || 0,
+      s3Data?.length || 0,
+      ec2Data?.length || 0,
+    ];
 
-      });
-    }
-  };
-  useEffect(() => {
-    fetchPerformanceData()
-    fetchResourceCounts()
-  }, [])
-  // Fetch performance data for statistics
+    const runningCount = ec2Data.filter(inst => inst.state === "running").length;
+    const stoppedCount = ec2Data.filter(inst => inst.state === "stopped").length;
+  
+    const labels1 = ["Running", "Stopped"];
+    const data1 = [runningCount, stoppedCount];
+    const labels2 = ec2Data.map((inst, index) => inst.instance_name || `Instance ${index + 1}`);
+    const data2 = ec2Data.map(inst => inst.cpu_avg_7d || 0);
   const fetchPerformanceData = async () => {
     try {
       setLoading(true)
-
       const apiUrl = 'http://13.212.15.14:8008/performance'
-      const response = await axios({
-        method: 'get',
-        url: apiUrl,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        }
+      const response = await axios.get(apiUrl, {
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
       })
-
       const responseData = response.data.data || []
 
-      if (responseData && responseData.length > 0) {
+      if (responseData.length > 0) {
         const formattedData = responseData.map((item) => ({
           id: item.id,
           accountId: String(item.account_id).trim(),
@@ -348,74 +255,35 @@ function Dashboard() {
           memoryUsage: Number(item.memory_utilization).toFixed(2),
           diskUsage: Number(item.disk_utilization).toFixed(2),
         }))
-
         setPerformanceData(formattedData)
       }
-
     } catch (err) {
       console.error('Error fetching performance data:', err)
-
-      // Mock data for testing when API fails
-      const mockData = [
-        {
-          id: 'mock-1',
-          accountId: 'ACC-001',
-          accountName: 'Production Account',
-          region: 'us-east-1',
-          instanceId: 'i-1234567890abcdef0',
-          cpuUsage: '45.00',
-          memoryUsage: '67.00',
-          diskUsage: '23.00'
-        },
-        {
-          id: 'mock-2',
-          accountId: 'ACC-002',
-          accountName: 'Development Account',
-          region: 'us-west-2',
-          instanceId: 'i-0987654321fedcba0',
-          cpuUsage: '78.00',
-          memoryUsage: '56.00',
-          diskUsage: '89.00'
-        },
-        {
-          id: 'mock-3',
-          accountId: 'ACC-003',
-          accountName: 'Testing Account',
-          region: 'ap-south-1',
-          instanceId: 'i-fedcba0987654321',
-          cpuUsage: '92.00',
-          memoryUsage: '87.00',
-          diskUsage: '76.00'
-        }
-      ]
-
-      setPerformanceData(mockData)
-
+      // fallback mock data
+      setPerformanceData([
+        { id: 'mock-1', accountId: 'ACC-001', accountName: 'Production', region: 'us-east-1', instanceId: 'i-123', cpuUsage: '45.00', memoryUsage: '67.00', diskUsage: '23.00' },
+        { id: 'mock-2', accountId: 'ACC-002', accountName: 'Development', region: 'us-west-2', instanceId: 'i-456', cpuUsage: '78.00', memoryUsage: '56.00', diskUsage: '89.00' },
+        { id: 'mock-3', accountId: 'ACC-003', accountName: 'Testing', region: 'ap-south-1', instanceId: 'i-789', cpuUsage: '92.00', memoryUsage: '87.00', diskUsage: '76.00' }
+      ])
     } finally {
       setLoading(false)
     }
   }
 
-  // Initial data fetch
-  useEffect(() => {
-    fetchPerformanceData()
-  }, [])
+  useEffect(() => { fetchPerformanceData() }, [])
 
-  // Calculate statistics
+  // Stats
   const totalInstances = performanceData.length
-
   const healthyInstances = performanceData.filter(d =>
     parseFloat(d.cpuUsage) < 60 &&
     parseFloat(d.memoryUsage) < 60 &&
     parseFloat(d.diskUsage) < 60
   ).length
-
   const warningInstances = performanceData.filter(d =>
     (parseFloat(d.cpuUsage) >= 60 && parseFloat(d.cpuUsage) < 80) ||
     (parseFloat(d.memoryUsage) >= 60 && parseFloat(d.memoryUsage) < 80) ||
     (parseFloat(d.diskUsage) >= 60 && parseFloat(d.diskUsage) < 80)
   ).length
-
   const criticalInstances = performanceData.filter(d =>
     parseFloat(d.cpuUsage) >= 80 ||
     parseFloat(d.memoryUsage) >= 80 ||
@@ -436,7 +304,7 @@ function Dashboard() {
           <LoadingState key="loading" />
         ) : (
           <motion.div key="content">
-            {/* Performance Statistics Cards */}
+            {/* Top Animated Stat Cards */}
             <motion.div
               variants={containerVariants}
               initial="hidden"
@@ -448,100 +316,45 @@ function Dashboard() {
                 marginBottom: '48px'
               }}
             >
-              <AnimatedStatCard
-                icon={<BarChartOutlined />}
-                title="Total Instances"
-                value={totalInstances}
-                color="#1890ff"
-                index={0}
-              />
-
-              <AnimatedStatCard
-                icon={<CheckCircleOutlined />}
-                title="Healthy Instances"
-                value={healthyInstances}
-                color="#52c41a"
-                index={1}
-              />
-
-              <AnimatedStatCard
-                icon={<ExclamationCircleOutlined />}
-                title="Warning"
-                value={warningInstances}
-                color="#faad14"
-                index={2}
-              />
-
-              <AnimatedStatCard
-                icon={<CloseCircleOutlined />}
-                title="Critical"
-                value={criticalInstances}
-                color="#ff4d4f"
-                index={3}
-              />
+              <AnimatedStatCard icon={<BarChartOutlined />} title="Total Instances" value={totalInstances} color="#1890ff" index={0} />
+              <AnimatedStatCard icon={<CheckCircleOutlined />} title="Healthy Instances" value={healthyInstances} color="#52c41a" index={1} />
+              <AnimatedStatCard icon={<ExclamationCircleOutlined />} title="Warning" value={warningInstances} color="#faad14" index={2} />
+              <AnimatedStatCard icon={<CloseCircleOutlined />} title="Critical" value={criticalInstances} color="#ff4d4f" index={3} />
             </motion.div>
+            <SectionTitle delay={0.5}>Observability</SectionTitle>
+            {/* Charts (no animation) */}
+            <Row gutter={[16, 16]}>
+              <Col md={15}>
+                <Card style={{ borderRadius: '12px' }}>
+                  <Chart labels={labelss} data={data} title="overall Observability" />
+                </Card>
+              </Col>
+              <Col md={9}>
+                <Card style={{ borderRadius: '12px' }}>
+                <HalfPieChart labels={labels1} data={data1} />
+                </Card>
+              </Col>
+              {/* <Col md={15}>
+                <Card style={{ borderRadius: '12px' }}>
+                <Linechart labels={labels2} data={data2}  title="EC2 CPU Avg (7 Days)" />
+             
+                </Card>
+              </Col> */}
+            </Row>
+            <br/>
+            <SectionTitle delay={0.5}>Snapshot</SectionTitle>
 
-            {/* Original Dashboard Content */}
-            <SectionTitle delay={0.5}>Snapshot </SectionTitle>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-            >
-              <Row gutter={[16, 16]}>
-                <Col md={9}>
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
-                    <Card style={{ borderRadius: '12px' }}>
-                      <DonutChart />
-                    </Card>
-                  </motion.div>
-                </Col>
-                <Col md={15}>
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
-                    <Card style={{ borderRadius: '12px' }}>
-                      <Chart />
-                    </Card>
-                  </motion.div>
-                </Col>
-              </Row>
-            </motion.div>
-            {/* <SectionTitle delay={1}>Resource Overview</SectionTitle>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.2 }}
-            >
-              <ResourceBarChart data={resourceCounts} />
-            </motion.div> */}
-
-
+            <Row gutter={[16, 16]}>
+              <Col md={9}>
+                <Card style={{ borderRadius: '12px', padding:"10px" }}>
+                  <DonutChart />
+                </Card>
+              </Col>
+             
+            </Row>
           </motion.div>
-
         )}
       </AnimatePresence>
-
-      <style jsx>{`
-        .stat-card {
-          transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-        }
-        
-        .stat-card:hover {
-          transform: translateY(-4px);
-        }
-        
-        @media (max-width: 768px) {
-          .grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
     </motion.div>
   )
 }

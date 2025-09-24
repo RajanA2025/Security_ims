@@ -255,7 +255,7 @@ const SecurityTools = () => {
       )
     },
     {
-      title: "LastUsed Date",
+      title: "Last Used Date",
       dataIndex: "last_used_date",
       key: "last_used_date",
     
@@ -312,13 +312,24 @@ Security & KMS Tools
       </Row>
 
       <Tabs 
-        defaultActiveKey="1" 
+        defaultActiveKey="2" 
         onChange={key => setTabKey(key)}
         style={{
           marginTop: "0px",
           padding: "0px"
         }}
       >
+         <Tabs.TabPane tab="KMS" key="2">
+          <Table
+            columns={columns1}
+            dataSource={kmData.filter(item =>
+              item.aws_account?.toLowerCase().includes(searchText.toLowerCase())
+            )}
+            loading={loading}
+            rowKey="username"
+            pagination={{ pageSize: 8 }}
+          />
+        </Tabs.TabPane>
         <Tabs.TabPane tab="Security" key="1">
           <Table
             columns={columns}
@@ -330,17 +341,7 @@ Security & KMS Tools
             pagination={{ pageSize: 8 }}
           />
         </Tabs.TabPane>
-        <Tabs.TabPane tab="KMS" key="2">
-          <Table
-            columns={columns1}
-            dataSource={kmData.filter(item =>
-              item.aws_account?.toLowerCase().includes(searchText.toLowerCase())
-            )}
-            loading={loading}
-            rowKey="username"
-            pagination={{ pageSize: 8 }}
-          />
-        </Tabs.TabPane>
+       
       </Tabs>
 
       <Modal
