@@ -84,11 +84,11 @@ const BarChart = () => {
       },
       legend: {
         type: "scroll",
-        bottom: "5%",
+        bottom: "2%",
         orient: "horizontal",
         data: services,
-        textStyle: { fontSize: 8, fontWeight: 600, color: "#333",fontFamily: " Roboto, sans-serif",},
-        padding: [5, 100, 0, 100],
+        textStyle: { fontSize: 8, fontWeight: 600, color: "#333", fontFamily: " Roboto, sans-serif", },
+        padding: [5, 70, 0, 70],
       },
       grid: { top: "15%", left: "5%", right: "3%", bottom: "12%", containLabel: true },
       xAxis: {
@@ -170,25 +170,47 @@ const BarChart = () => {
             Daily Cost
           </Title>
 
-          <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-            <Select
+
+          <div style={{ display: "flex", alignItems: "center", }}>
+            {/* Scaled Select */}
+            <div
+              style={{
+                display: "flex",              // flex container
+                justifyContent: "center",     // horizontal centering
+                alignItems: "center",         // vertical centering
+                transform: "scale(0.7)",      // scale the Select
+                transformOrigin: "center right",  // keep it aligned to top-left
+                paddingRight: "10px",        // space from the button
+              }}
+            >              <Select
               value={range}
               onChange={(v) => setRange(v)}
               size="small"
-              style={{ width: 140 }}
+              style={{ width: 150, height: 24, textAlign: "center" }}
+              dropdownRender={(menu) => (
+                <div style={{ textAlign: "center", fontSize: "10px" }}>
+                  {menu}
+                </div>
+              )}
             >
-              <Option value="3M">Last 3 Months</Option>
-              <Option value="6M">Last 6 Months</Option>
-              <Option value="YTD">Year to Date</Option>
-            </Select>
+                <Option value="3M" style={{ textAlign: "center", fontSize: "8px" }}>Last 3 Months</Option>
+                <Option value="6M" style={{ textAlign: "center", fontSize: "8px" }}>Last 6 Months</Option>
+                <Option value="YTD" style={{ textAlign: "center", fontSize: "8px" }}>Year to Date</Option>
+              </Select>
+            </div>
 
+            {/* Button */}
             <Button
               size="small"
               type="default"
               onClick={() => setShowModal(true)}
               icon={<FaExpandArrowsAlt />}
+              style={{ height: 19, display: "flex", alignItems: "center", justifyContent: "center" }}
             />
           </div>
+
+
+
         </div>
 
         {/* Chart */}
@@ -242,7 +264,7 @@ const BarChart = () => {
               <Option value="6M">Last 6 Months</Option>
               <Option value="YTD">Year to Date</Option>
             </Select>
-           
+
           </div>
         </div>
 

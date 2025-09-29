@@ -19,6 +19,7 @@ import {
 } from "@ant-design/icons";
 import { PortableWifiOffOutlined, SecuritySharp } from "@mui/icons-material";
 
+
 const { Title } = Typography;
 
 // Animation variants
@@ -34,13 +35,13 @@ const containerVariants = {
 };
 
 const cardVariants = {
-  hidden: { 
-    opacity: 0, 
+  hidden: {
+    opacity: 0,
     y: 20,
     scale: 0.95
   },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     y: 0,
     scale: 1,
     transition: {
@@ -63,8 +64,8 @@ const cardVariants = {
 
 const progressVariants = {
   hidden: { pathLength: 0, opacity: 0 },
-  visible: { 
-    pathLength: 1, 
+  visible: {
+    pathLength: 1,
     opacity: 1,
     transition: {
       pathLength: { duration: 1.5, ease: "easeOut" },
@@ -75,8 +76,8 @@ const progressVariants = {
 
 const titleVariants = {
   hidden: { opacity: 0, x: -20 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     x: 0,
     transition: { duration: 0.6, ease: "easeOut" }
   }
@@ -87,16 +88,16 @@ const AnimatedProgress = ({ percent, strokeColor, delay = 0 }) => (
   <motion.div
     initial={{ scale: 0, rotate: -180 }}
     animate={{ scale: 1, rotate: 0 }}
-    transition={{ 
+    transition={{
       delay,
       type: "spring",
       stiffness: 200,
       damping: 15
     }}
   >
-    <Progress 
-      type="circle" 
-      percent={percent} 
+    <Progress
+      type="circle"
+      percent={percent}
       strokeColor={strokeColor}
       trailColor="#f0f0f0"
       strokeWidth={8}
@@ -106,13 +107,13 @@ const AnimatedProgress = ({ percent, strokeColor, delay = 0 }) => (
 );
 
 // Reusable StatCard component
-const StatCard = ({ 
-  icon, 
-  title, 
-  tooltip, 
-  percent, 
-  count, 
-  total, 
+const StatCard = ({
+  icon,
+  title,
+  tooltip,
+  percent,
+  count,
+  total,
   strokeColor,
   index = 0,
   isNumeric = false
@@ -124,9 +125,9 @@ const StatCard = ({
     whileHover="hover"
     className="stat-card"
   >
-    <Card 
+    <Card
       hoverable={false}
-      style={{ 
+      style={{
         height: '100%',
         borderRadius: '12px',
         border: 'none',
@@ -139,14 +140,14 @@ const StatCard = ({
         <motion.div
           initial={{ scale: 0, rotate: -90 }}
           animate={{ scale: 1, rotate: 0 }}
-          transition={{ 
+          transition={{
             delay: index * 0.1,
             type: "spring",
             stiffness: 200
           }}
           style={{ marginBottom: '16px' }}
         >
-          {React.cloneElement(icon, { 
+          {React.cloneElement(icon, {
             style: { fontSize: 32, color: strokeColor || "#1890ff" }
           })}
         </motion.div>
@@ -155,16 +156,16 @@ const StatCard = ({
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ 
+            transition={{
               delay: index * 0.1 + 0.3,
               type: "spring",
               stiffness: 300
             }}
           >
-            <motion.h1 
-              style={{ 
-                fontSize: '48px', 
-                fontWeight: 'bold', 
+            <motion.h1
+              style={{
+                fontSize: '48px',
+                fontWeight: 'bold',
                 margin: '16px 0',
                 background: `linear-gradient(135deg, ${strokeColor}, #1890ff)`,
                 WebkitBackgroundClip: 'text',
@@ -172,7 +173,7 @@ const StatCard = ({
                 backgroundClip: 'text'
               }}
               animate={{ scale: [1, 1.1, 1] }}
-              transition={{ 
+              transition={{
                 duration: 2,
                 repeat: Infinity,
                 repeatType: "reverse"
@@ -182,8 +183,8 @@ const StatCard = ({
             </motion.h1>
           </motion.div>
         ) : (
-          <AnimatedProgress 
-            percent={percent} 
+          <AnimatedProgress
+            percent={percent}
             strokeColor={strokeColor}
             delay={index * 0.1 + 0.2}
           />
@@ -195,8 +196,8 @@ const StatCard = ({
           transition={{ delay: index * 0.1 + 0.4 }}
           style={{ marginTop: '16px' }}
         >
-          <div style={{ 
-            fontWeight: "600", 
+          <div style={{
+            fontWeight: "600",
             fontSize: '16px',
             marginBottom: '8px',
             display: 'flex',
@@ -209,9 +210,9 @@ const StatCard = ({
               <InfoCircleOutlined style={{ color: '#1890ff' }} />
             </Tooltip>
           </div>
-          
+
           {!isNumeric && (
-            <motion.span 
+            <motion.span
               style={{ color: "#666", fontSize: '14px' }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -234,7 +235,7 @@ const SectionTitle = ({ children, delay = 0 }) => (
     animate="visible"
     transition={{ delay }}
   >
-    <Title 
+    <Title
       level={3}
       style={{
         fontFamily: "'Roboto', 'Segoe UI', sans-serif",
@@ -303,7 +304,7 @@ const Insights = () => {
           axios.get(API_URL),
           axios.get(API_URL1)
         ]);
-        
+
         setData(response1.data);
         setData1(response2.data);
         setError(null);
@@ -380,7 +381,7 @@ const Insights = () => {
           <motion.div key="content">
             {/* IAM Insights Section */}
             <SectionTitle delay={0} >IAM Insights</SectionTitle>
-            
+
             <motion.div
               variants={containerVariants}
               initial="hidden"
@@ -402,7 +403,7 @@ const Insights = () => {
                 strokeColor={stats.iam.mfa.percent >= 75 ? "#ff4d4f" : stats.iam.mfa.percent > 50 ? "#fa8c16" : "#52c41a"}
                 index={0}
               />
-              
+
               <StatCard
                 icon={<LockOutlined />}
                 title="Password Enabled"
@@ -413,7 +414,7 @@ const Insights = () => {
                 strokeColor={stats.iam.password.percent > 50 ? "#52c41a" : "#ff4d4f"}
                 index={1}
               />
-              
+
               <StatCard
                 icon={<UserSwitchOutlined />}
                 title="Admin Access"
@@ -424,7 +425,7 @@ const Insights = () => {
                 strokeColor={stats.iam.admin.percent > 75 ? "#52c41a" : stats.iam.admin.percent > 50 ? "#fa8c16" : "#ff4d4f"}
                 index={2}
               />
-              
+
               <StatCard
                 icon={<DesktopOutlined />}
                 title="Console Access"
@@ -439,7 +440,7 @@ const Insights = () => {
 
             {/* Security Groups Section */}
             <SectionTitle delay={0.5}>Security Groups</SectionTitle>
-            
+
             <motion.div
               variants={containerVariants}
               initial="hidden"
@@ -460,7 +461,7 @@ const Insights = () => {
                 strokeColor={stats.security.orphaned.percent > 75 ? "#52c41a" : stats.security.orphaned.percent > 50 ? "#fa8c16" : "#ff4d4f"}
                 index={0}
               />
-              
+
               <StatCard
                 icon={<SecuritySharp />}
                 title="Open SSH"
@@ -470,7 +471,7 @@ const Insights = () => {
                 index={1}
                 isNumeric={true}
               />
-              
+
               <StatCard
                 icon={<SecuritySharp />}
                 title="Open RDP"
@@ -480,7 +481,7 @@ const Insights = () => {
                 index={2}
                 isNumeric={true}
               />
-              
+
               <StatCard
                 icon={<PortableWifiOffOutlined />}
                 title="All Traffic Open"

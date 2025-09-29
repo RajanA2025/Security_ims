@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './Layout/Layout';
 
 
+
 // Security
 import Dashboard from './pages/Dashboard';
 import Insights from './pages/Security/iam_insights/insights';
