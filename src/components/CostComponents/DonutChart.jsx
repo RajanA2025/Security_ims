@@ -82,19 +82,20 @@ const DonutChart = () => {
     },
     legend: {
       type: "scroll",
-      bottom: "3%",
+      top: "69%",
+      bottom: "0%",
       left: "center",
-      orient: "horizontal",
-      textStyle: { fontSize: 10, fontWeight: 600, fontFamily: "Roboto, sans-serif" },
+      orient: "vertical",
+      textStyle: { fontSize: 8, fontWeight: 600, color: "#333", fontFamily: " Roboto, sans-serif", },
       icon: "circle",
-      padding: [0, 10],
+      padding: [5, 100, 0, 100],
       itemGap: 8,
     },
     series: [
       {
         type: "pie",
         radius: ["50%", "90%"],
-        center: ["50%", "45%"],
+        center: ["50%", "35%"],
         avoidLabelOverlap: false,
         itemStyle: { borderRadius: 6, borderColor: "#fff", borderWidth: 2 },
         label: { show: true, position: "inside", formatter: "{d}%", color: "#000", fontWeight: "bold", fontSize: labelFontSize },
@@ -102,10 +103,10 @@ const DonutChart = () => {
         data,
       },
     ],
-    color: ["#0284c7", "#22c55e", "#facc15", "#f97316", "#dc2626", "#8b5cf6", "#f43f5e", "#0ea5e9", "#14b8a6"],
+    color: ["#0284c7", "#22c55e", "#facc15", "#f97316", "#afef40ff", "#8b5cf6", "#7cdafaff", "#0ea5e9", "#14b8a6"],
     graphic: [
-      { type: "text", left: "center", top: "center", style: { text: "Total Spend", textAlign: "center", fill: "#64748b", fontSize: centerTitleSize, fontWeight: 500 } },
-      { type: "text", left: "center", top: "40%", style: { text: `$${total.toFixed(2)}`, textAlign: "center", fill: "#0f172a", fontSize: centerValueSize, fontWeight: 700 } },
+      { type: "text", left: "center", top: "38%", style: { text: "Total Spend", textAlign: "center", fill: "#64748b", fontSize: centerTitleSize, fontWeight: 500 } },
+      { type: "text", left: "center", top: "30%", style: { text: `$${total.toFixed(2)}`, textAlign: "center", fill: "#0f172a", fontSize: centerValueSize, fontWeight: 700 } },
     ],
   };
 

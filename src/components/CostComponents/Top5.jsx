@@ -6,10 +6,17 @@ import "../../stylecss/App.css";
 
 const { Title } = Typography;
 
+// Group options
 const optionsList = [
   { label: "App", name: "top_apps" },
   { label: "A/C", name: "top_accounts" },
   { label: "Srv", name: "top_services" },
+];
+
+// Color palette for dynamic bars
+const colorPalette = [
+  "#0284c7", "#22c55e", "#facc15", "#f97316", "#dc2626",
+  "#8b5cf6", "#f43f5e", "#0ea5e9", "#14b8a6"
 ];
 
 const Top5 = () => {
@@ -20,7 +27,7 @@ const Top5 = () => {
   const chartRef = useRef(null);
   const containerRef = useRef(null);
 
-  // Responsiveness using ResizeObserver
+  // Responsiveness
   useEffect(() => {
     const handleResize = () => {
       const width = containerRef.current?.offsetWidth || window.innerWidth;
@@ -30,10 +37,8 @@ const Top5 = () => {
     };
 
     handleResize();
-
     const observer = new ResizeObserver(handleResize);
     if (containerRef.current) observer.observe(containerRef.current);
-
     window.addEventListener("resize", handleResize);
 
     return () => {
@@ -42,6 +47,7 @@ const Top5 = () => {
     };
   }, []);
 
+  // Checkbox change
   const handleCheckboxChange = (e) => {
     const { value, checked } = e.target;
     setSelectedGroups((prev) =>
@@ -49,72 +55,74 @@ const Top5 = () => {
     );
   };
 
+  // Top 5 data for current month only
   const displayedData = useMemo(() => {
-    return selectedGroups
-      .flatMap((groupKey) => {
-        const groupData = costData?.top_5?.[groupKey] || [];
-        return groupData
-          .map((item) => {
-            const name = item.name || item.account_id || item.app_name || "Unknown";
-            return { name, values: Array(7).fill(item.total_cost), total: item.total_cost };
-          })
-          .sort((a, b) => b.total - a.total)
-          .slice(0, 5);
-      });
+    return selectedGroups.flatMap((groupKey) => {
+      const groupData = costData?.top_5?.[groupKey] || [];
+      return groupData
+        .map((item) => {
+          const name = item.name || item.account_id || item.app_name || "Unknown";
+          const currentMonthCost = item.current_month_cost || item.total_cost || 0;
+          return { name, value: currentMonthCost };
+        })
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5);
+    });
   }, [selectedGroups, costData]);
 
-  const categories = Array(7).fill("");
+  // Y-axis labels (names)
+  const categories = displayedData.map((item) => item.name);
 
+  // Chart options
   const option = useMemo(() => ({
     tooltip: {
       trigger: "axis",
-      axisPointer: { type: "cross" },
+      axisPointer: { type: "shadow" },
       formatter: (params) =>
-        params.map((item) => `${item.marker} ${item.seriesName} <strong>₹${item.data}</strong>`).join("<br/>"),
+        params
+          .map((item) => `${item.marker} ${item.name} : <strong>₹${item.data}</strong>`)
+          .join("<br/>"),
       textStyle: { fontSize: 10, fontWeight: 500, color: "#333" },
     },
-    legend: {
-      type: "scroll",
-      orient: "horizontal",     // keep horizontal
-      bottom: 0,                // always at bottom
-      right: "auto",
-      top: "auto",
-      data: displayedData.map(({ name }) => name),
-      textStyle: {
-        fontSize: isSmall ? 8 : isMedium ? 11 : 12,
-        fontFamily: " Roboto, sans-serif",
-        fontWeight: 600,
-        color: "#333",
-      },
-    },
-
-    grid: { left: "2%", right: "2%", bottom: "18%", top: "10%", containLabel: true },
+    grid: { left: "0%", right: "10%", bottom: "2%", top: "10%", containLabel: true },
     xAxis: [{
-      type: "category",
-      data: categories,
-      axisLabel: { show: false },
-      name: "Current Month",
-      nameLocation: "middle",
-      nameGap: 10,
+      type: "value",
+      name: "USD ($)",
+      axisLabel: {
+        formatter: (v) => `₹${Math.round(v)}` // removes decimal
+      },
       nameTextStyle: { fontSize: 12, fontWeight: 600 },
     }],
     yAxis: [{
-      type: "log",
-      name: "USD ($)",
-      min: 1,
-      axisLabel: { formatter: (v) => `₹${v.toFixed(2)}` },
+      type: "category",
+      data: categories,
+      axisLabel: {
+        fontSize: isSmall ? 9 : 11,
+        fontWeight: 500,
+        rotate: 40,      // keeps rotation
+        interval: 0,     // show all labels
+        formatter: (value) => value.length > 10 ? value.slice(0, 5) + "..." : value
+      },
     }],
-    series: displayedData.map(({ name, values }) => ({
-      name,
-      type: "line",
-      smooth: true,
-      symbol: "circle",
-      symbolSize: 6,
-      areaStyle: { opacity: 0.15 },
-      lineStyle: { width: 2 },
-      emphasis: { focus: "series" },
-      data: values,
-    })),
+    legend: {
+      type: "scroll",
+      orient: "horizontal",
+      bottom: 0,
+      data: displayedData.map(({ name }) => name),
+      textStyle: { fontSize: isSmall ? 8 : isMedium ? 11 : 12, fontWeight: 600, color: "#333" },
+    },
+    series: [
+      {
+        name: "Cost",
+        type: "bar",
+        barWidth: "50%",
+        data: displayedData.map((item) => item.value),
+        itemStyle: {
+          color: (params) => colorPalette[params.dataIndex % colorPalette.length],
+        },
+        emphasis: { focus: "series" },
+      },
+    ],
   }), [displayedData, isSmall, isMedium]);
 
   if (loading) return <Card><p>Loading...</p></Card>;

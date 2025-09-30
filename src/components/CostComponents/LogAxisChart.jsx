@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useCallback } from "react";
 import ReactECharts from "echarts-for-react";
 import { Card } from "antd";
 
-const LogAxisChart = ({ isSmall = false, isMedium = false }) => {
+const LogAxisChart = () => {
   const chartRef = useRef(null);
   const wrapRef = useRef(null);
   const rafId = useRef(null);
@@ -13,7 +13,6 @@ const LogAxisChart = ({ isSmall = false, isMedium = false }) => {
     if (inst) inst.resize();
   }, []);
 
-  // Resize when container width/height changes (e.g., Sider collapse/expand)
   useEffect(() => {
     const el = wrapRef.current;
     if (!el || typeof ResizeObserver === "undefined") return;
@@ -22,6 +21,7 @@ const LogAxisChart = ({ isSmall = false, isMedium = false }) => {
       if (rafId.current) cancelAnimationFrame(rafId.current);
       rafId.current = requestAnimationFrame(forceResize);
     });
+
     ro.observe(el);
     return () => {
       ro.disconnect();
@@ -29,21 +29,15 @@ const LogAxisChart = ({ isSmall = false, isMedium = false }) => {
     };
   }, [forceResize]);
 
-  // Fallback: also listen to window resize
   useEffect(() => {
     window.addEventListener("resize", forceResize);
     return () => window.removeEventListener("resize", forceResize);
   }, [forceResize]);
 
-  // Generate last 3 months of dates (weekly interval)
-  const today = new Date();
-  const pastDate = new Date();
-  pastDate.setMonth(today.getMonth() - 3);
-
-  const dateList = [];
-  for (let d = new Date(pastDate); d <= today; d.setDate(d.getDate() + 7)) {
-    dateList.push(d.toISOString().split("T")[0]); // YYYY-MM-DD
-  }
+  // Small dataset
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep"];
+  const potentialSavings = [500, 1000, 1500, 2000,2500,3000,3500,4000,4500];
+  const realizedSavings = [0, 300, 600, 900, 1200, 1500, 1800, 2100, 2400];
 
   const option = {
     tooltip: {
@@ -64,13 +58,14 @@ const LogAxisChart = ({ isSmall = false, isMedium = false }) => {
       top: "0%",
       right: "5%",
       data: ["Potential Savings", "Realized Savings"],
+      textStyle: { fontSize: 10 },
     },
     grid: { left: "3%", right: "3%", top: 30, bottom: "10%", containLabel: true },
     xAxis: {
       type: "category",
       boundaryGap: false,
-      data: dateList,
-      axisLabel: { formatter: (val) => val.slice(5), fontSize: 10 }, // MM-DD
+      data: months,
+      axisLabel: { fontSize: 10 },
     },
     yAxis: {
       type: "value",
@@ -87,7 +82,7 @@ const LogAxisChart = ({ isSmall = false, isMedium = false }) => {
         symbolSize: 6,
         itemStyle: { color: "#1677ff" },
         areaStyle: { color: "rgba(22,119,255,0.1)" },
-        data: dateList.map((_, i) => [568, 721, 813][i % 3]),
+        data: potentialSavings,
       },
       {
         name: "Realized Savings",
@@ -97,7 +92,7 @@ const LogAxisChart = ({ isSmall = false, isMedium = false }) => {
         symbolSize: 6,
         itemStyle: { color: "#fa8c16" },
         areaStyle: { color: "rgba(250,140,22,0.1)" },
-        data: dateList.map((_, i) => [400, 600, 750][i % 3]),
+        data: realizedSavings,
       },
     ],
   };
@@ -113,15 +108,15 @@ const LogAxisChart = ({ isSmall = false, isMedium = false }) => {
         padding: "5px 20px 0px",
         borderRadius: 8,
         background: "#fff",
-        overflow: "hidden", // ✅ keep canvas inside
-        borderTop: "4px solid #722ed1"
+        overflow: "hidden",
+        borderTop: "4px solid #722ed1",
       }}
       bodyStyle={{
         display: "flex",
         flexDirection: "column",
         height: "100%",
         padding: 0,
-        overflow: "hidden", // ✅ keep canvas inside
+        overflow: "hidden",
       }}
     >
       <h3
@@ -135,13 +130,12 @@ const LogAxisChart = ({ isSmall = false, isMedium = false }) => {
         Savings Trend
       </h3>
 
-      {/* Wrapper observed by ResizeObserver */}
       <div
         ref={wrapRef}
         style={{
           width: "100%",
           flex: 1,
-          minHeight: 110, // ensures chart has height to measure
+          minHeight: 110,
         }}
       >
         <ReactECharts
@@ -149,12 +143,12 @@ const LogAxisChart = ({ isSmall = false, isMedium = false }) => {
           option={option}
           notMerge
           lazyUpdate
-          style={{ width: "100%", height: "100%" }} // fill wrapper
+          style={{ width: "100%", height: "100%" }}
           opts={{ renderer: "canvas" }}
-          onChartReady={forceResize} // ensure first paint fits container
+          onChartReady={forceResize}
         />
       </div>
-    </Card >
+    </Card>
   );
 };
 
