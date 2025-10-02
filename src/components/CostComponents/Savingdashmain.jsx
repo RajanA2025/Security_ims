@@ -5,6 +5,7 @@ import Savingimg from "../../assets/Savingimg.png";
 import realsaveimg from "../../assets/realsaveimg.png";
 import piechartimg from "../../assets/piechartimg.png";
 import { CostContext } from "../../Context/CostContext";
+import SavingsTrendGraph from "./SavingsTrendGraph";
 
 const { Title, Text } = Typography;
 
@@ -146,6 +147,7 @@ export const Savingdashmain = () => {
         {/* Chart */}
         <Col xs={24} sm={24} md={9}>
           <LogAxisChart />
+          {/* <SavingsTrendGraph/> */}
         </Col>
       </Row>
     </div>

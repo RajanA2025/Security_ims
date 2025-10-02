@@ -7,6 +7,7 @@ import Layout from './Layout/Layout';
 //authScreens
 import RegistrationForm from './pages/authScreens/registerScreen';
 
+
 // Security
 import Dashboard from './pages/Dashboard';
 import Insights from './pages/Security/iam_insights/insights';
