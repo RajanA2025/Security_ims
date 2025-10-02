@@ -4,6 +4,8 @@ import './stylecss/App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './Layout/Layout';
 
+//authScreens
+import RegistrationForm from './pages/authScreens/registerScreen';
 
 // Security
 import Dashboard from './pages/Dashboard';
@@ -32,6 +34,13 @@ import { Complaince } from './pages/CostPages/Complaince';
 import LandingHome from './landing/pages/Home';
 import Header from './landing/Components/Hearder';
 
+//company admin
+import CompanyAdminUsers from './pages/companyAdmin/homeScreen';
+import RegisterScreen from './pages/authScreens/inviteUser';
+
+//JIT admin
+import JITAdminCompanies from './pages/JITAdmin/homeScreen';
+import JITAdminNotifications from './components/notification';
 function App() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [filters, setFilters] = useState({
@@ -81,6 +90,17 @@ function App() {
       <Route path="/cost/cost-deepdrive" element={<Costdeepdrive />} />
       <Route path="/cost/savings" element={<Savings />} />
       <Route path="/cost/compliance" element={<Complaince />} />
+
+      {/* Auth Screens */}
+      <Route path="/register" element={<RegistrationForm />} />
+      <Route path="/invite-user" element={<RegisterScreen />} />
+
+      {/* Company Admin */}
+      <Route path="/company-admin/users" element={<CompanyAdminUsers />} />
+
+      {/* JIT Admin */}
+      <Route path="/jit-admin/companies" element={<JITAdminCompanies />} />
+      <Route path="/jit-admin/notifications" element={<JITAdminNotifications />} />
     </Route>
   </Routes>
 </Router>
