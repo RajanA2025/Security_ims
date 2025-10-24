@@ -100,7 +100,7 @@ const RegistrationForm = () => {
     if (validateForm('details')) {
       setActiveTab('accounts');
     } else {
-      alert('Please fill all required fields in Details tab.');
+      // alert('Please fill all required fields in Details tab.');
     }
   };
 
