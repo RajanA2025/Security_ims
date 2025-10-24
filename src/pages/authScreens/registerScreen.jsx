@@ -171,14 +171,14 @@ const RegistrationForm = () => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex space-x-2 mb-6 border-b pb-4 justify-center">
-          <TabButton id="details" label="Details" icon={User} />
-          <TabButton id="accounts" label="Accounts" icon={CreditCard} />
-          <TabButton id="permissions" label="Permissions" icon={Shield} />
+        <div className="flex space-x-2 mb-1 justify-center">
+          {/* <TabButton id="details" label="Details" icon={User} /> */}
+          {/* <TabButton id="accounts" label="Accounts" icon={CreditCard} /> */}
+          {/* <TabButton id="permissions" label="Permissions" icon={Shield} /> */}
         </div>
 
         {/* Tab Content */}
-        <div className="bg-gray-50 rounded-lg p-6 min-h-96">
+        <div className="bg-gray-50 rounded-lg p-0 min-h-96">
           {/* Details Tab */}
           {activeTab === 'details' && (
             <div className="space-y-4">
@@ -247,7 +247,7 @@ const RegistrationForm = () => {
           )}
 
           {/* Accounts Tab */}
-          {activeTab === 'accounts' && (
+          {/* {activeTab === 'accounts' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-gray-800">Account Information</h2>
@@ -329,7 +329,7 @@ const RegistrationForm = () => {
               ))}
 
               {/* Submit Button */}
-              <div className="mt-6 flex justify-center">
+              {/* <div className="mt-6 flex justify-center">
                 <button
                   onClick={handleSubmit}
                   className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
@@ -337,15 +337,15 @@ const RegistrationForm = () => {
                   Submit Request
                 </button>
               </div>
-            </div>
-          )}
+            </div> */}
+          {/* )} */} 
 
           {/* Permissions Tab */}
-          {activeTab === 'permissions' && (
+           {/* {activeTab === 'permissions' && (
             <div className="text-center text-gray-500 py-10">
               Permissions are not required.
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </div>
