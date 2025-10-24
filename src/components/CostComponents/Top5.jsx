@@ -13,7 +13,7 @@ const optionsList = [
   { label: "Srv", name: "top_services" },
 ];
 
-// Color palette for dynamic bars
+// Color palette
 const colorPalette = [
   "#0284c7", "#22c55e", "#facc15", "#f97316", "#dc2626",
   "#8b5cf6", "#f43f5e", "#0ea5e9", "#14b8a6"
@@ -21,7 +21,7 @@ const colorPalette = [
 
 const Top5 = () => {
   const { costData, loading } = useContext(CostContext);
-  const [selectedGroups, setSelectedGroups] = useState(["top_services"]);
+  const [selectedGroup, setSelectedGroup] = useState("top_accounts"); // ✅ single value
   const [isSmall, setIsSmall] = useState(false);
   const [isMedium, setIsMedium] = useState(false);
   const chartRef = useRef(null);
@@ -47,30 +47,24 @@ const Top5 = () => {
     };
   }, []);
 
-  // Checkbox change
+  // ✅ Single-select handler (radio-like behavior)
   const handleCheckboxChange = (e) => {
-    const { value, checked } = e.target;
-    setSelectedGroups((prev) =>
-      checked ? [...new Set([...prev, value])] : prev.filter((g) => g !== value)
-    );
+    setSelectedGroup(e.target.value); // always replace, never multi-select
   };
 
-  // Top 5 data for current month only
+  // Top 5 data
   const displayedData = useMemo(() => {
-    return selectedGroups.flatMap((groupKey) => {
-      const groupData = costData?.top_5?.[groupKey] || [];
-      return groupData
-        .map((item) => {
-          const name = item.name || item.account_id || item.app_name || "Unknown";
-          const currentMonthCost = item.current_month_cost || item.total_cost || 0;
-          return { name, value: currentMonthCost };
-        })
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 5);
-    });
-  }, [selectedGroups, costData]);
+    const groupData = costData?.top_5?.[selectedGroup] || [];
+    return groupData
+      .map((item) => {
+        const name = item.name || item.account_id || item.app_name || "Unknown";
+        const currentMonthCost = item.current_month_cost || item.total_cost || 0;
+        return { name, value: currentMonthCost };
+      })
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+  }, [selectedGroup, costData]);
 
-  // Y-axis labels (names)
   const categories = displayedData.map((item) => item.name);
 
   // Chart options
@@ -89,7 +83,7 @@ const Top5 = () => {
       type: "value",
       name: "USD ($)",
       axisLabel: {
-        formatter: (v) => `₹${Math.round(v)}` // removes decimal
+        formatter: (v) => `₹${Math.round(v)}`
       },
       nameTextStyle: { fontSize: 12, fontWeight: 600 },
     }],
@@ -99,9 +93,10 @@ const Top5 = () => {
       axisLabel: {
         fontSize: isSmall ? 9 : 11,
         fontWeight: 500,
-        rotate: 40,      // keeps rotation
-        interval: 0,     // show all labels
-        formatter: (value) => value.length > 10 ? value.slice(0, 5) + "..." : value
+        rotate: 40,
+        interval: 0,
+        formatter: (value) =>
+          value.length > 10 ? value.slice(0, 5) + "..." : value,
       },
     }],
     legend: {
@@ -109,7 +104,11 @@ const Top5 = () => {
       orient: "horizontal",
       bottom: 0,
       data: displayedData.map(({ name }) => name),
-      textStyle: { fontSize: isSmall ? 8 : isMedium ? 11 : 12, fontWeight: 600, color: "#333" },
+      textStyle: {
+        fontSize: isSmall ? 8 : isMedium ? 11 : 12,
+        fontWeight: 600,
+        color: "#333",
+      },
     },
     series: [
       {
@@ -121,6 +120,8 @@ const Top5 = () => {
           color: (params) => colorPalette[params.dataIndex % colorPalette.length],
         },
         emphasis: { focus: "series" },
+        cursor: "default", // 👈 this removes the hand cursor
+
       },
     ],
   }), [displayedData, isSmall, isMedium]);
@@ -131,7 +132,7 @@ const Top5 = () => {
     <Card
       ref={containerRef}
       style={{
-        padding: isSmall ? "12px" : "05px 10px",
+        padding: isSmall ? "12px" : "5px 10px",
         display: "flex",
         flexDirection: "column",
         height: isSmall ? 370 : isMedium ? 300 : 370,
@@ -158,7 +159,7 @@ const Top5 = () => {
               <Checkbox
                 key={name}
                 value={name}
-                checked={selectedGroups.includes(name)}
+                checked={selectedGroup === name} // ✅ only one checked
                 onChange={handleCheckboxChange}
               >
                 {label}
@@ -171,7 +172,7 @@ const Top5 = () => {
       <div style={{ flex: 1 }}>
         <ReactECharts
           ref={chartRef}
-          key={selectedGroups.join(",")}
+          key={selectedGroup}
           option={option}
           style={{ width: "100%", height: "100%" }}
           opts={{ renderer: "svg" }}

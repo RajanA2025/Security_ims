@@ -1,5 +1,5 @@
 import React, { useContext, useMemo } from "react";
-import { Row, Col, Card, Typography } from "antd";
+import { Row, Col, Card, Typography, Spin } from "antd";
 import LogAxisChart from "./LogAxisChart";
 import Savingimg from "../../assets/Savingimg.png";
 import realsaveimg from "../../assets/realsaveimg.png";
@@ -50,7 +50,35 @@ export const Savingdashmain = () => {
     };
   }, [resourcesData]);
 
-  if (loading) return <div>Loading...</div>;
+if (loading) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "60vh", // adjust height as needed
+        width: "100%",
+      }}
+    >
+      <Spin size="large" tip="Loading savings data..." />
+    </div>
+  );
+}
+
+if (error) {
+  return (
+    <div
+      style={{
+        textAlign: "center",
+        padding: 50,
+        color: "red",
+      }}
+    >
+      Error: {error}
+    </div>
+  );
+}
   if (error) return <div>Error: {error}</div>;
 
   const cardStyle = (bgGradient) => ({

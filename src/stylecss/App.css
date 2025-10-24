@@ -216,3 +216,11 @@ body {
 .custom-checkbox-group .ant-checkbox-wrapper span {
   font-size: 10px;
 }
+
+
+.no-hand-cursor svg,
+.no-hand-cursor canvas,
+.no-hand-cursor tspan,
+.no-hand-cursor g {
+  cursor: default !important;
+}

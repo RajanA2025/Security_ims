@@ -52,8 +52,8 @@ export const Complaincedashmain = () => {
       padding: 10,
       width: "100%",
       fontFamily: "'Roboto', sans-serif",
-      gap:"1px"
-
+      gap: "1px",
+      cursor: "default",
     },
   })
 
@@ -88,7 +88,7 @@ export const Complaincedashmain = () => {
     const enabledPercent = Math.round((enabled / total) * 100);
 
     return (
-      <Card styles={cardStyles("4px solid #eb2f96")} hoverable style={{ flex: 1, position: "relative",}}>
+      <Card styles={cardStyles("4px solid #eb2f96")} hoverable style={{ flex: 1, position: "relative", }}>
         <div style={{ position: "absolute", top: 12, left: 16 }}>
           <Text strong>Auto Start/Stop</Text>
         </div>

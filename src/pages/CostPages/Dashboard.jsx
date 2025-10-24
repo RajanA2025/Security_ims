@@ -9,6 +9,7 @@ import {
   Typography,
   Space,
   TreeSelect,
+  Spin
 } from "antd";
 import { DownOutlined, ReloadOutlined } from "@ant-design/icons";
 import { LuTrendingDown, LuTrendingUp } from "react-icons/lu";
@@ -97,7 +98,30 @@ const Dashboard = () => {
   ];
 
   /** ================== Render ================== */
-  if (loading) return <p>Loading...</p>;
+  /** ================== Render ================== */
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "80vh", // full viewport height
+          width: "100%",
+        }}
+      >
+        <Spin size="large" tip="Loading dashboard..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <p style={{ color: "red", textAlign: "center", marginTop: 50 }}>
+        Error: {error}
+      </p>
+    );
+  }
   if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
 
   return (
