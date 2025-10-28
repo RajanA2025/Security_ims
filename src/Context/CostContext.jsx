@@ -35,25 +35,120 @@ export const CostProvider = ({ children }) => {
     setCurrent_acc(account);
   }, []);
 
+  // 🔹 Register new company
+  const registerCompany = async (companyData) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch("http://13.212.15.14:8006/api/company/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(companyData),
+      });
+
+      const result = await response.json();
+      console.log("API Result:", result);
+
+      return result; // ✅ return backend JSON directly
+    } catch (err) {
+      console.error("Register Error:", err);
+      setError(err.message);
+      return { error: "Network Error" }; // ✅ prevent undefined
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  // 🔹 Login company (new API)
+  const loginCompany = async (loginData) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch("http://13.212.15.14:8006/api/company/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(loginData),
+      });
+
+      const result = await response.json();
+      console.log("Login Result:", result);
+
+      if (!response.ok) {
+        throw new Error(result.message || "Login failed");
+      }
+
+      // ✅ Store token and CID
+      if (result.token) localStorage.setItem("auth_token", result.token);
+      if (result.cid) localStorage.setItem("company_cid", result.cid);
+
+      return result;
+    } catch (err) {
+      console.error("Login Error:", err);
+      setError(err.message);
+      return { error: err.message || "Network Error" };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+    // 🔹 Add new account
+  const addAccount = async (accountData) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const token = localStorage.getItem("auth_token");
+
+      const response = await fetch("http://13.212.15.14:8006/api/accounts/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify(accountData),
+      });
+
+      const result = await response.json();
+      console.log("Add Account Result:", result);
+
+      if (!response.ok) {
+        throw new Error(result.message || "Account creation failed");
+      }
+
+      return result; // ✅ Return backend result directly
+    } catch (err) {
+      console.error("Add Account Error:", err);
+      setError(err.message);
+      return { error: err.message || "Network Error" };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
       try {
         // 🔹 Build query param URL correctly
-     const { account_id, start_date, end_date } = filters;
+        const { account_id, start_date, end_date } = filters;
 
-const params = new URLSearchParams();
+        const params = new URLSearchParams();
 
-// Only add if value exists
-if (account_id && account_id !== "ALL") params.append("account_id", account_id);
-if (start_date) params.append("start_date", start_date);
-if (end_date) params.append("end_date", end_date);
+        // Only add if value exists
+        if (account_id && account_id !== "ALL") params.append("account_id", account_id);
+        if (start_date) params.append("start_date", start_date);
+        if (end_date) params.append("end_date", end_date);
 
-const costUrl = `http://13.212.15.14:8010/cost-summary?${params.toString()}`;
+        const costUrl = `http://13.212.15.14:8010/cost-summary?${params.toString()}`;
 
         const [costRes, resourcesRes, tagRes] = await Promise.all([
           fetch(costUrl),
-            fetch("http://13.212.15.14:8003/resources"),
+          fetch("http://13.212.15.14:8003/resources"),
           fetch("http://13.212.15.14:8007/tags"),
         ]);
 
@@ -79,13 +174,13 @@ const costUrl = `http://13.212.15.14:8010/cost-summary?${params.toString()}`;
         // Tag data processing
         const processedTagData = Array.isArray(tagsJson)
           ? tagsJson.map((resource, index) => ({
-              id: resource.id || index + 1,
-              account: resource.account || "",
-              region: resource.region || "",
-              service: resource.service || "",
-              resource: resource.resource || "",
-              tags: resource.tags || {},
-            }))
+            id: resource.id || index + 1,
+            account: resource.account || "",
+            region: resource.region || "",
+            service: resource.service || "",
+            resource: resource.resource || "",
+            tags: resource.tags || {},
+          }))
           : [];
 
         const requiredTags = ["Name", "Owner", "Project", "Environment"];
@@ -137,6 +232,9 @@ const costUrl = `http://13.212.15.14:8010/cost-summary?${params.toString()}`;
         setFilters,
         accounts,
         apps,
+        registerCompany,
+        loginCompany,
+        addAccount
       }}
     >
       {children}

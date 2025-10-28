@@ -5,7 +5,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './Layout/Layout';
 
 //authScreens
-import RegistrationForm from './pages/authScreens/registerScreen';
+import RegistrationForm from './pages/authScreens/RegisterScreen';
+import AccountsScreen from './pages/authScreens/AccountsScreen';
 
 // Security
 import Dashboard from './pages/Dashboard';
@@ -36,7 +37,7 @@ import Header from './landing/Components/Hearder';
 
 //company admin
 import CompanyAdminUsers from './pages/companyAdmin/homeScreen';
-import RegisterScreen from './pages/authScreens/inviteUser';
+import LoginScreen from './pages/authScreens/LoginScreen';
 
 //JIT admin
 import JITAdminCompanies from './pages/JITAdmin/homeScreen';
@@ -57,7 +58,7 @@ function App() {
     <Router>
   <Routes>
     {/* Pages without Layout */}
-    <Route path="/" element={<Imsproduct />} />
+    <Route path="/Imsproduct" element={<Imsproduct />} />
     <Route path="/landing" element={<LandingHome />} />
     <Route path="/header" element={<Header />} />
 
@@ -92,8 +93,9 @@ function App() {
       <Route path="/cost/compliance" element={<Complaince />} />
 
       {/* Auth Screens */}
-      <Route path="/register" element={<RegistrationForm />} />
-      <Route path="/invite-user" element={<RegisterScreen />} />
+      <Route path="/" element={<RegistrationForm />} />
+      <Route path="/Login" element={<LoginScreen />} />
+      <Route path="/accounts" element={<AccountsScreen />} />
 
       {/* Company Admin */}
       <Route path="/company-admin/users" element={<CompanyAdminUsers />} />
