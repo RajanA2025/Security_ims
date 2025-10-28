@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useContext, memo } from "react";
+import { useNavigate } from 'react-router-dom';
+
 import { Plus, Minus } from "lucide-react";
 import { CostContext } from "../../Context/CostContext";
 
@@ -169,6 +171,7 @@ export default function AccountsScreen() {
 
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const storedCid = localStorage.getItem("company_cid");
@@ -256,7 +259,6 @@ export default function AccountsScreen() {
     try {
       const payload = {
         accounts: formData.accounts.map((acc) => {
-          // ✅ Only include selected pillars as true
           const selectedPillarsObj = {};
           acc.selectedPillars.forEach((pillar) => {
             selectedPillarsObj[pillar] = true;
@@ -270,7 +272,7 @@ export default function AccountsScreen() {
             secret_key: acc.secretKey,
             bucket_name: acc.bucketName,
             prefix: acc.prefix,
-            pillars: selectedPillarsObj, // ✅ fixed here
+            pillars: selectedPillarsObj,
           };
         }),
       };
@@ -279,25 +281,15 @@ export default function AccountsScreen() {
       const result = await addAccount(payload);
 
       if (result?.message === "Accounts added successfully (no duplicates inserted)") {
+        // ✅ Store account IDs in localStorage
+        const accountIds = formData.accounts.map((acc) => acc.accountId);
+        localStorage.setItem("account_ids", JSON.stringify(accountIds));
+
         setToast({ type: "success", message: result.message });
         setTimeout(() => setToast(null), 3000);
 
-        // ✅ Reset form after success
-        setFormData({
-          accounts: [
-            {
-              cid: localStorage.getItem("company_cid") || "",
-              accountId: "",
-              accountName: "",
-              accessKey: "",
-              secretKey: "",
-              bucketName: "",
-              prefix: "",
-              pillars: {},
-              selectedPillars: [],
-            },
-          ],
-        });
+        // ✅ Navigate after storing
+        navigate("/imsproduct");
       } else {
         setToast({ type: "error", message: "Failed to add accounts." });
         setTimeout(() => setToast(null), 3000);
@@ -307,7 +299,8 @@ export default function AccountsScreen() {
       setToast({ type: "error", message: "Something went wrong. Try again." });
       setTimeout(() => setToast(null), 3000);
     }
-  }, [formData, validateForm, addAccount]);
+  }, [formData, validateForm, addAccount, navigate]);
+
 
 
   return (
@@ -355,10 +348,8 @@ export default function AccountsScreen() {
           <div className="flex justify-center mt-6">
             <button
               onClick={() => {
-                handleSubmit();         // Call your form submission logiccls
-                
-                navigate('/accounts');  // Then navigate to the Accounts page
-              }}
+                handleSubmit();         
+                navigate('/accounts');  }}
               className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 shadow-lg hover:shadow-xl"
               navigation
             >

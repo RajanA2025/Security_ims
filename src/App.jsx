@@ -5,7 +5,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './Layout/Layout';
 
 //authScreens
-import RegistrationForm from './pages/authScreens/RegisterScreen';
+import CompanyForm from './pages/authScreens/CompanyForm';
 import AccountsScreen from './pages/authScreens/AccountsScreen';
 
 // Security
@@ -108,7 +108,8 @@ function App() {
 
           {/* JIT Admin */}
           <Route path="/admin" element={<Admin />} />
-          <Route path="/admin/RegistrationForm" element={<RegistrationForm />} />
+          <Route path="/admin/register" element={<CompanyForm />} />
+          <Route path="/admin/edit" element={<CompanyForm />} />
           <Route path="/admin/notifications" element={<JITAdminNotifications />} />
         </Route>
       </Routes>

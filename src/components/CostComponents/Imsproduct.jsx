@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Typography } from 'antd';
+import { Card, Row, Col, Typography, Modal } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
@@ -21,14 +21,27 @@ export default function Imsproduct() {
     operational_excellence: false,
     performance: false,
   });
+  const [hasAccount, setHasAccount] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
+  // ✅ Load pillars & check if account exists
   useEffect(() => {
     const storedPillars = JSON.parse(localStorage.getItem('pillars'));
-    if (storedPillars) {
-      setPillars(storedPillars);
-      console.log('Loaded pillars:', storedPillars);
+    if (storedPillars) setPillars(storedPillars);
+
+    const storedAccounts = JSON.parse(localStorage.getItem('account_ids'));
+    if (storedAccounts && storedAccounts.length > 0) {
+      setHasAccount(true);
+    } else {
+      setHasAccount(false);
+      setIsModalVisible(true); // ✅ Show modal if no account found
     }
   }, []);
+
+  const handleCreateAccount = () => {
+    setIsModalVisible(false);
+    navigate('/accounts');
+  };
 
   const isOperationalActive = pillars.operational_excellence && pillars.performance;
 
@@ -41,16 +54,36 @@ export default function Imsproduct() {
         alignItems: 'center',
       }}
     >
-      {/* ✅ Add Account Button Section */}
-      <div className="w-full flex justify-end mb-10">
-        <button
-          onClick={() => navigate('/accounts')}
-          className="flex items-center gap-2 bg-indigo-400 hover:bg-indigo-500 text-white font-semibold py-2.5 px-5 rounded-lg shadow-md transition-all duration-200"
-        >
-          <Plus size={18} />
-          Add Account
-        </button>
-      </div>
+      {/* ✅ Top Add Account Button */}
+      {hasAccount && (
+        <div className="w-full flex justify-end mb-10">
+          <button
+            onClick={() => navigate('/accounts')}
+            className="flex items-center gap-2 bg-indigo-400 hover:bg-indigo-500 text-white font-semibold py-2.5 px-5 rounded-lg shadow-md transition-all duration-200"
+          >
+            <Plus size={18} />
+            Add Account
+          </button>
+        </div>
+      )}
+
+      {/* ✅ Modal for Create Account */}
+      <Modal
+        title="No Account Found"
+        open={isModalVisible}
+        closable={false}
+        footer={[
+          <button
+            key="create"
+            onClick={handleCreateAccount}
+            className="bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-5 py-2 rounded-lg"
+          >
+            Create Account
+          </button>,
+        ]}
+      >
+        <p>You don’t have any accounts yet. Please create an account to continue.</p>
+      </Modal>
 
       {/* ✅ Cards Section */}
       <Row gutter={32} justify="center">

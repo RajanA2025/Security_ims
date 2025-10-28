@@ -1,5 +1,5 @@
-import React, { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useContext, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Building2,
   ShieldCheck,
@@ -11,28 +11,54 @@ import {
 } from "lucide-react";
 import { CostContext } from "../../Context/CostContext";
 
-const RegistrationForm = () => {
-  const { registerCompany, loading } = useContext(CostContext);
+const CompanyForm = () => {
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
+  const location = useLocation();
+  const { registerCompany, loading } = useContext(CostContext);
 
+  // ✅ Detect edit mode
+  const editCompany = location.state?.company || null;
+  const isEdit = !!editCompany;
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [errors, setErrors] = useState({});
+
+  console.log("Edit company data:", location.state?.company);
+
+
+  // ✅ Initialize formData (prefill if editing)
   const [formData, setFormData] = useState({
-    companyName: "",
-    name: "",
-    mailId: "",
+    companyName: editCompany?.company_name || "",
+    name: editCompany?.admin_name || editCompany?.name || "",
+    mailId: editCompany?.mail_id || editCompany?.email || "",
     password: "",
     features: {
-      Cost: false,
-      Security: false,
-      Performance: false,
-      Operational: false,
+      Cost: editCompany?.features?.cost ?? editCompany?.cost ?? false,
+      Security: editCompany?.features?.security ?? editCompany?.security ?? false,
+      "Performance & Operational":
+        (editCompany?.features?.performance ??
+          editCompany?.performance ??
+          false) ||
+        (editCompany?.features?.operational_excellence ??
+          editCompany?.operational_excellence ??
+          false),
     },
   });
 
-  const [errors, setErrors] = useState({});
-  const [toast, setToast] = useState(null);
 
-  const featuresList = ["Cost", "Security", "Performance", "Operational"];
+
+
+
+  useEffect(() => {
+    if (isEdit) {
+      document.title = "Edit Company";
+    } else {
+      document.title = "Register Company";
+    }
+  }, [isEdit]);
+
+  const featuresList = ["Cost", "Security", "Performance & Operational",];
 
   // Input change
   const handleInputChange = (e) => {
@@ -51,6 +77,12 @@ const RegistrationForm = () => {
     }));
   };
 
+  // Toast handler
+  const showToast = (message, color = "bg-red-600") => {
+    setToast({ message, color });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   // Validation
   const validateForm = () => {
     const newErrors = {};
@@ -58,7 +90,7 @@ const RegistrationForm = () => {
       newErrors.companyName = "Company name is required";
     if (!formData.name.trim()) newErrors.name = "Admin name is required";
     if (!formData.mailId.trim()) newErrors.mailId = "Mail ID is required";
-    if (!formData.password.trim())
+    if (!isEdit && !formData.password.trim())
       newErrors.password = "Password is required";
     if (!Object.values(formData.features).some(Boolean))
       newErrors.features = "Select at least one feature";
@@ -67,39 +99,61 @@ const RegistrationForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Toast handler
-  const showToast = (message, color = "bg-red-600") => {
-    setToast({ message, color });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  // Submit
+  // Submit (register or update)
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     const { features } = formData;
 
-    // ✅ Build flat JSON payload
+    // ✅ Get role dynamically from localStorage
+    const storedRole =
+      JSON.parse(localStorage.getItem("user"))?.role ||
+      localStorage.getItem("role") ||
+      "admin"; // fallback to "admin"
+
+    // ✅ If user checked “Performance & Operational”, set both true
+    const isPerfOperational = features["Performance & Operational"];
+
     const payload = {
       company_name: formData.companyName,
       admin_name: formData.name,
       email: formData.mailId,
-      password: formData.password,
+      password: formData.password || undefined,
       cost: features.Cost,
       security: features.Security,
-      performance: features.Performance,
-      operational_excellence: features.Operational,
+      performance: isPerfOperational, // 👈 both true if selected
+      operational_excellence: isPerfOperational,
+      role: storedRole,
+      cid: editCompany?.cid,
     };
 
-    console.log("Payload to send:", payload);
+    console.log("📦 Payload to send:", payload);
 
     try {
-      const res = await registerCompany(payload);
-      console.log("Response:", res);
+      let res;
+      if (isEdit) {
+        // ✅ Update existing company
+        const response = await fetch("http://13.212.15.14:8006/api/company/update", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        res = await response.json();
+      } else {
+        // ✅ Register new company
+        res = await registerCompany(payload);
+      }
 
-      if (res?.message === "Registered successfully") {
-        showToast("Registered successfully", "bg-green-600");
+      console.log("✅ Response:", res);
+
+      if (res?.message?.toLowerCase().includes("success")) {
+        showToast(
+          isEdit
+            ? "Company updated successfully!"
+            : "Registered successfully!",
+          "bg-green-600"
+        );
         setTimeout(() => navigate("/admin"), 1500);
       } else if (res?.detail === "Email already registered") {
         showToast("Email already registered", "bg-yellow-600");
@@ -107,38 +161,42 @@ const RegistrationForm = () => {
         showToast("Unexpected error occurred", "bg-red-600");
       }
     } catch (err) {
-      console.error("Register error:", err);
+      console.error("❌ Error:", err);
       showToast("Server connection failed", "bg-red-600");
     }
   };
+
 
   return (
     <>
       {toast && (
         <div
-          className={`fixed top-5 right-5 ${toast.color} text-white px-4 py-3 rounded-lg shadow-lg text-sm transition-all duration-300 ease-in-out z-50`}
+          className={`fixed top-5 right-5 ${toast.color} text-white px-4 py-3 rounded-lg shadow-lg text-sm z-50`}
         >
           {toast.message}
         </div>
       )}
 
-      <div className="min-h-screen flex items-center justify-center p-0 relative">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <form
           onSubmit={handleSubmit}
-          className="w-full max-w-lg bg-white/70 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-gray-200"
+          className="w-full max-w-lg bg-white rounded-2xl shadow-xl p-8 border border-gray-200"
         >
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 text-white rounded-full shadow-md mb-3">
               <Building2 size={28} />
             </div>
             <h1 className="text-3xl font-bold text-gray-800">
-              Company Registration
+              {isEdit ? "Edit Company Admin" : "Company Registration"}
             </h1>
             <p className="text-gray-500 text-sm mt-1">
-              Fill in the details to create your account
+              {isEdit
+                ? "Update existing company details"
+                : "Fill in the details to create your account"}
             </p>
           </div>
 
+          {/* Input fields */}
           <div className="space-y-5">
             {["companyName", "name", "mailId", "password"].map((field) => (
               <div key={field}>
@@ -186,16 +244,16 @@ const RegistrationForm = () => {
                     placeholder={`Enter ${field
                       .replace(/([A-Z])/g, " $1")
                       .toLowerCase()}`}
-                    className={`w-full pl-10 pr-10 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${errors[field] ? "border-red-500" : "border-gray-300"
+                    className={`w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${errors[field] ? "border-red-500" : "border-gray-300"
                       }`}
+                    disabled={isEdit && field === "mailId"} // lock email when editing
                   />
 
-                  {/* Password toggle button */}
+                  {/* Password toggle */}
                   {field === "password" && (
                     <button
                       type="button"
                       onClick={() => setShowPassword((s) => !s)}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
                       className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded-md hover:bg-gray-100"
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -219,9 +277,9 @@ const RegistrationForm = () => {
                     key={feature}
                     type="button"
                     onClick={() => handleFeatureToggle(feature)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium border transition-all duration-200 ${formData.features[feature]
-                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                        : "bg-white border-gray-300 text-gray-700 hover:bg-blue-50"
+                    className={`px-4 py-2 rounded-full text-sm font-medium border transition ${formData.features[feature]
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white border-gray-300 text-gray-700 hover:bg-blue-50"
                       }`}
                   >
                     <ShieldCheck size={14} className="inline-block mr-1" />
@@ -241,7 +299,11 @@ const RegistrationForm = () => {
                 disabled={loading}
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-400 transition"
               >
-                {loading ? "Submitting..." : "Submit"}
+                {loading
+                  ? "Submitting..."
+                  : isEdit
+                    ? "Update Company"
+                    : "Register Company"}
               </button>
             </div>
           </div>
@@ -251,4 +313,4 @@ const RegistrationForm = () => {
   );
 };
 
-export default RegistrationForm;
+export default CompanyForm;
