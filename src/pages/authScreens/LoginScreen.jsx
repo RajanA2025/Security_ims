@@ -20,10 +20,29 @@ export default function LoginScreen() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ✅ Hardcoded Admin Login
+    if (
+      formData.email === "admin@Jit.com" &&
+      formData.password === "Test@1234"
+    ) {
+      setToast({
+        type: "success",
+        message: "Welcome Admin!",
+        // subMessage: "Redirecting to Admin Companies...",
+      });
+      setTimeout(() => {
+        setToast(null);
+        navigate("/admin");
+      }, 2000);
+      return;
+    }
+
+    // ✅ Normal company login
     const result = await loginCompany(formData);
 
-    if (result?.message === "Login successful") {
-      // ✅ Store CID and active pillars in localStorage
+    if (result?.message === "Login successful" && result?.cid) {
+      // Store CID and active pillars in localStorage
       localStorage.setItem("company_cid", result.cid);
 
       const pillars = {
@@ -34,7 +53,7 @@ export default function LoginScreen() {
       };
       localStorage.setItem("pillars", JSON.stringify(pillars));
 
-      // ✅ Toast with active pillars
+      // Toast with active pillars
       const activePillars = Object.entries(pillars)
         .filter(([_, value]) => value)
         .map(([key]) =>
@@ -48,14 +67,14 @@ export default function LoginScreen() {
 
       setToast({
         type: "success",
-        message: `Welcome ${result.admin_name}!`,
-        subMessage: pillarsText,
+        message: `Welcome ${result.admin_name || "User"}!`,
+        // subMessage: pillarsText,
       });
 
       setTimeout(() => {
         setToast(null);
-        navigate("/accounts");
-      }, 3000);
+        navigate("/Imsproduct");
+      }, 2500);
     } else {
       setToast({
         type: "error",

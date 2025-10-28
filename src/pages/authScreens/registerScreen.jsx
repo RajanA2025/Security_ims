@@ -100,7 +100,7 @@ const RegistrationForm = () => {
 
       if (res?.message === "Registered successfully") {
         showToast("Registered successfully", "bg-green-600");
-        setTimeout(() => navigate("/login"), 1500);
+        setTimeout(() => navigate("/admin"), 1500);
       } else if (res?.detail === "Email already registered") {
         showToast("Email already registered", "bg-yellow-600");
       } else {
@@ -122,7 +122,7 @@ const RegistrationForm = () => {
         </div>
       )}
 
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 p-0 relative">
+      <div className="min-h-screen flex items-center justify-center p-0 relative">
         <form
           onSubmit={handleSubmit}
           className="w-full max-w-lg bg-white/70 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-gray-200"

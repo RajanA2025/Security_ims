@@ -1,10 +1,8 @@
-// File: src/components/Imsproduct.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Typography } from 'antd';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import securityimg from '../../assets/securityimg.avif';
-import cloudimg from '../../assets/cloudimg.png';
 
 const { Title, Text } = Typography;
 
@@ -14,8 +12,25 @@ const cardAnimation = {
   hover: { scale: 1.05, transition: { duration: 0.3 } },
 };
 
-const Imsproduct = () => {
+export default function Imsproduct() {
   const navigate = useNavigate();
+  const [pillars, setPillars] = useState({
+    cost: false,
+    security: false,
+    operational_excellence: false,
+    performance: false,
+  });
+
+  useEffect(() => {
+    const storedPillars = JSON.parse(localStorage.getItem('pillars'));
+    if (storedPillars) {
+      setPillars(storedPillars);
+      console.log("Loaded pillars:", storedPillars);
+    }
+  }, []);
+
+  const isOperationalActive =
+    pillars.operational_excellence && pillars.performance;
 
   return (
     <div
@@ -26,40 +41,40 @@ const Imsproduct = () => {
       }}
     >
       <Row gutter={32} justify="center">
-
-        {/* Cost Card */}
+        {/* COST CARD */}
         <Col>
           <motion.div
             initial="hidden"
             whileInView="visible"
-            whileHover="hover"
+            whileHover={pillars.cost ? "hover" : ""}
             variants={cardAnimation}
             viewport={{ once: true }}
-            onClick={() => navigate('/cost')}
-            style={{ cursor: 'pointer' }}
+            onClick={() => pillars.cost && navigate('/cost')}
+            style={{ cursor: pillars.cost ? 'pointer' : 'not-allowed' }}
           >
             <Card
               style={{
                 width: 300,
                 borderRadius: '15px',
                 overflow: 'hidden',
+                opacity: pillars.cost ? 1 : 0.5,
+                filter: pillars.cost ? 'none' : 'grayscale(100%)',
               }}
-              bodyStyle={{ padding: '20px', backgroundColor: '#91caff' }}
+              bodyStyle={{
+                padding: '20px',
+                backgroundColor: pillars.cost ? '#91caff' : '#d3d3d3',
+              }}
             >
               <div style={{ textAlign: 'center' }}>
-                <div
-                  style={{
-                    width: '100%',
-                    height: '200px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: '8px',
-                  }}
-                >
-                  <img src="https://www.shutterstock.com/image-photo/cost-reduction-concept-wording-on-600nw-2405339143.jpg" alt="Cost Cloud" width="500px" height="230px" />
-                </div>
-                <Title level={4} style={{ margin: '20px 0' }}>Cost</Title>
+                <img
+                  src="https://www.shutterstock.com/image-photo/cost-reduction-concept-wording-on-600nw-2405339143.jpg"
+                  alt="Cost Cloud"
+                  width="100%"
+                  height="200px"
+                />
+                <Title level={4} style={{ margin: '20px 0' }}>
+                  Cost
+                </Title>
                 <Text>
                   Cost Cloud provides real-time visibility into your cloud expenses across all services.
                 </Text>
@@ -68,94 +83,83 @@ const Imsproduct = () => {
           </motion.div>
         </Col>
 
-        {/* Security Card */}
-        {/* <Link to='http://192.168.1.18:5173/Security'> */}
-
-          <Col>
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              whileHover="hover"
-              variants={cardAnimation}
-              viewport={{ once: true }}
-              onClick={() => navigate('/security')}
-              style={{ cursor: 'pointer' }}
+        {/* SECURITY CARD */}
+        <Col>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            whileHover={pillars.security ? "hover" : ""}
+            variants={cardAnimation}
+            viewport={{ once: true }}
+            onClick={() => pillars.security && navigate('/security')}
+            style={{ cursor: pillars.security ? 'pointer' : 'not-allowed' }}
+          >
+            <Card
+              style={{
+                width: 300,
+                borderRadius: '15px',
+                overflow: 'hidden',
+                opacity: pillars.security ? 1 : 0.5,
+                filter: pillars.security ? 'none' : 'grayscale(100%)',
+              }}
+              bodyStyle={{
+                padding: '20px',
+                backgroundColor: pillars.security ? '#91caff' : '#d3d3d3',
+              }}
             >
-              <Card
-                style={{
-                  width: 300,
-                  borderRadius: '15px',
-                  overflow: 'hidden',
-                }}
-                bodyStyle={{ padding: '20px', backgroundColor: '#91caff' }}
-              >
-                <div style={{ textAlign: 'center' }}>
-                  <div
-                    style={{
-                      width: '100%',
-                      height: '200px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: '8px',
-                    }}
-                  >
-                    <img src={securityimg} alt="Security" width="300px" height="230px" />
-                  </div>
-                  <Title level={4} style={{ margin: '20px 0' }}>Security</Title>
-                  <Text>
-                    IMS security continuously monitors, detects, and safeguards your cloud infrastructure and data.
-                  </Text>
-                </div>
-              </Card>
-            </motion.div>
-          </Col>
-        {/* </Link> */}
+              <div style={{ textAlign: 'center' }}>
+                <img src={securityimg} alt="Security" width="100%" height="200px" />
+                <Title level={4} style={{ margin: '20px 0' }}>Security</Title>
+                <Text>
+                  IMS security continuously monitors, detects, and safeguards your cloud infrastructure and data.
+                </Text>
+              </div>
+            </Card>
+          </motion.div>
+        </Col>
 
-        {/* <Link to='http://192.168.1.18:5173/Operational'> */}
-
-          <Col>
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              whileHover="hover"
-              variants={cardAnimation}
-              viewport={{ once: true }}
-              onClick={() => navigate('/operational')}
-              style={{ cursor: 'pointer' }}
+        {/* OPERATIONAL EXCELLENCE CARD */}
+        <Col>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            whileHover={isOperationalActive ? "hover" : ""}
+            variants={cardAnimation}
+            viewport={{ once: true }}
+            onClick={() => isOperationalActive && navigate('/operational')}
+            style={{ cursor: isOperationalActive ? 'pointer' : 'not-allowed' }}
+          >
+            <Card
+              style={{
+                width: 300,
+                borderRadius: '15px',
+                overflow: 'hidden',
+                opacity: isOperationalActive ? 1 : 0.5,
+                filter: isOperationalActive ? 'none' : 'grayscale(100%)',
+              }}
+              bodyStyle={{
+                padding: '20px',
+                backgroundColor: isOperationalActive ? '#91caff' : '#d3d3d3',
+              }}
             >
-              <Card
-                style={{
-                  width: 300,
-                  borderRadius: '15px',
-                  overflow: 'hidden',
-                }}
-                bodyStyle={{ padding: '20px', backgroundColor: '#91caff' }}
-              >
-                <div style={{ textAlign: 'center' }}>
-                  <div
-                    style={{
-                      width: '100%',
-                      height: '200px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: '8px',
-                    }}
-                  >
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRr8MIn0_lXk26lbBEqZzEWec1koj6Wy33mw&s" alt="Security" width="300px" height="230px" />
-                  </div>
-                  <Title level={4} style={{ margin: '20px 0' }}>Operational Excellence</Title>
-                  <Text>
-                    Our company strives for Operational Excellence by continuously improving processes</Text>
-                </div>
-              </Card>
-            </motion.div>
-          </Col>
-        {/* </Link> */}
+              <div style={{ textAlign: 'center' }}>
+                <img
+                  src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSRr8MIn0_lXk26lbBEqZzEWec1koj6Wy33mw&s"
+                  alt="Operational Excellence"
+                  width="100%"
+                  height="200px"
+                />
+                <Title level={4} style={{ margin: '18px 0' }}>
+                  Operational Excellence
+                </Title>
+                <Text>
+                  Our company strives for Operational Excellence by continuously improving processes.
+                </Text>
+              </div>
+            </Card>
+          </motion.div>
+        </Col>
       </Row>
     </div>
   );
-};
-
-export default Imsproduct;
+}
