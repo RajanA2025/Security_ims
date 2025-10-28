@@ -29,6 +29,8 @@ export default function Imsproduct() {
     const storedPillars = JSON.parse(localStorage.getItem('pillars'));
     if (storedPillars) setPillars(storedPillars);
 
+
+
     const storedAccounts = JSON.parse(localStorage.getItem('account_ids'));
     if (storedAccounts && storedAccounts.length > 0) {
       setHasAccount(true);
@@ -36,7 +38,10 @@ export default function Imsproduct() {
       setHasAccount(false);
       setIsModalVisible(true); // ✅ Show modal if no account found
     }
+        console.log(storedAccounts)
+
   }, []);
+
 
   const handleCreateAccount = () => {
     setIsModalVisible(false);
