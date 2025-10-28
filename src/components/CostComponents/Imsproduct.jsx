@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Typography } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Plus } from 'lucide-react';
 import securityimg from '../../assets/securityimg.avif';
 
 const { Title, Text } = Typography;
@@ -25,28 +26,40 @@ export default function Imsproduct() {
     const storedPillars = JSON.parse(localStorage.getItem('pillars'));
     if (storedPillars) {
       setPillars(storedPillars);
-      console.log("Loaded pillars:", storedPillars);
+      console.log('Loaded pillars:', storedPillars);
     }
   }, []);
 
-  const isOperationalActive =
-    pillars.operational_excellence && pillars.performance;
+  const isOperationalActive = pillars.operational_excellence && pillars.performance;
 
   return (
     <div
       style={{
-        padding: '150px',
+        padding: '50px 100px',
         display: 'flex',
-        justifyContent: 'center',
+        flexDirection: 'column',
+        alignItems: 'center',
       }}
     >
+      {/* ✅ Add Account Button Section */}
+      <div className="w-full flex justify-end mb-10">
+        <button
+          onClick={() => navigate('/accounts')}
+          className="flex items-center gap-2 bg-indigo-400 hover:bg-indigo-500 text-white font-semibold py-2.5 px-5 rounded-lg shadow-md transition-all duration-200"
+        >
+          <Plus size={18} />
+          Add Account
+        </button>
+      </div>
+
+      {/* ✅ Cards Section */}
       <Row gutter={32} justify="center">
         {/* COST CARD */}
         <Col>
           <motion.div
             initial="hidden"
             whileInView="visible"
-            whileHover={pillars.cost ? "hover" : ""}
+            whileHover={pillars.cost ? 'hover' : ''}
             variants={cardAnimation}
             viewport={{ once: true }}
             onClick={() => pillars.cost && navigate('/cost')}
@@ -88,7 +101,7 @@ export default function Imsproduct() {
           <motion.div
             initial="hidden"
             whileInView="visible"
-            whileHover={pillars.security ? "hover" : ""}
+            whileHover={pillars.security ? 'hover' : ''}
             variants={cardAnimation}
             viewport={{ once: true }}
             onClick={() => pillars.security && navigate('/security')}
@@ -123,7 +136,7 @@ export default function Imsproduct() {
           <motion.div
             initial="hidden"
             whileInView="visible"
-            whileHover={isOperationalActive ? "hover" : ""}
+            whileHover={isOperationalActive ? 'hover' : ''}
             variants={cardAnimation}
             viewport={{ once: true }}
             onClick={() => isOperationalActive && navigate('/operational')}

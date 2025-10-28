@@ -56,8 +56,8 @@ const PillarDropdown = memo(({ pillars, selected, onChange, error }) => {
                 type="button"
                 onClick={() => toggle(pillar)}
                 className={`px-3 py-1 rounded-full text-sm border transition ${active
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
                   }`}
               >
                 {label}
@@ -246,68 +246,68 @@ export default function AccountsScreen() {
   }, [formData]);
 
 
-const handleSubmit = useCallback(async () => {
-  if (!validateForm()) {
-    setToast({ type: "error", message: "Please fill all required fields." });
-    setTimeout(() => setToast(null), 3000);
-    return;
-  }
-
-  try {
-    const payload = {
-      accounts: formData.accounts.map((acc) => {
-        // ✅ Only include selected pillars as true
-        const selectedPillarsObj = {};
-        acc.selectedPillars.forEach((pillar) => {
-          selectedPillarsObj[pillar] = true;
-        });
-
-        return {
-          cid: acc.cid || 0,
-          account_id: acc.accountId,
-          account_name: acc.accountName,
-          access_key: acc.accessKey,
-          secret_key: acc.secretKey,
-          bucket_name: acc.bucketName,
-          prefix: acc.prefix,
-          pillars: selectedPillarsObj, // ✅ fixed here
-        };
-      }),
-    };
-
-    console.log("📦 Sending Payload:", payload);
-    const result = await addAccount(payload);
-
-    if (result?.message === "Accounts added successfully (no duplicates inserted)") {
-      setToast({ type: "success", message: result.message });
+  const handleSubmit = useCallback(async () => {
+    if (!validateForm()) {
+      setToast({ type: "error", message: "Please fill all required fields." });
       setTimeout(() => setToast(null), 3000);
+      return;
+    }
 
-      // ✅ Reset form after success
-      setFormData({
-        accounts: [
-          {
-            cid: localStorage.getItem("company_cid") || "",
-            accountId: "",
-            accountName: "",
-            accessKey: "",
-            secretKey: "",
-            bucketName: "",
-            prefix: "",
-            pillars: {},
-            selectedPillars: [],
-          },
-        ],
-      });
-    } else {
-      setToast({ type: "error", message: "Failed to add accounts." });
+    try {
+      const payload = {
+        accounts: formData.accounts.map((acc) => {
+          // ✅ Only include selected pillars as true
+          const selectedPillarsObj = {};
+          acc.selectedPillars.forEach((pillar) => {
+            selectedPillarsObj[pillar] = true;
+          });
+
+          return {
+            cid: acc.cid || 0,
+            account_id: acc.accountId,
+            account_name: acc.accountName,
+            access_key: acc.accessKey,
+            secret_key: acc.secretKey,
+            bucket_name: acc.bucketName,
+            prefix: acc.prefix,
+            pillars: selectedPillarsObj, // ✅ fixed here
+          };
+        }),
+      };
+
+      console.log("📦 Sending Payload:", payload);
+      const result = await addAccount(payload);
+
+      if (result?.message === "Accounts added successfully (no duplicates inserted)") {
+        setToast({ type: "success", message: result.message });
+        setTimeout(() => setToast(null), 3000);
+
+        // ✅ Reset form after success
+        setFormData({
+          accounts: [
+            {
+              cid: localStorage.getItem("company_cid") || "",
+              accountId: "",
+              accountName: "",
+              accessKey: "",
+              secretKey: "",
+              bucketName: "",
+              prefix: "",
+              pillars: {},
+              selectedPillars: [],
+            },
+          ],
+        });
+      } else {
+        setToast({ type: "error", message: "Failed to add accounts." });
+        setTimeout(() => setToast(null), 3000);
+      }
+    } catch (err) {
+      console.error("Submit Error:", err);
+      setToast({ type: "error", message: "Something went wrong. Try again." });
       setTimeout(() => setToast(null), 3000);
     }
-  } catch (err) {
-    console.error("Submit Error:", err);
-    setToast({ type: "error", message: "Something went wrong. Try again." });
-    setTimeout(() => setToast(null), 3000);
-  }
-}, [formData, validateForm, addAccount]);
+  }, [formData, validateForm, addAccount]);
 
 
   return (
@@ -354,8 +354,13 @@ const handleSubmit = useCallback(async () => {
 
           <div className="flex justify-center mt-6">
             <button
-              onClick={handleSubmit}
+              onClick={() => {
+                handleSubmit();         // Call your form submission logiccls
+                
+                navigate('/accounts');  // Then navigate to the Accounts page
+              }}
               className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 shadow-lg hover:shadow-xl"
+              navigation
             >
               Submit
             </button>
