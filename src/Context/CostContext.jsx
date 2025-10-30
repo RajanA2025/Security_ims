@@ -156,7 +156,7 @@ export const CostProvider = ({ children }) => {
       if (!cid) throw new Error("Company ID not found. Please log in again.");
 
       // 🔸 Dynamic endpoint using template literal
-      const response = await fetch(`http://13.212.15.14:8005/api/accounts/all/${cid}`, {
+      const response = await fetch(`http://13.212.15.14:8006/api/accounts/all/${cid}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

@@ -26,7 +26,7 @@ const Companyadmin = () => {
         const cid = localStorage.getItem("company_cid");
         if (!cid) throw new Error("Company ID not found. Please log in again.");
 
-        const response = await fetch(`http://13.212.15.14:8005/api/accounts/all/${cid}`);
+        const response = await fetch(`http://13.212.15.14:8006/api/accounts/all/${cid}`);
         const result = await response.json();
 
         if (!response.ok) throw new Error(result.message || "Failed to fetch accounts");

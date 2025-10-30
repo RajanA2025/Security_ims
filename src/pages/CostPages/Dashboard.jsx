@@ -28,7 +28,7 @@ const { RangePicker } = DatePicker;
 
 const Dashboard = () => {
   const { costData, loading, error, filters, setFilters, accounts } =
-  
+
     useContext(CostContext);
 
   const [context, setContext] = useState([]);
@@ -87,16 +87,26 @@ const Dashboard = () => {
   };
 
   /** ================== TreeSelect Data ================== */
+  // ✅ Filter accounts using localStorage account_ids
+  const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
+
+  const filteredAccounts = accounts.filter((acc) =>
+    storedAccountIds.includes(acc)
+  );
+
   const treeData = [
     {
       title: "Accounts",
       value: "accounts",
       selectable: false,
-      children: accounts
-        .filter((acc) => acc !== "ALL")
-        .map((acc) => ({ title: acc, value: acc, selectable: true })),
+      children: filteredAccounts.map((acc) => ({
+        title: acc,
+        value: acc,
+        selectable: true,
+      })),
     },
   ];
+
 
   /** ================== Render ================== */
   /** ================== Render ================== */

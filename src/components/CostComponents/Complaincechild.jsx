@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useMemo } from "react";
 import { Table, Spin, Alert, Tag } from "antd";
 import { CostContext } from "../../Context/CostContext";
 
@@ -7,18 +7,28 @@ const Compliancechild = () => {
 
   const requiredTags = ["Name", "Owner", "Project", "Environment"];
 
-  if (loading)
-    return (
-      <Spin tip="Loading..." style={{ display: "block", margin: "20px auto" }} />
+  // ✅ Get account IDs from localStorage
+  const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
+
+  // ✅ Filter data by localStorage account_ids
+  const filteredTagData = useMemo(() => {
+    if (!Array.isArray(tagData)) return [];
+
+    // Convert both to strings for accurate matching
+    const normalizedIds = storedAccountIds.map(String);
+    const filtered = tagData.filter((item) =>
+      normalizedIds.includes(String(item.account_id))
     );
 
-  if (error)
-    return (
-      <Alert message="Error" description={error} type="error" showIcon />
-    );
+    console.log("🧩 Stored IDs:", normalizedIds);
+    console.log("🧩 Filtered count:", filtered.length);
+    console.log("🧩 Example IDs in tagData:", tagData.slice(0, 3).map((d) => d.account_id));
 
-  // ✅ Add auto-generated IDs for table
-  const dataWithIds = tagData?.map((item, index) => ({
+    return filtered;
+  }, [tagData, storedAccountIds]);
+
+  // ✅ Add IDs for table key
+  const dataWithIds = filteredTagData.map((item, index) => ({
     ...item,
     id: index + 1,
   }));
@@ -26,21 +36,19 @@ const Compliancechild = () => {
   // ✅ Tagging logic
   const getTagStatus = (tags) => {
     if (!tags) return "Not Tagged";
-    const presentRequiredTags = requiredTags.filter(
+    const present = requiredTags.filter(
       (tag) => tags[tag] !== null && tags[tag] !== "" && tags[tag] !== undefined
     );
-    if (presentRequiredTags.length === requiredTags.length) return "Fully Tagged";
-    if (presentRequiredTags.length > 0) return "Partially Tagged";
+    if (present.length === requiredTags.length) return "Fully Tagged";
+    if (present.length > 0) return "Partially Tagged";
     return "Not Tagged";
   };
 
   const uniqueValues = (key) =>
     [...new Set(dataWithIds.map((r) => r[key]))].filter(Boolean);
 
-  // ✅ Columns setup (fixed mapping)
   const columns = [
     { title: "ID", dataIndex: "id", key: "id", width: 60 },
-
     {
       title: "Account Name",
       dataIndex: "account_name",
@@ -109,10 +117,10 @@ const Compliancechild = () => {
       width: 200,
       render: (tags) => {
         if (!tags) return "-";
-        const availableKeys = requiredTags.filter(
+        const available = requiredTags.filter(
           (key) => tags[key] !== null && tags[key] !== "" && tags[key] !== undefined
         );
-        return availableKeys.length > 0 ? availableKeys.join(", ") : "-";
+        return available.length ? available.join(", ") : "-";
       },
     },
     {
@@ -122,16 +130,20 @@ const Compliancechild = () => {
       width: 200,
       render: (tags) => {
         const missing = requiredTags.filter(
-          (tag) =>
-            !tags || tags[tag] === null || tags[tag] === "" || tags[tag] === undefined
+          (key) =>
+            !tags || tags[key] === null || tags[key] === "" || tags[key] === undefined
         );
         return missing.length ? missing.join(", ") : "-";
       },
     },
   ];
 
-  if (!dataWithIds || dataWithIds.length === 0)
-    return <Alert message="No resources found" type="info" showIcon />;
+  if (loading)
+    return <Spin tip="Loading..." style={{ display: "block", margin: "20px auto" }} />;
+  if (error)
+    return <Alert message="Error" description={error} type="error" showIcon />;
+  if (dataWithIds.length === 0)
+    return <Alert message="No matching accounts found" type="info" showIcon />;
 
   return (
     <div style={{ padding: 16 }}>
