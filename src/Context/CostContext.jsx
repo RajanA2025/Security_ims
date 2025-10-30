@@ -145,6 +145,40 @@ export const CostProvider = ({ children }) => {
     }
   };
 
+  // 🔹 Get all accounts for a specific company
+  const getAllAccounts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // 🔸 Get the company CID dynamically from localStorage
+      const cid = localStorage.getItem("company_cid");
+      if (!cid) throw new Error("Company ID not found. Please log in again.");
+
+      // 🔸 Dynamic endpoint using template literal
+      const response = await fetch(`http://13.212.15.14:8005/api/accounts/all/${cid}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("auth_token")}`, // optional if backend needs token
+        },
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Failed to fetch accounts");
+
+      return result;
+    } catch (err) {
+      console.error("Fetch Accounts Error:", err);
+      setError(err.message);
+      return { error: err.message || "Network Error" };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+
   // 🔹 Fetch cost & tag data
   useEffect(() => {
     const fetchAllData = async () => {
@@ -184,13 +218,13 @@ export const CostProvider = ({ children }) => {
 
         const processedTagData = Array.isArray(tagsJson)
           ? tagsJson.map((res, i) => ({
-              id: res.id || i + 1,
-              account: res.account || "",
-              region: res.region || "",
-              service: res.service || "",
-              resource: res.resource || "",
-              tags: res.tags || {},
-            }))
+            id: res.id || i + 1,
+            account: res.account || "",
+            region: res.region || "",
+            service: res.service || "",
+            resource: res.resource || "",
+            tags: res.tags || {},
+          }))
           : [];
 
         const requiredTags = ["Name", "Owner", "Project", "Environment"];
@@ -243,6 +277,7 @@ export const CostProvider = ({ children }) => {
         addAccount,
         getAllCompanies,
         companies,
+        getAllAccounts
       }}
     >
       {children}

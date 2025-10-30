@@ -122,38 +122,47 @@ const Admin = () => {
 
   // ---------- UI ----------
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-gray-100 p-0">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
-          Company Account Management
-        </h1>
+      <div className="px-0 py-4 mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 ">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Company Management
+            </h1>
+          </div>
 
-        <button
-          onClick={() => navigate("/admin/register")}
-          className="py-2.5 px-5 rounded-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all duration-200"
-        >
-          <Plus size={18} className="inline mr-1 mb-0.5" />
-          Create Company Admin
-        </button>
-      </div>
+          {/* Search Bar */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="relative flex-1 md:max-w-md">
+              <Search
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+              />
+              <input
+                type="text"
+                placeholder="Search by ID, name, or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
 
-      {/* Search Bar */}
-      <div className="bg-white p-4 rounded-lg shadow mb-6 w-full flex justify-start">
-        <div className="relative w-[350px]">
-          <Search
-            size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-          />
-          <input
-            type="text"
-            placeholder="Search company by ID, name, or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
+            <div>
+              <button
+                onClick={() => navigate("/admin/register")}
+                className="py-2.5 px-5 rounded-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all duration-200"
+              >
+                <Plus size={18} className="inline mr-1 mb-0.5" />
+                Create Company Admin
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
+
+
 
       {/* Loading / Error */}
       {loading && (

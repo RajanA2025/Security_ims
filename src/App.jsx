@@ -42,6 +42,9 @@ import LoginScreen from './pages/authScreens/LoginScreen';
 //JIT admin
 import Admin from './pages/JITAdmin/homeScreen';
 import JITAdminNotifications from './components/notification';
+import Companyadmin from './pages/Companyadmin';
+
+
 function App() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [filters, setFilters] = useState({
@@ -62,13 +65,8 @@ function App() {
         <Route path="/login" element={<LoginScreen />} />
 
         {/* Pages without Layout */}
-        <Route path="/Imsproduct" element={<Imsproduct />} />
         <Route path="/landing" element={<LandingHome />} />
         <Route path="/header" element={<Header />} />
-
-        {/* Add Accounts Screens */}
-        <Route path="/accounts" element={<AccountsScreen />} />
-
 
         {/* Pages with Layout */}
         <Route
@@ -105,6 +103,18 @@ function App() {
 
           {/* Company Admin */}
           <Route path="/company-admin/users" element={<CompanyAdminUsers />} />
+
+
+          {/* Ims Product Screens */}
+          <Route path="/imsproduct" element={<Imsproduct />} />
+          <Route path="/imsproduct/accounts" element={<AccountsScreen />} />
+          <Route path="/imsproduct/accountsmanage" element={<Companyadmin />} />
+
+
+
+          <Route path="/Companyadmin" element={<Companyadmin />} />
+
+          
 
           {/* JIT Admin */}
           <Route path="/admin" element={<Admin />} />

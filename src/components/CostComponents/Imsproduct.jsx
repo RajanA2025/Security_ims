@@ -3,6 +3,7 @@ import { Card, Row, Col, Typography, Modal } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
+import axios from 'axios'; // ✅ Added axios import
 import securityimg from '../../assets/securityimg.avif';
 
 const { Title, Text } = Typography;
@@ -29,8 +30,6 @@ export default function Imsproduct() {
     const storedPillars = JSON.parse(localStorage.getItem('pillars'));
     if (storedPillars) setPillars(storedPillars);
 
-
-
     const storedAccounts = JSON.parse(localStorage.getItem('account_ids'));
     if (storedAccounts && storedAccounts.length > 0) {
       setHasAccount(true);
@@ -38,22 +37,43 @@ export default function Imsproduct() {
       setHasAccount(false);
       setIsModalVisible(true); // ✅ Show modal if no account found
     }
-        console.log(storedAccounts)
-
+    console.log(storedAccounts);
   }, []);
-
 
   const handleCreateAccount = () => {
     setIsModalVisible(false);
-    navigate('/accounts');
+    navigate('/imsproduct/accounts');
   };
 
+  // ✅ Unified function for all cards
+  const handleCardClick = async (pillar) => {
+    const cid = localStorage.getItem('company_cid');
+    if (!cid) {
+      console.warn('No company_cid found in localStorage');
+      return;
+    }
+
+    try {
+      const url = `http://13.212.15.14:8005/api/accounts/${cid}/${pillar}`;
+      console.log('Sending request to:', url);
+
+      const response = await axios.get(url);
+      console.log('API Response:', response.data);
+
+      // ✅ Navigate after API success
+      navigate(`/${pillar}`);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  // ✅ Merge operational & performance
   const isOperationalActive = pillars.operational_excellence && pillars.performance;
 
   return (
     <div
       style={{
-        padding: '50px 100px',
+        padding: '20px 10px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -63,8 +83,8 @@ export default function Imsproduct() {
       {hasAccount && (
         <div className="w-full flex justify-end mb-10">
           <button
-            onClick={() => navigate('/accounts')}
-            className="flex items-center gap-2 bg-indigo-400 hover:bg-indigo-500 text-white font-semibold py-2.5 px-5 rounded-lg shadow-md transition-all duration-200"
+            onClick={() => navigate('/imsproduct/accounts')}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-5 rounded-lg shadow-md transition-all duration-200"
           >
             <Plus size={18} />
             Add Account
@@ -100,7 +120,7 @@ export default function Imsproduct() {
             whileHover={pillars.cost ? 'hover' : ''}
             variants={cardAnimation}
             viewport={{ once: true }}
-            onClick={() => pillars.cost && navigate('/cost')}
+            onClick={() => pillars.cost && handleCardClick('cost')}
             style={{ cursor: pillars.cost ? 'pointer' : 'not-allowed' }}
           >
             <Card
@@ -127,7 +147,8 @@ export default function Imsproduct() {
                   Cost
                 </Title>
                 <Text>
-                  Cost Cloud provides real-time visibility into your cloud expenses across all services.
+                  Cost Cloud provides real-time visibility into your cloud expenses across all
+                  services.
                 </Text>
               </div>
             </Card>
@@ -142,7 +163,7 @@ export default function Imsproduct() {
             whileHover={pillars.security ? 'hover' : ''}
             variants={cardAnimation}
             viewport={{ once: true }}
-            onClick={() => pillars.security && navigate('/security')}
+            onClick={() => pillars.security && handleCardClick('security')}
             style={{ cursor: pillars.security ? 'pointer' : 'not-allowed' }}
           >
             <Card
@@ -160,9 +181,12 @@ export default function Imsproduct() {
             >
               <div style={{ textAlign: 'center' }}>
                 <img src={securityimg} alt="Security" width="100%" height="200px" />
-                <Title level={4} style={{ margin: '20px 0' }}>Security</Title>
+                <Title level={4} style={{ margin: '20px 0' }}>
+                  Security
+                </Title>
                 <Text>
-                  IMS security continuously monitors, detects, and safeguards your cloud infrastructure and data.
+                  IMS security continuously monitors, detects, and safeguards your cloud
+                  infrastructure and data.
                 </Text>
               </div>
             </Card>
@@ -177,7 +201,7 @@ export default function Imsproduct() {
             whileHover={isOperationalActive ? 'hover' : ''}
             variants={cardAnimation}
             viewport={{ once: true }}
-            onClick={() => isOperationalActive && navigate('/operational')}
+            onClick={() => isOperationalActive && handleCardClick('operational')}
             style={{ cursor: isOperationalActive ? 'pointer' : 'not-allowed' }}
           >
             <Card
@@ -204,7 +228,8 @@ export default function Imsproduct() {
                   Operational Excellence
                 </Title>
                 <Text>
-                  Our company strives for Operational Excellence by continuously improving processes.
+                  Our company strives for Operational Excellence by continuously improving
+                  processes.
                 </Text>
               </div>
             </Card>

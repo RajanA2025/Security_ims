@@ -140,6 +140,7 @@ const CompanyForm = () => {
           body: JSON.stringify(payload),
         });
         res = await response.json();
+
       } else {
         // ✅ Register new company
         res = await registerCompany(payload);
@@ -154,7 +155,10 @@ const CompanyForm = () => {
             : "Registered successfully!",
           "bg-green-600"
         );
-        setTimeout(() => navigate("/admin"), 1500);
+        setTimeout(() => {
+          navigate("/admin");
+          window.location.reload(); // 🔁 forces table to reload data
+        }, 1500);
       } else if (res?.detail === "Email already registered") {
         showToast("Email already registered", "bg-yellow-600");
       } else {
@@ -177,15 +181,15 @@ const CompanyForm = () => {
         </div>
       )}
 
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-0 m-0">
         <form
           onSubmit={handleSubmit}
           className="w-full max-w-lg bg-white rounded-2xl shadow-xl p-8 border border-gray-200"
         >
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 text-white rounded-full shadow-md mb-3">
+            {/* <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 text-white rounded-full shadow-md mb-3">
               <Building2 size={28} />
-            </div>
+            </div> */}
             <h1 className="text-3xl font-bold text-gray-800">
               {isEdit ? "Edit Company Admin" : "Company Registration"}
             </h1>

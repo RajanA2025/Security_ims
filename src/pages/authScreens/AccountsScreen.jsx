@@ -23,17 +23,53 @@ const InputField = memo(({ label, value, onChange, type = "text", placeholder, e
 ));
 
 const PillarDropdown = memo(({ pillars, selected, onChange, error }) => {
-  const available = Object.keys(pillars || {}).filter((k) => pillars[k]);
+  // ✅ Combine operational_excellence & performance into one button
+  const available = [
+    { key: "cost", label: "Cost" },
+    { key: "security", label: "Security" },
+    { key: "operational_performance", label: "Operational & Performance" },
+  ].filter((item) => {
+    if (item.key === "operational_performance") {
+      return pillars?.operational_excellence || pillars?.performance;
+    }
+    return pillars?.[item.key];
+  });
 
   const toggle = useCallback(
-    (pillar) => {
-      const updated = selected.includes(pillar)
-        ? selected.filter((p) => p !== pillar)
-        : [...selected, pillar];
+    (pillarKey) => {
+      let updated = [...selected];
+
+      if (pillarKey === "operational_performance") {
+        // ✅ Toggle both operational_excellence & performance together
+        const hasBoth =
+          selected.includes("operational_excellence") &&
+          selected.includes("performance");
+
+        updated = hasBoth
+          ? selected.filter(
+              (p) => p !== "operational_excellence" && p !== "performance"
+            )
+          : [...selected, "operational_excellence", "performance"];
+      } else {
+        updated = selected.includes(pillarKey)
+          ? selected.filter((p) => p !== pillarKey)
+          : [...selected, pillarKey];
+      }
+
       onChange(updated);
     },
     [selected, onChange]
   );
+
+  const isActive = (pillarKey) => {
+    if (pillarKey === "operational_performance") {
+      return (
+        selected.includes("operational_excellence") &&
+        selected.includes("performance")
+      );
+    }
+    return selected.includes(pillarKey);
+  };
 
   return (
     <div className="space-y-1.5">
@@ -42,30 +78,27 @@ const PillarDropdown = memo(({ pillars, selected, onChange, error }) => {
       </label>
 
       <div
-        className={`flex flex-wrap gap-2 p-2 border rounded-lg transition ${error ? "border-red-500" : "border-gray-300"
-          }`}
+        className={`flex flex-wrap gap-2 p-2 border rounded-lg transition ${
+          error ? "border-red-500" : "border-gray-300"
+        }`}
       >
         {available.length === 0 ? (
           <p className="text-gray-500 text-sm italic">No available pillars.</p>
         ) : (
-          available.map((pillar) => {
-            const label =
-              pillar.charAt(0).toUpperCase() + pillar.slice(1).replace("_", " ");
-            const active = selected.includes(pillar);
-            return (
-              <button
-                key={pillar}
-                type="button"
-                onClick={() => toggle(pillar)}
-                className={`px-3 py-1 rounded-full text-sm border transition ${active
+          available.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => toggle(item.key)}
+              className={`px-3 py-1 rounded-full text-sm border transition ${
+                isActive(item.key)
                   ? "bg-blue-600 text-white border-blue-600"
                   : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-                  }`}
-              >
-                {label}
-              </button>
-            );
-          })
+              }`}
+            >
+              {item.label}
+            </button>
+          ))
         )}
       </div>
 
@@ -73,6 +106,7 @@ const PillarDropdown = memo(({ pillars, selected, onChange, error }) => {
     </div>
   );
 });
+
 
 
 
@@ -304,7 +338,7 @@ export default function AccountsScreen() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br flex items-center justify-center p-6">
       {/* ✅ Toast */}
       {toast && (
         <div
@@ -315,7 +349,7 @@ export default function AccountsScreen() {
         </div>
       )}
 
-      <div className="max-w-3xl w-full bg-white rounded-xl shadow-lg p-8">
+      <div className="max-w-4xl w-full bg-white rounded-xl shadow-lg p-8">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-bold text-gray-800 mb-1">Account Registration</h1>
           <p className="text-gray-600">Enter account details below</p>
@@ -349,7 +383,7 @@ export default function AccountsScreen() {
             <button
               onClick={() => {
                 handleSubmit();         
-                navigate('/accounts');  }}
+                navigate('/imsproduct/accounts');  }}
               className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 shadow-lg hover:shadow-xl"
               navigation
             >
