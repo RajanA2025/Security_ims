@@ -37,7 +37,7 @@ export default function Imsproduct() {
       setHasAccount(false);
       setIsModalVisible(true); // ✅ Show modal if no account found
     }
-    console.log(storedAccounts);
+    console.log("storedAccounts:", storedAccounts);
   }, []);
 
   const handleCreateAccount = () => {
@@ -47,33 +47,47 @@ export default function Imsproduct() {
 
   // ✅ Unified function for all cards
   const handleCardClick = async (pillar) => {
-    const cid = localStorage.getItem('company_cid');
+    const cid = localStorage.getItem("company_cid");
     if (!cid) {
-      console.warn('No company_cid found in localStorage');
+      console.warn("No company_cid found in localStorage");
       return;
     }
 
     try {
       const url = `http://13.212.15.14:8005/api/accounts/${cid}/${pillar}`;
-      console.log('Sending request to:', url);
+      console.log("Sending request to:", url);
 
       const response = await axios.get(url);
-      console.log('API Response:', response.data);
+      console.log("API Response:", response.data);
 
-      // ✅ Store pillar accounts in localStorage (as array of objects)
-      if (response.data && response.data[`${pillar}_accounts`]) {
-        const accountsArray = response.data[`${pillar}_accounts`];
-        localStorage.setItem('account_ids', JSON.stringify(accountsArray));
+      // ✅ Try to find the correct array in response dynamically
+      const accountsArray =
+        response.data?.accounts ||
+        response.data?.[`${pillar}_accounts`] ||
+        response.data?.results ||
+        [];
 
-        console.log(`Stored ${pillar} accounts:`, accountsArray);
+      if (Array.isArray(accountsArray) && accountsArray.length > 0) {
+        // ✅ Extract only account IDs
+        const accountIds = accountsArray.map((acc) => acc.account_id);
+
+        // ✅ Store the list of IDs
+        localStorage.setItem("account_ids", JSON.stringify(accountIds));
+
+        console.log(`✅ Stored ${pillar} account IDs:`, accountIds);
+      } else {
+        console.warn(`⚠️ No accounts found for pillar: ${pillar}`);
+        // Don't remove existing data unless necessary
+        // localStorage.removeItem("account_ids");
       }
 
       // ✅ Navigate after storing
       navigate(`/${pillar}`);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error("❌ Error fetching data:", error);
     }
   };
+
 
 
   // ✅ Merge operational & performance

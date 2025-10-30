@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Table, Card, Tabs, Spin } from "antd";
+import { Table, Card, Tabs, Spin, Empty } from "antd";
 import ReactECharts from "echarts-for-react";
 import axios from "axios";
 import * as echarts from "echarts";
 
-// 🔹 Resizable Chart Wrapper
 const ResizableChart = ({ option, height = 300 }) => {
   const chartRef = useRef(null);
-
   useEffect(() => {
     const handleResize = () => chartRef.current?.getEchartsInstance().resize();
     window.addEventListener("resize", handleResize);
@@ -18,7 +16,6 @@ const ResizableChart = ({ option, height = 300 }) => {
       observer.disconnect();
     };
   }, []);
-
   return (
     <ReactECharts
       ref={chartRef}
@@ -32,7 +29,6 @@ const ResizableChart = ({ option, height = 300 }) => {
   );
 };
 
-// 🔹 Mini Sparkline Chart
 const MiniChart = ({ data }) => {
   const options = {
     xAxis: { type: "category", data: data.map((_, i) => i + 1), show: false },
@@ -44,7 +40,6 @@ const MiniChart = ({ data }) => {
   return <ReactECharts echarts={echarts} option={options} style={{ height: 10, width: 100 }} />;
 };
 
-// 🔹 Table Columns
 const columns = [
   { title: "Deep Dive", dataIndex: "name", key: "name", render: (_, record) => record.name || record.container || "Unknown" },
   { title: "Cost ($)", dataIndex: "cost", key: "cost", render: (val) => (typeof val === "number" ? `$${val.toFixed(2)}` : "-") },
@@ -56,7 +51,6 @@ const columns = [
   { title: "RunTime Graph", dataIndex: "runtimegraph", key: "runtimegraph", render: (val) => (val ? <MiniChart data={val} /> : "-") },
 ];
 
-// 🔹 Aggregate recursive values
 const aggregateValues = (row) => {
   if (!row.children?.length) {
     row.cpu = row.vcpu || 0;
@@ -65,10 +59,8 @@ const aggregateValues = (row) => {
     row.instance_id = 1;
     return row;
   }
-
   let totalCost = 0, totalCpu = 0, totalRam = 0, totalVolume = 0, totalInstances = 0;
   const families = new Set();
-
   row.children.forEach((child) => {
     const agg = aggregateValues(child);
     totalCost += agg.cost || 0;
@@ -78,18 +70,15 @@ const aggregateValues = (row) => {
     totalInstances += agg.instance_id || 0;
     if (agg.instance_type) families.add(agg.instance_type);
   });
-
   row.cost = totalCost;
   row.cpu = totalCpu;
   row.ram = totalRam;
   row.volume_size = totalVolume;
   row.instance_id = totalInstances;
   row.instance_type = families.size > 1 ? "Mixed" : [...families][0] || "-";
-
   return row;
 };
 
-// 🔹 Merge multiple API records per instance
 const mergeByInstance = (rows) => {
   const map = {};
   rows.forEach((row) => {
@@ -107,7 +96,6 @@ const mergeByInstance = (rows) => {
   return Object.values(map);
 };
 
-// 🔹 Compute chart data
 const computeChartData = (data, activeTab) => {
   if (!data || !data.length) return { labels: [], costs: [] };
   if (activeTab === "environment") {
@@ -121,7 +109,6 @@ const computeChartData = (data, activeTab) => {
     traverse(data);
     return { labels: ["Production", "Non-Production"], costs: [prodCost, nonProdCost] };
   }
-
   const result = [];
   const traverse = (nodes) => {
     nodes.forEach((node) => {
@@ -147,16 +134,22 @@ export default function AntdNestedTable({ selectedAccount }) {
         const { data } = await axios.get("http://13.212.15.14:8002/instances");
         const results = data.results || [];
 
-        // ✅ Filter with localStorage account_ids
         const storedAccounts = JSON.parse(localStorage.getItem("account_ids")) || [];
         const filteredResults = results.filter((r) =>
           storedAccounts.includes(r.account_id)
         );
 
-        // ✅ Further filter if selectedAccount is chosen
         const finalResults = selectedAccount
           ? filteredResults.filter((r) => r.account_id === selectedAccount)
           : filteredResults;
+
+        if (!finalResults.length) {
+          setDataEnv([]);
+          setDataService([]);
+          setDataContainer([]);
+          setLoading(false);
+          return;
+        }
 
         const allRows = finalResults.map((inst) => {
           const envRaw = inst.environment?.toLowerCase().trim();
@@ -185,7 +178,6 @@ export default function AntdNestedTable({ selectedAccount }) {
         });
 
         const mergedRows = mergeByInstance(allRows);
-
         const production = [];
         const nonProduction = [];
         const servicesMap = {};
@@ -246,15 +238,15 @@ export default function AntdNestedTable({ selectedAccount }) {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [selectedAccount]);
 
   const { labels, costs } = useMemo(
-    () => computeChartData(
-      activeTab === "environment" ? dataEnv : activeTab === "service" ? dataService : dataContainer,
-      activeTab
-    ),
+    () =>
+      computeChartData(
+        activeTab === "environment" ? dataEnv : activeTab === "service" ? dataService : dataContainer,
+        activeTab
+      ),
     [dataEnv, dataService, dataContainer, activeTab]
   );
 
@@ -268,37 +260,47 @@ export default function AntdNestedTable({ selectedAccount }) {
     [labels, costs]
   );
 
+  // ✅ No data fallback
+  const noData =
+    !loading &&
+    (!dataEnv.length && !dataService.length && !dataContainer.length);
+
   return (
     <div>
-      <ResizableChart option={graphOptions} height={250} />
-      <Card style={{ borderRadius: 8, marginTop: 20, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <Tabs.TabPane tab="By Environment" key="environment" />
-          <Tabs.TabPane tab="By Service" key="service" />
-          <Tabs.TabPane tab="By Container" key="container" />
-        </Tabs>
-
-        {loading ? (
-          <div style={{ textAlign: "center", padding: 50 }}>
-            <Spin size="large" />
-          </div>
-        ) : (
-          <Table
-            columns={columns}
-            dataSource={
-              activeTab === "environment"
-                ? dataEnv
-                : activeTab === "service"
-                ? dataService
-                : dataContainer
-            }
-            pagination={false}
-            rowKey={(record) => record.key}
-            expandable={{ expandIconColumnIndex: 0, childrenColumnName: "children" }}
-            size="small"
-          />
-        )}
-      </Card>
+      {noData ? (
+        <Empty description="No Data Found" style={{ marginTop: 80 }} />
+      ) : (
+        <>
+          <ResizableChart option={graphOptions} height={250} />
+          <Card style={{ borderRadius: 8, marginTop: 20, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+            <Tabs activeKey={activeTab} onChange={setActiveTab}>
+              <Tabs.TabPane tab="By Environment" key="environment" />
+              <Tabs.TabPane tab="By Service" key="service" />
+              <Tabs.TabPane tab="By Container" key="container" />
+            </Tabs>
+            {loading ? (
+              <div style={{ textAlign: "center", padding: 50 }}>
+                <Spin size="large" />
+              </div>
+            ) : (
+              <Table
+                columns={columns}
+                dataSource={
+                  activeTab === "environment"
+                    ? dataEnv
+                    : activeTab === "service"
+                    ? dataService
+                    : dataContainer
+                }
+                pagination={false}
+                rowKey={(record) => record.key}
+                expandable={{ expandIconColumnIndex: 0, childrenColumnName: "children" }}
+                size="small"
+              />
+            )}
+          </Card>
+        </>
+      )}
     </div>
   );
 }

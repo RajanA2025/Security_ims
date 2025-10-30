@@ -125,13 +125,13 @@ const Dashboard = () => {
   if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
 
   return (
-    <div style={{ width: "100%", padding: "0 10px", boxSizing: "border-box" }}>
+    <div style={{ width: "100%", padding: "10px 10px", boxSizing: "border-box" }}>
       {/* ========== Filters ========== */}
       <Row justify="end">
         <Card
           size="small"
           style={{ borderRadius: 12, background: "none" }}
-          bodyStyle={{ padding: "5px 10px" }}
+          bodyStyle={{ padding: "5px 0px" }}
         >
           <Space size="middle" wrap>
             <TreeSelect

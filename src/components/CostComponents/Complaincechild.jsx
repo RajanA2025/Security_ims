@@ -8,16 +8,22 @@ const Compliancechild = () => {
   const requiredTags = ["Name", "Owner", "Project", "Environment"];
 
   if (loading)
-    return <Spin tip="Loading..." style={{ display: "block", margin: "20px auto" }} />;
+    return (
+      <Spin tip="Loading..." style={{ display: "block", margin: "20px auto" }} />
+    );
 
-  if (error) return <Alert message="Error" description={error} type="error" showIcon />;
+  if (error)
+    return (
+      <Alert message="Error" description={error} type="error" showIcon />
+    );
 
-  // Add auto-generated IDs
+  // ✅ Add auto-generated IDs for table
   const dataWithIds = tagData?.map((item, index) => ({
     ...item,
     id: index + 1,
   }));
 
+  // ✅ Tagging logic
   const getTagStatus = (tags) => {
     if (!tags) return "Not Tagged";
     const presentRequiredTags = requiredTags.filter(
@@ -31,21 +37,31 @@ const Compliancechild = () => {
   const uniqueValues = (key) =>
     [...new Set(dataWithIds.map((r) => r[key]))].filter(Boolean);
 
+  // ✅ Columns setup (fixed mapping)
   const columns = [
     { title: "ID", dataIndex: "id", key: "id", width: 60 },
+
     {
-      title: "Account",
-      dataIndex: "account",
-      key: "account",
-      width: 120,
-      filters: uniqueValues("account").map((val) => ({ text: val, value: val })),
-      onFilter: (value, record) => record.account === value,
+      title: "Account Name",
+      dataIndex: "account_name",
+      key: "account_name",
+      width: 160,
+      filters: uniqueValues("account_name").map((val) => ({ text: val, value: val })),
+      onFilter: (value, record) => record.account_name === value,
+    },
+    {
+      title: "Account ID",
+      dataIndex: "account_id",
+      key: "account_id",
+      width: 160,
+      filters: uniqueValues("account_id").map((val) => ({ text: val, value: val })),
+      onFilter: (value, record) => record.account_id === value,
     },
     {
       title: "Region",
       dataIndex: "region",
       key: "region",
-      width: 100,
+      width: 120,
       filters: uniqueValues("region").map((val) => ({ text: val, value: val })),
       onFilter: (value, record) => record.region === value,
     },
@@ -62,7 +78,7 @@ const Compliancechild = () => {
       dataIndex: "resource",
       key: "resource",
       width: 250,
-      ellipsis: true
+      ellipsis: true,
     },
     {
       title: "Tagging Status",
@@ -78,7 +94,11 @@ const Compliancechild = () => {
       render: (tags) => {
         const status = getTagStatus(tags);
         const color =
-          status === "Fully Tagged" ? "green" : status === "Partially Tagged" ? "gold" : "red";
+          status === "Fully Tagged"
+            ? "green"
+            : status === "Partially Tagged"
+            ? "gold"
+            : "red";
         return <Tag color={color}>{status}</Tag>;
       },
     },
@@ -102,7 +122,8 @@ const Compliancechild = () => {
       width: 200,
       render: (tags) => {
         const missing = requiredTags.filter(
-          (tag) => !tags || tags[tag] === null || tags[tag] === "" || tags[tag] === undefined
+          (tag) =>
+            !tags || tags[tag] === null || tags[tag] === "" || tags[tag] === undefined
         );
         return missing.length ? missing.join(", ") : "-";
       },
@@ -114,15 +135,18 @@ const Compliancechild = () => {
 
   return (
     <div style={{ padding: 16 }}>
-      <h3 style={{
-        fontFamily: "'Roboto', sans-serif",
-        paddingTop: 16,
-        paddingBottom: 16,
-        margin: 0, // optional: remove default margin
-        color:"#000e00"
-      }}>
+      <h3
+        style={{
+          fontFamily: "'Roboto', sans-serif",
+          paddingTop: 16,
+          paddingBottom: 16,
+          margin: 0,
+          color: "#000e00",
+        }}
+      >
         Resource Tag Compliance
-        </h3>
+      </h3>
+
       <Table
         dataSource={dataWithIds}
         columns={columns}
@@ -134,4 +158,4 @@ const Compliancechild = () => {
   );
 };
 
-export default Compliancechild; 
+export default Compliancechild;

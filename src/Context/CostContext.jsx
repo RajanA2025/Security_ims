@@ -216,16 +216,19 @@ export const CostProvider = ({ children }) => {
         setAccounts(orderedAccounts);
         setApps(appList);
 
+        
         const processedTagData = Array.isArray(tagsJson)
           ? tagsJson.map((res, i) => ({
             id: res.id || i + 1,
-            account: res.account || "",
+            account_name: res.account_name || "",
+            account_id: res.account_id || "",
             region: res.region || "",
             service: res.service || "",
             resource: res.resource || "",
             tags: res.tags || {},
           }))
           : [];
+
 
         const requiredTags = ["Name", "Owner", "Project", "Environment"];
         const summary = {
