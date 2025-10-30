@@ -60,12 +60,21 @@ export default function Imsproduct() {
       const response = await axios.get(url);
       console.log('API Response:', response.data);
 
-      // ✅ Navigate after API success
+      // ✅ Store pillar accounts in localStorage (as array of objects)
+      if (response.data && response.data[`${pillar}_accounts`]) {
+        const accountsArray = response.data[`${pillar}_accounts`];
+        localStorage.setItem('account_ids', JSON.stringify(accountsArray));
+
+        console.log(`Stored ${pillar} accounts:`, accountsArray);
+      }
+
+      // ✅ Navigate after storing
       navigate(`/${pillar}`);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
+
 
   // ✅ Merge operational & performance
   const isOperationalActive = pillars.operational_excellence && pillars.performance;
