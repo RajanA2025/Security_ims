@@ -54,7 +54,7 @@ export default function Imsproduct() {
     }
 
     try {
-      const url = `http://13.212.15.14:8005/api/accounts/${cid}/${pillar}`;
+      const url = `http://13.212.15.14:8006/api/accounts/${cid}/${pillar}`;
       console.log("Sending request to:", url);
 
       const response = await axios.get(url);

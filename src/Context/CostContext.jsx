@@ -184,17 +184,29 @@ export const CostProvider = ({ children }) => {
     const fetchAllData = async () => {
       try {
         setLoading(true);
+
+        // Retrieve filters and localStorage account IDs
         const { account_id, start_date, end_date } = filters;
-        const params = new URLSearchParams();
+        const accountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
 
-        if (account_id && account_id !== "ALL") params.append("account_id", account_id);
-        if (start_date) params.append("start_date", start_date);
-        if (end_date) params.append("end_date", end_date);
+        // Prepare POST body
+        const postBody = {
+          account_ids: account_id && account_id !== "ALL" ? [account_id] : accountIds,
+          start_date: start_date || "",
+          end_date: end_date || "",
+        };
 
-        const costUrl = `http://13.212.15.14:8010/cost-summary?${params.toString()}`;
+        console.log("🔹 Sending POST body:", postBody);
+
+        // POST request instead of GET
+        const costUrl = `http://13.212.15.14:8021/cost-summary`;
 
         const [costRes, resourcesRes, tagRes] = await Promise.all([
-          fetch(costUrl),
+          fetch(costUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(postBody),
+          }),
           fetch("http://13.212.15.14:8003/resources"),
           fetch("http://13.212.15.14:8007/tags"),
         ]);
@@ -206,17 +218,20 @@ export const CostProvider = ({ children }) => {
         const resourcesJson = await resourcesRes.json();
         const tagsJson = await tagRes.json();
 
+        // Build account list
         const accountList = costJson?.all_account_ids || [];
+        console.log("🔹 Fetched account IDs:", accountList);
         const orderedAccounts = accountList.includes("ALL")
           ? accountList
           : ["ALL", ...accountList];
+
         const appList =
           costJson?.top_5?.top_apps_current_month?.map((a) => a.app_name) || [];
 
         setAccounts(orderedAccounts);
         setApps(appList);
 
-        
+        // Process tags
         const processedTagData = Array.isArray(tagsJson)
           ? tagsJson.map((res, i) => ({
             id: res.id || i + 1,
@@ -229,7 +244,7 @@ export const CostProvider = ({ children }) => {
           }))
           : [];
 
-
+        // Compute tagging summary
         const requiredTags = ["Name", "Owner", "Project", "Environment"];
         const summary = {
           fully_tagged: 0,
@@ -248,11 +263,14 @@ export const CostProvider = ({ children }) => {
           else summary.not_tagged++;
         });
 
+        // Set final states
         setCostData(costJson);
         setResourcesData(resourcesJson);
         setTagData(processedTagData);
         setTagSummary(summary);
+
       } catch (err) {
+        console.error("❌ Fetch error:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -261,6 +279,7 @@ export const CostProvider = ({ children }) => {
 
     fetchAllData();
   }, [filters]);
+
 
   return (
     <CostContext.Provider

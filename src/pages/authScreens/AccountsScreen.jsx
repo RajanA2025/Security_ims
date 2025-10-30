@@ -316,7 +316,7 @@ export default function AccountsScreen() {
 
       if (result?.message === "Accounts added successfully (no duplicates inserted)") {
         // ✅ Store account IDs in localStorage
-        const accountIds = formData.accounts.map((acc) => acc.accountId);
+        // const accountIds = formData.accounts.map((acc) => acc.accountId);
         localStorage.setItem("account_ids", JSON.stringify(accountIds));
 
         setToast({ type: "success", message: result.message });
