@@ -1,10 +1,12 @@
 import { useState, useContext } from "react";
 import { Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
 import { CostContext } from "../../Context/CostContext";
+import { useAuth } from "../../Context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export default function LoginScreen() {
   const { loginCompany, loading } = useContext(CostContext);
+  const { login: setAuthLogin } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState(null);
@@ -42,6 +44,9 @@ export default function LoginScreen() {
     const result = await loginCompany(formData);
 
     if (result?.message === "Login successful" && result?.cid) {
+      // ensure auth context knows we're logged in (token stored by CostContext)
+      if (result.token) setAuthLogin(result.token);
+      else if (localStorage.getItem("auth_token")) setAuthLogin(localStorage.getItem("auth_token"));
       // Store CID and active pillars in localStorage
       localStorage.setItem("company_cid", result.cid);
 

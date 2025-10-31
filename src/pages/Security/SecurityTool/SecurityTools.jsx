@@ -28,7 +28,7 @@ const SecurityTools = () => {
   const { Option } = Select;
 
   // Make default the KMS tab so its data is fetched on mount
-  const [tabKey, setTabKey] = useState("2");
+  const [tabKey, setTabKey] = useState("1");
   const [loading, setLoading] = useState(false);
   const [securityData, setSecurityData] = useState([]);
   const [kmData, setKmData] = useState([]);
@@ -42,24 +42,58 @@ const SecurityTools = () => {
 
   // Fetch data
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      // ✅ Step 1: Get and normalize storedAccountId
+      let storedAccountId = localStorage.getItem("account_ids");
+
       try {
-        if (tabKey === "1") {
-          const res = await axios.get("http://13.212.15.14:8012/tools");
-          setSecurityData(res.data);
-        } else if (tabKey === "2") {
-          const res = await axios.get("http://13.212.15.14:8012/kms");
-          setKmData(res.data);
+        storedAccountId = JSON.parse(storedAccountId);
+        if (Array.isArray(storedAccountId)) {
+          storedAccountId = storedAccountId[0]; // take first ID if it's array
         }
-      } catch (err) {
-        console.error("Error fetching data:", err);
-      } finally {
-        setLoading(false);
+      } catch {
+        // ignore parse error if it's plain string
       }
-    };
-    fetchData();
-  }, [tabKey]);
+
+      const normalizeId = (id) => String(id).trim().toLowerCase();
+      const storedId = normalizeId(storedAccountId);
+      console.log("Filtered Account ID:", storedId);
+
+      // ✅ Step 2: Fetch API data
+      if (tabKey === "2") {
+        const res = await axios.get("http://13.212.15.14:8012/tools");
+        if (Array.isArray(res.data)) {
+          // Filter only matching account_id
+          const filtered = res.data.filter(
+            (item) =>
+              normalizeId(item.account_id || item.aws_account) === storedId
+          );
+          console.log("Filtered Security Data:", filtered);
+          setSecurityData(filtered);
+        }
+      } else if (tabKey === "1") {
+        const res = await axios.get("http://13.212.15.14:8012/kms");
+        if (Array.isArray(res.data)) {
+          // Filter only matching account_id
+          const filtered = res.data.filter(
+            (item) =>
+              normalizeId(item.account_id || item.aws_account) === storedId
+          );
+          console.log("Filtered KMS Data:", filtered);
+          setKmData(filtered);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching filtered data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, [tabKey])
 
   const handleSearch = e => setSearchText(e.target.value);
 
@@ -165,9 +199,9 @@ const SecurityTools = () => {
           </Tooltip>
         </span>
       ),
-      dataIndex: "aws_account",
-      key: "aws_account",
-      filters: getUniqueOptions(kmData, "aws_account"),
+      dataIndex: "account_id",
+      key: "account_id",
+      filters: getUniqueOptions(kmData, "account_id"),
       onFilter: (value, record) => record.aws_account === value
     },
     {
@@ -281,7 +315,7 @@ const SecurityTools = () => {
   ];
 
   return (
-    <>
+    <div className="p-6">
      
 
       <Row gutter={[16, 16]} style={{ justifyContent: "flex-end" }}>
@@ -324,7 +358,7 @@ Security & KMS Tools
           <Table
             columns={columns1}
             dataSource={kmData.filter(item =>
-              item.aws_account?.toLowerCase().includes(searchText.toLowerCase())
+              item.account_id?.toLowerCase().includes(searchText.toLowerCase())
             )}
             loading={loading}
             rowKey="username"
@@ -390,7 +424,7 @@ Security & KMS Tools
           </Card>
         )}
       </Modal>
-    </>
+    </div>
   );
 };
 

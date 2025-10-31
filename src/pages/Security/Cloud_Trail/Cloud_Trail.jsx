@@ -22,6 +22,7 @@ const header = { backgroundColor: "#4f46e5", color: "white" };
 
 const Cloud_Trail = () => {
   const [data, setData] = useState([]);
+  console.log('data', data)
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedData, setSelectedData] = useState(null);
@@ -31,38 +32,60 @@ const Cloud_Trail = () => {
    let storedAccountId = localStorage.getItem("account_ids");
 
   // Fetch data on load
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
+useEffect(() => {
+  const fetchData = async () => {
+    setLoading(true);
+
+    try {
+      // ✅ Step 1: Normalize storedAccountId
+      let storedIdValue = storedAccountId;
       try {
-        // const response = await axios.get(API_URL);
-        // setData(response.data);
-        const [response] = await Promise.all([
-        axios.get(API_URL),
-       
-      ]);
+        const parsed = JSON.parse(storedAccountId);
+        if (Array.isArray(parsed)) {
+          storedIdValue = parsed[0]; // take first if it's an array
+        } else {
+          storedIdValue = parsed;
+        }
+      } catch {
+        // if it's a normal string, ignore
+      }
 
       const normalizeId = (id) => String(id).trim().toLowerCase();
-      const storedId = normalizeId(storedAccountId);
+      const storedId = normalizeId(storedIdValue);
 
+      console.log("Normalized storedAccountId:", storedId);
+
+      // ✅ Step 2: Fetch API
+      const [response] = await Promise.all([axios.get(API_URL)]);
+
+      // ✅ Step 3: Filter Data safely
       if (response?.data && Array.isArray(response.data)) {
-        const filtered2 = response.data.filter((item) => {
+        const filteredData = response.data.filter((item) => {
           const itemId =
-            item.account_id || item.accountId || item.ACCOUNT_ID || item.Account_ID;
+            item.account_id ||
+            item.accountId ||
+            item.ACCOUNT_ID ||
+            item.Account_ID;
           return normalizeId(itemId) === storedId;
         });
-        console.log("Filtered Data 2222:", filtered2);
-        setData(filtered2);
-    
+
+        console.log("Filtered Data 2222:", filteredData);
+        setData(filteredData);
+
+        if (filteredData.length === 0) {
+          console.warn(`⚠️ No matching account found for ID: ${storedId}`);
+        }
       }
-      } catch (error) {
-        console.error("Error fetching CloudTrail data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [storedAccountId]);
+    } catch (error) {
+      console.error("❌ Error fetching CloudTrail data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, [storedAccountId]);
+
 
   // Extract username safely
   const getRecordUsername = (record) => {
@@ -194,7 +217,7 @@ const Cloud_Trail = () => {
   );
 
   return (
-    <>
+    <div className="p-6">
      
 
       {/* Search input */}
@@ -257,7 +280,7 @@ Cloud Trail
           </Card>
         )}
       </Modal>
-    </>
+    </div>
   );
 };
 

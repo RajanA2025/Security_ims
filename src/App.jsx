@@ -4,6 +4,7 @@ import './stylecss/App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './Layout/Layout';
 import { SecurityProvider } from './Context/SecurityContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 //authScreens
 import CompanyForm from './pages/authScreens/CompanyForm';
@@ -73,11 +74,13 @@ function App() {
         {/* Pages with Layout */}
         <Route
           element={
-            <Layout
-              onDateChange={handleDateChange}
-              isExpanded={isExpanded}
-              setIsExpanded={setIsExpanded}
-            />
+            <ProtectedRoute>
+              <Layout
+                onDateChange={handleDateChange}
+                isExpanded={isExpanded}
+                setIsExpanded={setIsExpanded}
+              />
+            </ProtectedRoute>
           }
         >
           {/* Security */}
