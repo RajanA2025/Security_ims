@@ -9,6 +9,7 @@ import {
   Typography,
   Space,
   TreeSelect,
+  Spin
 } from "antd";
 import { DownOutlined, ReloadOutlined } from "@ant-design/icons";
 import { LuTrendingDown, LuTrendingUp } from "react-icons/lu";
@@ -27,6 +28,7 @@ const { RangePicker } = DatePicker;
 
 const Dashboard = () => {
   const { costData, loading, error, filters, setFilters, accounts } =
+
     useContext(CostContext);
 
   const [context, setContext] = useState([]);
@@ -85,29 +87,62 @@ const Dashboard = () => {
   };
 
   /** ================== TreeSelect Data ================== */
+  // ✅ Filter accounts using localStorage account_ids
+  const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
+
+  const filteredAccounts = accounts.filter((acc) =>
+    storedAccountIds.includes(acc)
+  );
+
   const treeData = [
     {
       title: "Accounts",
       value: "accounts",
       selectable: false,
-      children: accounts
-        .filter((acc) => acc !== "ALL")
-        .map((acc) => ({ title: acc, value: acc, selectable: true })),
+      children: filteredAccounts.map((acc) => ({
+        title: acc,
+        value: acc,
+        selectable: true,
+      })),
     },
   ];
 
+
   /** ================== Render ================== */
-  if (loading) return <p>Loading...</p>;
+  /** ================== Render ================== */
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "80vh", // full viewport height
+          width: "100%",
+        }}
+      >
+        <Spin size="large" tip="Loading dashboard..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <p style={{ color: "red", textAlign: "center", marginTop: 50 }}>
+        Error: {error}
+      </p>
+    );
+  }
   if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
 
   return (
-    <div style={{ width: "100%", padding: "0 10px", boxSizing: "border-box" }}>
+    <div style={{ width: "100%", padding: "10px 10px", boxSizing: "border-box" }}>
       {/* ========== Filters ========== */}
       <Row justify="end">
         <Card
           size="small"
           style={{ borderRadius: 12, background: "none" }}
-          bodyStyle={{ padding: "5px 10px" }}
+          bodyStyle={{ padding: "5px 0px" }}
         >
           <Space size="middle" wrap>
             <TreeSelect

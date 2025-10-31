@@ -117,6 +117,7 @@ const BarChart = () => {
         emphasis: { focus: "series" },
         itemStyle: { color: serviceColors[service] },
         data: normalizedData.map((d) => d[service]),
+        cursor: "default", // 👈 this removes the hand cursor
       })),
     };
 

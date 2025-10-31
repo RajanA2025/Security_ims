@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useMemo } from "react";
 import { Table, Spin, Alert, Tag } from "antd";
 import { CostContext } from "../../Context/CostContext";
 
@@ -7,24 +7,40 @@ const Compliancechild = () => {
 
   const requiredTags = ["Name", "Owner", "Project", "Environment"];
 
-  if (loading)
-    return <Spin tip="Loading..." style={{ display: "block", margin: "20px auto" }} />;
+  // ✅ Get account IDs from localStorage
+  const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
 
-  if (error) return <Alert message="Error" description={error} type="error" showIcon />;
+  // ✅ Filter data by localStorage account_ids
+  const filteredTagData = useMemo(() => {
+    if (!Array.isArray(tagData)) return [];
 
-  // Add auto-generated IDs
-  const dataWithIds = tagData?.map((item, index) => ({
+    // Convert both to strings for accurate matching
+    const normalizedIds = storedAccountIds.map(String);
+    const filtered = tagData.filter((item) =>
+      normalizedIds.includes(String(item.account_id))
+    );
+
+    console.log("🧩 Stored IDs:", normalizedIds);
+    console.log("🧩 Filtered count:", filtered.length);
+    console.log("🧩 Example IDs in tagData:", tagData.slice(0, 3).map((d) => d.account_id));
+
+    return filtered;
+  }, [tagData, storedAccountIds]);
+
+  // ✅ Add IDs for table key
+  const dataWithIds = filteredTagData.map((item, index) => ({
     ...item,
     id: index + 1,
   }));
 
+  // ✅ Tagging logic
   const getTagStatus = (tags) => {
     if (!tags) return "Not Tagged";
-    const presentRequiredTags = requiredTags.filter(
+    const present = requiredTags.filter(
       (tag) => tags[tag] !== null && tags[tag] !== "" && tags[tag] !== undefined
     );
-    if (presentRequiredTags.length === requiredTags.length) return "Fully Tagged";
-    if (presentRequiredTags.length > 0) return "Partially Tagged";
+    if (present.length === requiredTags.length) return "Fully Tagged";
+    if (present.length > 0) return "Partially Tagged";
     return "Not Tagged";
   };
 
@@ -34,18 +50,26 @@ const Compliancechild = () => {
   const columns = [
     { title: "ID", dataIndex: "id", key: "id", width: 60 },
     {
-      title: "Account",
-      dataIndex: "account",
-      key: "account",
-      width: 120,
-      filters: uniqueValues("account").map((val) => ({ text: val, value: val })),
-      onFilter: (value, record) => record.account === value,
+      title: "Account Name",
+      dataIndex: "account_name",
+      key: "account_name",
+      width: 190,
+      filters: uniqueValues("account_name").map((val) => ({ text: val, value: val })),
+      onFilter: (value, record) => record.account_name === value,
+    },
+    {
+      title: "Account ID",
+      dataIndex: "account_id",
+      key: "account_id",
+      width: 160,
+      filters: uniqueValues("account_id").map((val) => ({ text: val, value: val })),
+      onFilter: (value, record) => record.account_id === value,
     },
     {
       title: "Region",
       dataIndex: "region",
       key: "region",
-      width: 100,
+      width: 120,
       filters: uniqueValues("region").map((val) => ({ text: val, value: val })),
       onFilter: (value, record) => record.region === value,
     },
@@ -53,7 +77,7 @@ const Compliancechild = () => {
       title: "Service",
       dataIndex: "service",
       key: "service",
-      width: 120,
+      width: 150,
       filters: uniqueValues("service").map((val) => ({ text: val, value: val })),
       onFilter: (value, record) => record.service === value,
     },
@@ -62,13 +86,13 @@ const Compliancechild = () => {
       dataIndex: "resource",
       key: "resource",
       width: 250,
-      ellipsis: true
+      ellipsis: true,
     },
     {
       title: "Tagging Status",
       dataIndex: "tags",
       key: "tags",
-      width: 130,
+      width: 190,
       filters: [
         { text: "Fully Tagged", value: "Fully Tagged" },
         { text: "Partially Tagged", value: "Partially Tagged" },
@@ -78,7 +102,11 @@ const Compliancechild = () => {
       render: (tags) => {
         const status = getTagStatus(tags);
         const color =
-          status === "Fully Tagged" ? "green" : status === "Partially Tagged" ? "gold" : "red";
+          status === "Fully Tagged"
+            ? "green"
+            : status === "Partially Tagged"
+            ? "gold"
+            : "red";
         return <Tag color={color}>{status}</Tag>;
       },
     },
@@ -89,10 +117,10 @@ const Compliancechild = () => {
       width: 200,
       render: (tags) => {
         if (!tags) return "-";
-        const availableKeys = requiredTags.filter(
+        const available = requiredTags.filter(
           (key) => tags[key] !== null && tags[key] !== "" && tags[key] !== undefined
         );
-        return availableKeys.length > 0 ? availableKeys.join(", ") : "-";
+        return available.length ? available.join(", ") : "-";
       },
     },
     {
@@ -102,27 +130,35 @@ const Compliancechild = () => {
       width: 200,
       render: (tags) => {
         const missing = requiredTags.filter(
-          (tag) => !tags || tags[tag] === null || tags[tag] === "" || tags[tag] === undefined
+          (key) =>
+            !tags || tags[key] === null || tags[key] === "" || tags[key] === undefined
         );
         return missing.length ? missing.join(", ") : "-";
       },
     },
   ];
 
-  if (!dataWithIds || dataWithIds.length === 0)
-    return <Alert message="No resources found" type="info" showIcon />;
+  if (loading)
+    return <Spin tip="Loading..." style={{ display: "block", margin: "20px auto" }} />;
+  if (error)
+    return <Alert message="Error" description={error} type="error" showIcon />;
+  if (dataWithIds.length === 0)
+    return <Alert message="No matching accounts found" type="info" showIcon />;
 
   return (
     <div style={{ padding: 16 }}>
-      <h3 style={{
-        fontFamily: "'Roboto', sans-serif",
-        paddingTop: 16,
-        paddingBottom: 16,
-        margin: 0, // optional: remove default margin
-        color:"#000e00"
-      }}>
+      <h3
+        style={{
+          fontFamily: "'Roboto', sans-serif",
+          paddingTop: 16,
+          paddingBottom: 16,
+          margin: 0,
+          color: "#000e00",
+        }}
+      >
         Resource Tag Compliance
-        </h3>
+      </h3>
+
       <Table
         dataSource={dataWithIds}
         columns={columns}
@@ -134,4 +170,4 @@ const Compliancechild = () => {
   );
 };
 
-export default Compliancechild; 
+export default Compliancechild;

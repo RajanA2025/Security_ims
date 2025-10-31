@@ -1,27 +1,57 @@
 import React, { useState, useEffect } from "react";
-import { Row, Space, Select, Button } from "antd";
+import { Row, Space, Select, Button, Empty } from "antd";
 import { DownOutlined } from "@ant-design/icons";
 import AntdNestedTable from "../../components/CostComponents/AntdNestedTable";
 
 export const Costdeepdrive = () => {
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [accounts, setAccounts] = useState([]);
+  const [filteredAccounts, setFilteredAccounts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch unique accounts
   useEffect(() => {
+    // ✅ Read stored value and normalize it into an array
+    let storedAccounts = JSON.parse(localStorage.getItem("account_ids")) || [];
+    if (typeof storedAccounts === "string") {
+      storedAccounts = [storedAccounts];
+
+
+      console.log("storedAccounts:", storedAccounts);
+    }
+
     fetch("http://13.212.15.14:8002/instances")
       .then((res) => res.json())
       .then((res) => {
-        const uniqueAccounts = [...new Set(res.results.map((inst) => inst.account_id))];
+        const results = res.results || [];
+
+        // ✅ Filter only matching accounts
+        const matched = results.filter((item) =>
+          storedAccounts.includes(item.account_id)
+        );
+
+        const uniqueAccounts = [
+          ...new Set(matched.map((inst) => inst.account_id)),
+        ];
+
         setAccounts(uniqueAccounts);
+        setFilteredAccounts(matched);
+        setLoading(false);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error("Error fetching instances:", err);
+        setLoading(false);
+      });
   }, []);
 
   const handleReset = () => setSelectedAccount(null);
 
+  // ✅ Filter by selected account dynamically
+  const displayedData = selectedAccount
+    ? filteredAccounts.filter((i) => i.account_id === selectedAccount)
+    : filteredAccounts;
+
   return (
-    <div style={{ margin: "16px" }}>
+    <div style={{ margin: "16px 10px" }}>
       {/* Filter Panel */}
       <Row justify="end" style={{ marginBottom: "1%" }}>
         <Space wrap>
@@ -44,8 +74,14 @@ export const Costdeepdrive = () => {
         </Space>
       </Row>
 
-      {/* Table + Chart */}
-      <AntdNestedTable selectedAccount={selectedAccount} />
+      {/* ✅ Show table or "No Data Found" */}
+      {loading ? (
+        <p>Loading...</p>
+      ) : displayedData.length > 0 ? (
+        <AntdNestedTable selectedAccount={selectedAccount} data={displayedData} />
+      ) : (
+        <Empty description="No Data Found" style={{ marginTop: "100px" }} />
+      )}
     </div>
   );
 };

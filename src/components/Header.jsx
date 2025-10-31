@@ -1,181 +1,135 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import logo from '../assets/logo.png';
+import logo from "../assets/logo.png";
 import {
   AppBar,
   Toolbar,
   Box,
-  
   IconButton,
-
   MenuItem,
   Menu,
-
   useTheme,
-
-} from '@mui/material';
-import { AccountCircle, AccountCircleOutlined, Login } from '@mui/icons-material';
-import { GiRamProfile } from 'react-icons/gi';
-import { Typography } from 'antd';
+} from "@mui/material";
+import { AccountCircleOutlined, Login } from "@mui/icons-material";
+import { Typography } from "antd";
 
 const Header = ({ onDateChange }) => {
   const theme = useTheme();
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [context, setContext] = useState('Account');
-  const [loaded, setLoaded] = useState(false); // trigger animation
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [context, setContext] = useState("Account");
+  const [loaded, setLoaded] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
-  const isSecurity = location.pathname.toLowerCase().startsWith('/security');
-  const Operational = location.pathname.toLowerCase().startsWith('/operational');
-  const layout = isSecurity ? "1" : Operational ? "2" :"3"
 
-  // Open menu
-  const handleMenu = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
+  // Detect section
+  const path = location.pathname.toLowerCase();
 
-  // Close menu
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-  useEffect(() => {
-    setLoaded(true); // trigger fade-in on mount
-  }, []);
+  const isSecurity = path.startsWith("/security");
+  const isOperational = path.startsWith("/operational");
+  const isAdmin = path.startsWith("/admin");
+  const isImsProduct = path.startsWith("/imsproduct");
+
+  const layout = isSecurity
+    ? "1"
+    : isOperational
+    ? "2"
+    : isAdmin
+    ? "4"
+    : isImsProduct
+    ? "3"
+    : "";
+
+  // Menu controls
+  const handleMenu = (event) => setAnchorEl(event.currentTarget);
+  const handleClose = () => setAnchorEl(null);
+
+  useEffect(() => setLoaded(true), []);
 
   useEffect(() => {
     if (startDate && endDate && context) {
       onDateChange({ startDate, endDate, context });
     }
-  }, [startDate, endDate, context]);
+  }, [startDate, endDate, context, onDateChange]);
 
   const handleReset = () => {
-    setStartDate('');
-    setEndDate('');
+    setStartDate("");
+    setEndDate("");
   };
-  const navigate = useNavigate();
+
+  // ✅ Title logic (IMS Product included)
+  const getHeaderTitle = () => {
+    switch (layout) {
+      case "1":
+        return "Security";
+      case "2":
+        return "Operational Excellence";
+      case "3":
+        return "IMS Product";
+      case "4":
+        return "Admin";
+      default:
+        return "Cost Management";
+    }
+  };
+
   return (
     <AppBar
       position="static"
       elevation={2}
       sx={{
-        bgcolor:'white',
+        bgcolor: "white",
         color: theme.palette.text.primary,
-        // borderBottom: `1px solid ${theme.palette.grey[300]}`,
       }}
     >
-      <Toolbar sx={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center' }} >
-          <img src={logo} alt="logo" style={{ height: 70, marginRight: 25 , cursor: "pointer"}}  onClick={() => navigate('/')} />
-          <Typography.Title 
-  level={3}
-  style={{
-    fontFamily: "Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
-    fontSize: "23px",
-    fontWeight: 700,
-    color: "black",
-    margin: 0
-  }}
->
-{layout === "1" ? "Security":layout === "2" ?  "Operational Excellence":"Cost Management"} 
-</Typography.Title>
- 
-
-        </Box>
-
-        {/* <Fade in={loaded} timeout={600}>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              flexWrap: 'wrap',
-              bgcolor: '#F9F7F3 ',
-              p: 1.5,
-              borderRadius: 2,
+      <Toolbar sx={{ justifyContent: "space-between", flexWrap: "wrap" }}>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <img
+            src={logo}
+            alt="logo"
+            style={{ height: 70, marginRight: 25, cursor: "pointer" }}
+            onClick={() => navigate("/")}
+          />
+          <Typography.Title
+            level={3}
+            style={{
+              fontFamily:
+                "Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif",
+              fontSize: "23px",
+              fontWeight: 700,
+              color: "black",
+              margin: 0,
             }}
           >
-            <Select
-              size="small"
-              value={context}
-              onChange={(e) => setContext(e.target.value)}
-              sx={{
-                minWidth: 150,
-                bgcolor: 'white',
-                borderRadius: 1,
-                boxShadow: 1,
-              }}
-            >
-              <MenuItem value="Account">By Account</MenuItem>
-              <MenuItem value="Environment">By Environment</MenuItem>
-              <MenuItem value="Service">By Service</MenuItem>
-              <MenuItem value="App">By App</MenuItem>
-            </Select>
+            {getHeaderTitle()}
+          </Typography.Title>
+        </Box>
 
-            <TextField
-              size="small"
-              type="date"
-              label="Start Date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-              sx={{
-                bgcolor: 'white',
-                borderRadius: 1,
-                boxShadow: 1,
-              }}
-            />
+        {/* User Menu */}
+        <IconButton onClick={handleMenu}>
+          <AccountCircleOutlined fontSize="medium" />
+        </IconButton>
 
-            <TextField
-              size="small"
-              type="date"
-              label="End Date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-              sx={{
-                bgcolor: 'white',
-                borderRadius: 1,
-                boxShadow: 1,
-              }}
-            />
-
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={handleReset}
-              sx={{
-                color: theme.palette.primary.main,
-                borderColor: theme.palette.primary.main,
-                '&:hover': {
-                  bgcolor: theme.palette.primary.light,
-                },
-              }}
-            >
-              Reset
-            </Button>
-
-            <IconButton sx={{ ml: 1 }}>
-              <AccountCircle fontSize="medium" />
-            </IconButton>
-          </Box>
-        </Fade> */}
-         <IconButton onClick={handleMenu}>
-              <AccountCircleOutlined fontSize="medium" /> 
-            </IconButton>
-            <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleClose}
-      >
-        <MenuItem onClick={() => { handleClose(); alert("Go to Profile"); }}>
-         <AccountCircleOutlined/>  &nbsp;  Profile
-        </MenuItem>
-        <MenuItem onClick={() => { handleClose(); alert("Logout clicked"); }}>
-        <Login/> &nbsp;  Logout
-        </MenuItem>
-      </Menu>
+        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+          <MenuItem
+            onClick={() => {
+              handleClose();
+              alert("Go to Profile");
+            }}
+          >
+            <AccountCircleOutlined /> &nbsp; Profile
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              handleClose();
+              navigate("/login");
+            }}
+          >
+            <Login /> &nbsp; Logout
+          </MenuItem>
+        </Menu>
       </Toolbar>
     </AppBar>
   );

@@ -5,8 +5,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './Layout/Layout';
 
 //authScreens
-import RegistrationForm from './pages/authScreens/registerScreen';
-
+import CompanyForm from './pages/authScreens/CompanyForm';
+import AccountsScreen from './pages/authScreens/AccountsScreen';
 
 // Security
 import Dashboard from './pages/Dashboard';
@@ -37,11 +37,14 @@ import Header from './landing/Components/Hearder';
 
 //company admin
 import CompanyAdminUsers from './pages/companyAdmin/homeScreen';
-import RegisterScreen from './pages/authScreens/inviteUser';
+import LoginScreen from './pages/authScreens/LoginScreen';
 
 //JIT admin
-import JITAdminCompanies from './pages/JITAdmin/homeScreen';
+import Admin from './pages/JITAdmin/homeScreen';
 import JITAdminNotifications from './components/notification';
+import Companyadmin from './pages/Companyadmin';
+
+
 function App() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [filters, setFilters] = useState({
@@ -56,55 +59,72 @@ function App() {
 
   return (
     <Router>
-  <Routes>
-    {/* Pages without Layout */}
-    <Route path="/" element={<Imsproduct />} />
-    <Route path="/landing" element={<LandingHome />} />
-    <Route path="/header" element={<Header />} />
+      <Routes>
+        {/* Default route → Login screen */}
+        <Route path="/" element={<LoginScreen />} />
+        <Route path="/login" element={<LoginScreen />} />
 
-    {/* Pages with Layout */}
-    <Route element={
-      <Layout 
-        onDateChange={handleDateChange}
-        isExpanded={isExpanded}
-        setIsExpanded={setIsExpanded}
-      />
-    }>
-      {/* Security */}
-      <Route path="/security" element={<Dashboard filters={filters} />} />
-      <Route path="/security/iaminsights" element={<Insights filters={filters} />} />
-      <Route path="/security/group" element={<SecurityGroup filters={filters} />} />
-      <Route path="/security/cloudtrail" element={<CloudTrail filters={filters} />} />
-      <Route path="/security/tools" element={<SecurityTools filters={filters} />} />
+        {/* Pages without Layout */}
+        <Route path="/landing" element={<LandingHome />} />
+        <Route path="/header" element={<Header />} />
 
-      {/* Operational */}
-      <Route path="/operational" element={<Dashboard1 filters={filters} />} />
-      <Route path="/operational/snapshot" element={<Business filters={filters} />} />
-      <Route path="/operational/ami" element={<Ami filters={filters} />} />
-      <Route path="/operational/observability" element={<Observability filters={filters} />} />
-      <Route path="/operational/monitoring" element={<Monitoring filters={filters} />} />
-      <Route path="/operational/rightsizing" element={<RightSizing filters={filters} />} />
-      <Route path="/operational/cloudWatch" element={<CloudWatch filters={filters} />} />
+        {/* Pages with Layout */}
+        <Route
+          element={
+            <Layout
+              onDateChange={handleDateChange}
+              isExpanded={isExpanded}
+              setIsExpanded={setIsExpanded}
+            />
+          }
+        >
+          {/* Security */}
+          <Route path="/security" element={<Dashboard filters={filters} />} />
+          <Route path="/security/iaminsights" element={<Insights filters={filters} />} />
+          <Route path="/security/group" element={<SecurityGroup filters={filters} />} />
+          <Route path="/security/cloudtrail" element={<CloudTrail filters={filters} />} />
+          <Route path="/security/tools" element={<SecurityTools filters={filters} />} />
 
-      {/* Cost */}
-      <Route path="/cost" element={<Dashboard2 />} />
-      <Route path="/cost/cost-deepdrive" element={<Costdeepdrive />} />
-      <Route path="/cost/savings" element={<Savings />} />
-      <Route path="/cost/compliance" element={<Complaince />} />
+          {/* Operational */}
+          <Route path="/operational" element={<Dashboard1 filters={filters} />} />
+          <Route path="/operational/snapshot" element={<Business filters={filters} />} />
+          <Route path="/operational/ami" element={<Ami filters={filters} />} />
+          <Route path="/operational/observability" element={<Observability filters={filters} />} />
+          <Route path="/operational/monitoring" element={<Monitoring filters={filters} />} />
+          <Route path="/operational/rightsizing" element={<RightSizing filters={filters} />} />
+          <Route path="/operational/cloudWatch" element={<CloudWatch filters={filters} />} />
 
-      {/* Auth Screens */}
-      <Route path="/register" element={<RegistrationForm />} />
-      <Route path="/invite-user" element={<RegisterScreen />} />
+          {/* Cost */}
+          <Route path="/cost" element={<Dashboard2 />} />
+          <Route path="/cost/cost-deepdrive" element={<Costdeepdrive />} />
+          <Route path="/cost/savings" element={<Savings />} />
+          <Route path="/cost/compliance" element={<Complaince />} />
 
-      {/* Company Admin */}
-      <Route path="/company-admin/users" element={<CompanyAdminUsers />} />
 
-      {/* JIT Admin */}
-      <Route path="/jit-admin/companies" element={<JITAdminCompanies />} />
-      <Route path="/jit-admin/notifications" element={<JITAdminNotifications />} />
-    </Route>
-  </Routes>
-</Router>
+          {/* Company Admin */}
+          <Route path="/company-admin/users" element={<CompanyAdminUsers />} />
+
+
+          {/* Ims Product Screens */}
+          <Route path="/imsproduct" element={<Imsproduct />} />
+          <Route path="/imsproduct/accounts" element={<AccountsScreen />} />
+          <Route path="/imsproduct/accountsmanage" element={<Companyadmin />} />
+
+
+
+          <Route path="/Companyadmin" element={<Companyadmin />} />
+
+          
+
+          {/* JIT Admin */}
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/register" element={<CompanyForm />} />
+          <Route path="/admin/edit" element={<CompanyForm />} />
+          <Route path="/admin/notifications" element={<JITAdminNotifications />} />
+        </Route>
+      </Routes>
+    </Router>
+
 
   );
 }

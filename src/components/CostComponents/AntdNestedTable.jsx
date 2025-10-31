@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Table, Card, Tabs, Spin } from "antd";
+import { Table, Card, Tabs, Spin, Empty } from "antd";
 import ReactECharts from "echarts-for-react";
 import axios from "axios";
 import * as echarts from "echarts";
 
-// 🔹 Resizable Chart Wrapper
 const ResizableChart = ({ option, height = 300 }) => {
   const chartRef = useRef(null);
-
   useEffect(() => {
     const handleResize = () => chartRef.current?.getEchartsInstance().resize();
     window.addEventListener("resize", handleResize);
@@ -18,7 +16,6 @@ const ResizableChart = ({ option, height = 300 }) => {
       observer.disconnect();
     };
   }, []);
-
   return (
     <ReactECharts
       ref={chartRef}
@@ -32,7 +29,6 @@ const ResizableChart = ({ option, height = 300 }) => {
   );
 };
 
-// 🔹 Mini Sparkline Chart
 const MiniChart = ({ data }) => {
   const options = {
     xAxis: { type: "category", data: data.map((_, i) => i + 1), show: false },
@@ -44,34 +40,17 @@ const MiniChart = ({ data }) => {
   return <ReactECharts echarts={echarts} option={options} style={{ height: 10, width: 100 }} />;
 };
 
-// 🔹 Table Columns
 const columns = [
-  {
-    title: "Deep Dive",
-    dataIndex: "name",
-    key: "name",
-    render: (_, record) => record.name || record.container || "Unknown",
-  },
-  {
-    title: "Cost ($)",
-    dataIndex: "cost",
-    key: "cost",
-    render: (val) => (typeof val === "number" ? `$${val.toFixed(2)}` : "-"),
-  },
+  { title: "Deep Dive", dataIndex: "name", key: "name", render: (_, record) => record.name || record.container || "Unknown" },
+  { title: "Cost ($)", dataIndex: "cost", key: "cost", render: (val) => (typeof val === "number" ? `$${val.toFixed(2)}` : "-") },
   { title: "Instance ID", dataIndex: "instance_id", key: "instance_id", align: "center" },
   { title: "Instance Family", dataIndex: "instance_type", key: "instance_type", align: "center" },
   { title: "CPU", dataIndex: "cpu", key: "cpu", align: "center" },
   { title: "RAM GB", dataIndex: "ram", key: "ram", align: "center" },
   { title: "Volume Size GB", dataIndex: "volume_size", key: "volume_size", align: "center" },
-  {
-    title: "RunTime Graph",
-    dataIndex: "runtimegraph",
-    key: "runtimegraph",
-    render: (val) => (val ? <MiniChart data={val} /> : "-"),
-  },
+  { title: "RunTime Graph", dataIndex: "runtimegraph", key: "runtimegraph", render: (val) => (val ? <MiniChart data={val} /> : "-") },
 ];
 
-// 🔹 Aggregate recursive values
 const aggregateValues = (row) => {
   if (!row.children?.length) {
     row.cpu = row.vcpu || 0;
@@ -80,14 +59,8 @@ const aggregateValues = (row) => {
     row.instance_id = 1;
     return row;
   }
-
-  let totalCost = 0,
-    totalCpu = 0,
-    totalRam = 0,
-    totalVolume = 0,
-    totalInstances = 0;
+  let totalCost = 0, totalCpu = 0, totalRam = 0, totalVolume = 0, totalInstances = 0;
   const families = new Set();
-
   row.children.forEach((child) => {
     const agg = aggregateValues(child);
     totalCost += agg.cost || 0;
@@ -97,36 +70,18 @@ const aggregateValues = (row) => {
     totalInstances += agg.instance_id || 0;
     if (agg.instance_type) families.add(agg.instance_type);
   });
-
   row.cost = totalCost;
   row.cpu = totalCpu;
   row.ram = totalRam;
   row.volume_size = totalVolume;
   row.instance_id = totalInstances;
   row.instance_type = families.size > 1 ? "Mixed" : [...families][0] || "-";
-
   return row;
 };
 
-// 🔹 Filter by selected account recursively
-const filterByAccount = (rows, accountId) => {
-  if (!accountId) return rows;
-  return rows
-    .map((row) => {
-      if (row.children?.length) {
-        const filteredChildren = filterByAccount(row.children, accountId);
-        return filteredChildren.length ? { ...row, children: filteredChildren } : null;
-      } else return row.account_id === accountId ? row : null;
-    })
-    .filter(Boolean);
-};
-
-// 🔹 Merge multiple API records per instance
 const mergeByInstance = (rows) => {
   const map = {};
   rows.forEach((row) => {
-    if (!row.environment) return;
-
     const id = row.instance_id;
     if (!map[id]) {
       map[id] = { ...row, runtimegraph: [...(row.runtimegraph || [])] };
@@ -135,52 +90,25 @@ const mergeByInstance = (rows) => {
       map[id].vcpu += row.vcpu || 0;
       map[id].ram += row.ram || 0;
       map[id].volume_size += row.volume_size || 0;
-      map[id].runtimegraph = [
-        ...map[id].runtimegraph.slice(-5),
-        ...(row.runtimegraph || []).slice(-5),
-      ].slice(-5);
-
-      map[id].environment =
-        map[id].environment === "Production" || row.environment === "Production"
-          ? "Production"
-          : "Non-Production";
-
-      map[id].instance_type ||= row.instance_type;
-      map[id].instance_name ||= row.instance_name;
-      map[id].container ||= row.container || "Unknown";
-      map[id].name ||= row.name || row.instance_name || "Unknown";
+      map[id].runtimegraph = [...map[id].runtimegraph.slice(-5), ...(row.runtimegraph || []).slice(-5)].slice(-5);
     }
   });
   return Object.values(map);
 };
 
-// 🔹 Compute chart data
 const computeChartData = (data, activeTab) => {
   if (!data || !data.length) return { labels: [], costs: [] };
-
   if (activeTab === "environment") {
-    // Only Production vs Non-Production
-    let prodCost = 0,
-      nonProdCost = 0;
-
+    let prodCost = 0, nonProdCost = 0;
     const traverse = (nodes) => {
       nodes.forEach((node) => {
         if (node.children?.length) traverse(node.children);
-        else {
-          if (node.environment === "Production") prodCost += node.cost || 0;
-          else nonProdCost += node.cost || 0;
-        }
+        else node.environment === "Production" ? (prodCost += node.cost || 0) : (nonProdCost += node.cost || 0);
       });
     };
     traverse(data);
-
-    return {
-      labels: ["Production", "Non-Production"],
-      costs: [prodCost, nonProdCost],
-    };
+    return { labels: ["Production", "Non-Production"], costs: [prodCost, nonProdCost] };
   }
-
-  // For service or container
   const result = [];
   const traverse = (nodes) => {
     nodes.forEach((node) => {
@@ -189,36 +117,46 @@ const computeChartData = (data, activeTab) => {
     });
   };
   traverse(data);
-  return {
-    labels: result.map((i) => i.name),
-    costs: result.map((i) => i.cost),
-  };
+  return { labels: result.map((i) => i.name), costs: result.map((i) => i.cost) };
 };
 
-// 🔹 Main Component
 export default function AntdNestedTable({ selectedAccount }) {
   const [activeTab, setActiveTab] = useState("environment");
   const [dataEnv, setDataEnv] = useState([]);
   const [dataService, setDataService] = useState([]);
   const [dataContainer, setDataContainer] = useState([]);
   const [loading, setLoading] = useState(true);
-  const tableContainerRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const url = selectedAccount
-          ? `http://13.212.15.14:8002/instances?account_id=${selectedAccount}`
-          : "http://13.212.15.14:8002/instances";
-
-        const { data } = await axios.get(url);
+        const { data } = await axios.get("http://13.212.15.14:8002/instances");
         const results = data.results || [];
 
-        const allRows = results.map((inst) => {
+        const storedAccounts = JSON.parse(localStorage.getItem("account_ids")) || [];
+        const filteredResults = results.filter((r) =>
+          storedAccounts.includes(r.account_id)
+        );
+
+        const finalResults = selectedAccount
+          ? filteredResults.filter((r) => r.account_id === selectedAccount)
+          : filteredResults;
+
+        if (!finalResults.length) {
+          setDataEnv([]);
+          setDataService([]);
+          setDataContainer([]);
+          setLoading(false);
+          return;
+        }
+
+        const allRows = finalResults.map((inst) => {
           const envRaw = inst.environment?.toLowerCase().trim();
           const environment =
-            envRaw && ["production", "prod", "prd"].includes(envRaw) ? "Production" : "Non-Production";
+            envRaw && ["production", "prod", "prd"].includes(envRaw)
+              ? "Production"
+              : "Non-Production";
 
           return {
             key: `${inst.instance_id}-${inst.period}`,
@@ -240,7 +178,6 @@ export default function AntdNestedTable({ selectedAccount }) {
         });
 
         const mergedRows = mergeByInstance(allRows);
-
         const production = [];
         const nonProduction = [];
         const servicesMap = {};
@@ -249,7 +186,6 @@ export default function AntdNestedTable({ selectedAccount }) {
         mergedRows.forEach((inst) => {
           if (inst.environment === "Production") production.push(inst);
           else nonProduction.push(inst);
-
           (servicesMap[inst.name] ||= []).push(inst);
           (containerMap[inst.container || "Unknown"] ||= []).push(inst);
         });
@@ -302,27 +238,16 @@ export default function AntdNestedTable({ selectedAccount }) {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [selectedAccount]);
 
-  const handleExpand = (expanded, record) => {
-    if (!expanded) return;
-    setTimeout(() => {
-      const rowElement = document.querySelector(`[data-row-key='${record.key}']`);
-      if (rowElement) rowElement.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 50);
-  };
-
-  const filteredData = useMemo(() => {
-    const data =
-      activeTab === "environment" ? dataEnv : activeTab === "service" ? dataService : dataContainer;
-    return filterByAccount(data, selectedAccount);
-  }, [activeTab, dataEnv, dataService, dataContainer, selectedAccount]);
-
   const { labels, costs } = useMemo(
-    () => computeChartData(filteredData, activeTab),
-    [filteredData, activeTab]
+    () =>
+      computeChartData(
+        activeTab === "environment" ? dataEnv : activeTab === "service" ? dataService : dataContainer,
+        activeTab
+      ),
+    [dataEnv, dataService, dataContainer, activeTab]
   );
 
   const graphOptions = useMemo(
@@ -331,51 +256,51 @@ export default function AntdNestedTable({ selectedAccount }) {
       yAxis: { type: "value", name: "Cost ($)" },
       series: [{ data: costs, type: "bar", color: "#1890ff" }],
       tooltip: { formatter: (p) => `$${p.value.toFixed(2)}` },
-      grid: { left: 50, right: 20, top: 20, bottom: 30 },
     }),
     [labels, costs]
   );
 
+  // ✅ No data fallback
+  const noData =
+    !loading &&
+    (!dataEnv.length && !dataService.length && !dataContainer.length);
+
   return (
     <div>
-      <ResizableChart option={graphOptions} height={250} />
-      <Card
-        style={{
-          borderRadius: 8,
-          marginTop: 20,
-          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-          background: "#fff",
-        }}
-      >
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <Tabs.TabPane tab="By Environment" key="environment" />
-          <Tabs.TabPane tab="By Service" key="service" />
-          <Tabs.TabPane tab="By Container" key="container" />
-        </Tabs>
-
-        {loading ? (
-          <div style={{ textAlign: "center", padding: 50 }}>
-            <Spin size="large" />
-          </div>
-        ) : (
-          <div ref={tableContainerRef}>
-            <Table
-              key={selectedAccount || "all"}
-              columns={columns}
-              dataSource={filteredData}
-              pagination={false}
-              rowKey={(record) => record.key}
-              expandable={{
-                expandIconColumnIndex: 0,
-                childrenColumnName: "children",
-                onExpand: handleExpand,
-              }}
-              size="small"
-              style={{ fontSize: 12 }}
-            />
-          </div>
-        )}
-      </Card>
+      {noData ? (
+        <Empty description="No Data Found" style={{ marginTop: 80 }} />
+      ) : (
+        <>
+          <ResizableChart option={graphOptions} height={250} />
+          <Card style={{ borderRadius: 8, marginTop: 20, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+            <Tabs activeKey={activeTab} onChange={setActiveTab}>
+              <Tabs.TabPane tab="By Environment" key="environment" />
+              <Tabs.TabPane tab="By Service" key="service" />
+              <Tabs.TabPane tab="By Container" key="container" />
+            </Tabs>
+            {loading ? (
+              <div style={{ textAlign: "center", padding: 50 }}>
+                <Spin size="large" />
+              </div>
+            ) : (
+              <Table
+                columns={columns}
+                dataSource={
+                  activeTab === "environment"
+                    ? dataEnv
+                    : activeTab === "service"
+                    ? dataService
+                    : dataContainer
+                }
+                pagination={false}
+                rowKey={(record) => record.key}
+                expandable={{ expandIconColumnIndex: 0, childrenColumnName: "children" }}
+                size="small"
+              />
+            )}
+          </Card>
+        </>
+      )}
     </div>
   );
 }

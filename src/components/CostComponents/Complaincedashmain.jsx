@@ -1,5 +1,5 @@
 // src/components/Complaincedashmain.js
-import React, { useContext } from "react";
+import React, { useContext, useMemo } from "react";
 import { Row, Col, Card, Typography, Progress, Tooltip, Spin } from "antd";
 import { TagOutlined, UnorderedListOutlined, DollarCircleOutlined } from "@ant-design/icons";
 import ReactECharts from "echarts-for-react";
@@ -10,36 +10,89 @@ const { Text } = Typography;
 export const Complaincedashmain = () => {
   const { costData, resourcesData, tagSummary, loading, error } = useContext(CostContext);
 
-  const safeTagData = tagSummary || {
+  // ✅ Get localStorage account IDs
+  const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
+
+  // ✅ Normalize and filter resource/tag data by account IDs
+  const normalizedIds = storedAccountIds.map(String);
+
+  const filteredResources = useMemo(() => {
+    if (!Array.isArray(resourcesData)) return [];
+    return resourcesData.filter((res) =>
+      normalizedIds.includes(String(res.account_id))
+    );
+  }, [resourcesData, normalizedIds]);
+
+  const filteredTagSummary = useMemo(() => {
+    if (!Array.isArray(tagSummary?.details)) return tagSummary;
+    const filtered = tagSummary.details.filter((t) =>
+      normalizedIds.includes(String(t.account_id))
+    );
+
+    // ✅ Aggregate totals across filtered accounts
+    const aggregated = filtered.reduce(
+      (acc, cur) => {
+        acc.fully_tagged += cur.fully_tagged || 0;
+        acc.partially_tagged += cur.partially_tagged || 0;
+        acc.not_tagged += cur.not_tagged || 0;
+        acc.total_resources += cur.total_resources || 0;
+        return acc;
+      },
+      { fully_tagged: 0, partially_tagged: 0, not_tagged: 0, total_resources: 0 }
+    );
+    return aggregated;
+  }, [tagSummary, normalizedIds]);
+
+  const safeTagData = filteredTagSummary || {
     fully_tagged: 0,
     partially_tagged: 0,
     not_tagged: 0,
     total_resources: 0,
   };
 
+  // ✅ Cost data filtered by account ID (if costData is an array)
+  const filteredCostData = useMemo(() => {
+    if (Array.isArray(costData)) {
+      return costData.filter((c) => normalizedIds.includes(String(c.account_id)));
+    }
+    return costData;
+  }, [costData, normalizedIds]);
+
+  // ✅ Calculate compliance values
   const compliance = {
-    total_cost: costData?.total_cost || 25000,
-    tagged_cost: costData?.tagged_cost || 18000,
-    untagged_cost: costData?.untagged_cost || 5000,
-    resources: resourcesData?.length || 100,
+    total_cost: filteredCostData?.total_cost || 25000,
+    tagged_cost: filteredCostData?.tagged_cost || 18000,
+    untagged_cost: filteredCostData?.untagged_cost || 5000,
+    resources: filteredResources.length,
     tagged_resources: safeTagData.fully_tagged + safeTagData.partially_tagged,
-    non_taggable_cost: costData?.non_taggable_cost || 2000,
-    service_costs: costData?.service_costs || {
+    non_taggable_cost: filteredCostData?.non_taggable_cost || 2000,
+    service_costs: filteredCostData?.service_costs || {
       EC2: 8000,
       S3: 5000,
       Lambda: 3000,
       RDS: 2000,
       CloudFront: 1000,
     },
-    auto_start_stop: costData?.auto_start_stop || {
+    auto_start_stop: filteredCostData?.auto_start_stop || {
       total: 50,
       enabled: 30,
     },
   };
 
-  if (loading) return <div style={{ textAlign: "center", marginTop: 100 }}><Spin size="large" /></div>;
+  // ✅ Debug logs (optional)
+  console.log("🧩 Stored IDs:", normalizedIds);
+  console.log("🧩 Filtered resources:", filteredResources.length);
+  console.log("🧩 Filtered tag summary:", safeTagData);
+
+  if (loading)
+    return (
+      <div style={{ textAlign: "center", marginTop: 100 }}>
+        <Spin size="large" />
+      </div>
+    );
   if (error) return <div style={{ color: "red" }}>Error: {error}</div>;
 
+  // Card styling and component render functions stay unchanged ⬇️
   const cardStyles = (border) => ({
     body: {
       boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
@@ -52,10 +105,10 @@ export const Complaincedashmain = () => {
       padding: 10,
       width: "100%",
       fontFamily: "'Roboto', sans-serif",
-      gap:"1px"
-
+      gap: "1px",
+      cursor: "default",
     },
-  })
+  });
 
   const renderResourceProgress = (label, value, total, color, icon = null) => {
     const percent = Math.round((value / (total || 1)) * 100);
@@ -85,10 +138,10 @@ export const Complaincedashmain = () => {
   const AutoStartStopCard = () => {
     const { total, enabled } = compliance.auto_start_stop;
     const disabled = total - enabled;
-    const enabledPercent = Math.round((enabled / total) * 100);
+    const enabledPercent = Math.round((enabled / (total || 1)) * 100);
 
     return (
-      <Card styles={cardStyles("4px solid #eb2f96")} hoverable style={{ flex: 1, position: "relative",}}>
+      <Card styles={cardStyles("4px solid #eb2f96")} hoverable style={{ flex: 1, position: "relative" }}>
         <div style={{ position: "absolute", top: 12, left: 16 }}>
           <Text strong>Auto Start/Stop</Text>
         </div>
@@ -125,6 +178,7 @@ export const Complaincedashmain = () => {
   );
 
   const ServiceProgressPieCard = () => {
+
     const taggedResources = safeTagData.fully_tagged + safeTagData.partially_tagged;
     const notTaggedResources = safeTagData.not_tagged;
     const totalResources = safeTagData.total_resources || 1;
@@ -175,7 +229,7 @@ export const Complaincedashmain = () => {
   };
 
   return (
-    <div style={{ fontFamily: "'Roboto', sans-serif" }}>
+    <div style={{ fontFamily: "'Roboto', sans-serif", padding: "25px 10px" }}>
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={24} md={12} lg={8}><AutoStartStopCard /></Col>
         <Col xs={24} sm={24} md={12} lg={8}><CostBreakdownCard /></Col>

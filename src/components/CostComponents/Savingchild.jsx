@@ -83,8 +83,25 @@ const SavingsChild = () => {
         const res = await axios.get("http://13.212.15.14:8003/resources");
         const data = res.data;
 
+        // ✅ Get stored account IDs from localStorage
+        const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
+
+        // ✅ Helper to filter data by account ID
+        const filterByAccount = (arr) =>
+          Array.isArray(arr)
+            ? arr.filter((item) => storedAccountIds.includes(item.account_id))
+            : [];
+
+        // ✅ Apply account filter to all datasets
+        const filteredVolumes = filterByAccount(data.orphaned_volumes);
+        const filteredEips = filterByAccount(data.orphaned_eips);
+        const filteredSnaps = filterByAccount(data.orphaned_snapshots);
+        const filteredEc2 = filterByAccount(data.underutilized_ec2);
+        const filteredEbs = filterByAccount(data.underutilized_ebs);
+
+        // ---- Mapping logic (unchanged, just replace data.* with filtered* ) ----
         setOrphanedDisks(
-          data.orphaned_volumes.map((item, i) => ({
+          filteredVolumes.map((item, i) => ({
             key: `disk-${i}`,
             accountId: item.account_id,
             region: item.region,
@@ -99,7 +116,7 @@ const SavingsChild = () => {
         );
 
         setOrphanedElasticIP(
-          data.orphaned_eips.map((item, i) => ({
+          filteredEips.map((item, i) => ({
             key: `eip-${i}`,
             accountId: item.account_id,
             region: item.region,
@@ -107,15 +124,14 @@ const SavingsChild = () => {
             volumeName: item.allocation_id,
             volumeType: "Elastic IP",
             volumeSize: "-",
-            costing: `$${item.cost ?? 0}`, // <-- use cost here
+            costing: `$${item.cost ?? 0}`,
             recommendation: "-",
             Action: item.status,
           }))
         );
 
-
         setOrphanedSnapshots(
-          data.orphaned_snapshots.map((item, i) => ({
+          filteredSnaps.map((item, i) => ({
             key: `snapshot-${i}`,
             accountId: item.account_id,
             region: item.region,
@@ -130,7 +146,7 @@ const SavingsChild = () => {
         );
 
         setRiSavings(
-          data.underutilized_ec2.map((item, i) => ({
+          filteredEc2.map((item, i) => ({
             key: `ri-${i}`,
             accountId: item.account_id,
             region: item.region,
@@ -144,9 +160,9 @@ const SavingsChild = () => {
           }))
         );
 
-        // Set Rightsizing data for both EC2 and EBS
+        // ✅ Rightsizing (EC2 + EBS)
         const ec2Data =
-          data.underutilized_ec2?.map((item, i) => ({
+          filteredEc2.map((item, i) => ({
             key: `rs-ec2-${i}`,
             accountId: item.account_id,
             region: item.region,
@@ -160,7 +176,7 @@ const SavingsChild = () => {
           })) || [];
 
         const ebsData =
-          data.underutilized_ebs?.map((item, i) => ({
+          filteredEbs.map((item, i) => ({
             key: `rs-ebs-${i}`,
             accountId: item.account_id,
             region: item.region,
@@ -182,6 +198,7 @@ const SavingsChild = () => {
 
     fetchData();
   }, []);
+
 
   const combinedData = useMemo(() => {
     let allData = [
