@@ -32,7 +32,7 @@ const Companyadmin = () => {
         if (!response.ok) throw new Error(result.message || "Failed to fetch accounts");
 
         // ✅ Dynamically merge all pillar accounts
-        const pillarKeys = Object.keys(result).filter((key) => key.endsWith("_accounts"));
+        const pillarKeys = Object.keys(result).filter((key) => key.endsWith("accounts"));
 
         const allAccounts = pillarKeys.flatMap((pillarKey) => {
           const pillarType = pillarKey.replace("_accounts", ""); // e.g. "cost"
