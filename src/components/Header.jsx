@@ -67,7 +67,7 @@ const Header = ({ onDateChange }) => {
     >
       <Toolbar sx={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
         <Box sx={{ display: 'flex', alignItems: 'center' }} >
-          <img src={logo} alt="logo" style={{ height: 70, marginRight: 25 }}  onClick={() => navigate('/')} />
+          <img src={logo} alt="logo" style={{ height: 70, marginRight: 25 , cursor: "pointer"}}  onClick={() => navigate('/')} />
           <Typography.Title 
   level={3}
   style={{
