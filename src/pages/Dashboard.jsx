@@ -295,29 +295,66 @@ const Insights = () => {
 
   const API_URL = "http://13.212.15.14:8012/iam";
   const API_URL1 = "http://13.212.15.14:8012/security-groups";
+const storedAccountId = localStorage.getItem("account_ids");
+console.log('first', storedAccountId)
+useEffect(() => {
+  const fetchAllData = async () => {
+    setLoading(true);
+    try {
+      let storedAccountId = localStorage.getItem("account_ids");
 
-  useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
       try {
-        const [response1, response2] = await Promise.all([
-          axios.get(API_URL),
-          axios.get(API_URL1)
-        ]);
-
-        setData(response1.data);
-        setData1(response2.data);
-        setError(null);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setError("Failed to load data. Please try again later.");
-      } finally {
-        setLoading(false);
+        storedAccountId = JSON.parse(storedAccountId);
+        if (Array.isArray(storedAccountId)) {
+          storedAccountId = storedAccountId[0]; // take first ID
+        }
+      } catch {
+        // keep as string
       }
-    };
 
-    fetchAllData();
-  }, []);
+      console.log("Normalized storedAccountId:", storedAccountId);
+
+      const [response1, response2] = await Promise.all([
+        axios.get(API_URL),
+        axios.get(API_URL1),
+      ]);
+
+      const normalizeId = (id) => String(id).trim().toLowerCase();
+      const storedId = normalizeId(storedAccountId);
+
+      if (response1?.data && Array.isArray(response1.data)) {
+        const filteredData = response1.data.filter((item) => {
+          const itemId =
+            item.account_id || item.accountId || item.ACCOUNT_ID || item.Account_ID;
+          return normalizeId(itemId) === storedId;
+        });
+        console.log("Filtered data:", filteredData);
+        setData(filteredData);
+      }
+
+      if (response2?.data && Array.isArray(response2.data)) {
+        const filtered2 = response2.data.filter((item) => {
+          const itemId =
+            item.account_id || item.accountId || item.ACCOUNT_ID || item.Account_ID;
+          return normalizeId(itemId) === storedId;
+        });
+        console.log("Filtered Data 2:", filtered2);
+        setData1(filtered2);
+      }
+
+      setError(null);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError("Failed to load data. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchAllData();
+}, []);
+
+
 
   // Calculate statistics
   const calculateStats = () => {

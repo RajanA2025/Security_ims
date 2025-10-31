@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import './stylecss/App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './Layout/Layout';
+import { SecurityProvider } from './Context/SecurityContext';
 
 //authScreens
 import CompanyForm from './pages/authScreens/CompanyForm';
@@ -58,8 +59,9 @@ function App() {
   };
 
   return (
-    <Router>
-      <Routes>
+    <SecurityProvider>
+      <Router>
+        <Routes>
         {/* Default route → Login screen */}
         <Route path="/" element={<LoginScreen />} />
         <Route path="/login" element={<LoginScreen />} />
@@ -124,8 +126,7 @@ function App() {
         </Route>
       </Routes>
     </Router>
-
-
+    </SecurityProvider>
   );
 }
 
