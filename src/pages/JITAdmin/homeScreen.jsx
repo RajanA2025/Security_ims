@@ -44,8 +44,14 @@ const Admin = () => {
     };
 
     fetchCompanies();
+    setTimeout((
+      
+    ) => {fetchCompanies()},2000);
+
   }, [getAllCompanies]);
 
+ 
+    
 
   // 🔍 Filtered Accounts
   const filteredAccounts = useMemo(() => {

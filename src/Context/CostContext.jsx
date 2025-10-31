@@ -185,41 +185,24 @@ export const CostProvider = ({ children }) => {
       try {
         setLoading(true);
 
-        // 🧩 Step 1: Retrieve filters and normalize account IDs
+        // Retrieve filters and localStorage account IDs
         const { account_id, start_date, end_date } = filters;
-        let storedAccountId = localStorage.getItem("account_ids");
+        const accountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
 
-        try {
-          storedAccountId = JSON.parse(storedAccountId);
-          if (Array.isArray(storedAccountId)) {
-            storedAccountId = storedAccountId[0]; // Take only first ID
-          }
-        } catch {
-          // keep as string if not JSON
-        }
-
-        const normalizeId = (id) => String(id || "").trim().toLowerCase();
-        const storedId = normalizeId(storedAccountId);
-
-        console.log("🔹 Normalized storedAccountId:", storedId);
-
-        // 🧩 Step 2: Prepare POST body (like first useEffect logic)
+        // Prepare POST body
         const postBody = {
-          account_ids:
-            account_id && account_id !== "ALL"
-              ? [account_id]
-              : storedId
-                ? [storedId]
-                : [],
+          account_ids: account_id && account_id !== "ALL" ? [account_id] : accountIds,
           start_date: start_date || "",
           end_date: end_date || "",
         };
 
         console.log("🔹 Sending POST body:", postBody);
 
-        // 🧩 Step 3: Fetch all required data
+        // POST request instead of GET
+        const costUrl = `http://13.212.15.14:8021/cost-summary`;
+
         const [costRes, resourcesRes, tagRes] = await Promise.all([
-          fetch(`http://13.212.15.14:8021/cost-summary`, {
+          fetch(costUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(postBody),
@@ -235,7 +218,7 @@ export const CostProvider = ({ children }) => {
         const resourcesJson = await resourcesRes.json();
         const tagsJson = await tagRes.json();
 
-        // 🧩 Step 4: Accounts
+        // Build account list
         const accountList = costJson?.all_account_ids || [];
         console.log("🔹 Fetched account IDs:", accountList);
         const orderedAccounts = accountList.includes("ALL")
@@ -248,7 +231,7 @@ export const CostProvider = ({ children }) => {
         setAccounts(orderedAccounts);
         setApps(appList);
 
-        // 🧩 Step 5: Tag data + summary
+        // Process tags
         const processedTagData = Array.isArray(tagsJson)
           ? tagsJson.map((res, i) => ({
             id: res.id || i + 1,
@@ -261,6 +244,7 @@ export const CostProvider = ({ children }) => {
           }))
           : [];
 
+        // Compute tagging summary
         const requiredTags = ["Name", "Owner", "Project", "Environment"];
         const summary = {
           fully_tagged: 0,
@@ -279,12 +263,12 @@ export const CostProvider = ({ children }) => {
           else summary.not_tagged++;
         });
 
-        // 🧩 Step 6: Set final states
+        // Set final states
         setCostData(costJson);
         setResourcesData(resourcesJson);
         setTagData(processedTagData);
         setTagSummary(summary);
-        setError(null);
+
       } catch (err) {
         console.error("❌ Fetch error:", err);
         setError(err.message);
@@ -295,7 +279,6 @@ export const CostProvider = ({ children }) => {
 
     fetchAllData();
   }, [filters]);
-
 
 
   return (

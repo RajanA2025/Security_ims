@@ -34,27 +34,31 @@ const Companyadmin = () => {
         // ✅ Dynamically merge all pillar accounts
         const pillarKeys = Object.keys(result).filter((key) => key.endsWith("accounts"));
 
-        const allAccounts = pillarKeys.flatMap((pillarKey) => {
-          const pillarType = pillarKey.replace("_accounts", ""); // e.g. "cost"
-          const accounts = result[pillarKey] || [];
+      const allAccounts = pillarKeys.flatMap((pillarKey) => {
+  const accounts = result[pillarKey] || [];
 
-          return accounts.map((item, index) => ({
-            cid: result.cid || index + 1,
-            account_id: item.account_id || "Nill",
-            account_name: item.account_name || "Nill",
-            access_key: item.access_key || "Nill",
-            secret_key: item.secret_key || "Nill",
-            bucket_name: item.bucket_name || "Nill",
-            prefix: item.prefix || "Nill",
-            pillars: {
-              cost: pillarType === "cost",
-              security: pillarType === "security",
-              operational_excellence: pillarType === "operational_excellence",
-              performance: pillarType === "performance",
-            },
-            status: "approved",
-          }));
-        });
+  return accounts.map((item, index) => {
+    const type = item.account_type || "unknown"; // e.g., "cost", "security", etc.
+
+    return {
+      cid: result.cid || index + 1,
+      account_id: item.account_id || "Nill",
+      account_name: item.account_name || "Nill",
+      access_key: item.access_key || "Nill",
+      secret_key: item.secret_key || "Nill",
+      bucket_name: item.bucket_name || "Nill",
+      prefix: item.prefix || "Nill",
+      pillars: {
+        cost: type === "cost",
+        security: type === "security",
+        operational_excellence: type === "operational_excellence",
+        performance: type === "performance",
+      },
+      status: "approved",
+    };
+  });
+});
+
 
         setAccounts(allAccounts);
       } catch (err) {
@@ -273,3 +277,5 @@ const Companyadmin = () => {
 };
 
 export default Companyadmin;
+
+
