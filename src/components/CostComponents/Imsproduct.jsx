@@ -26,19 +26,53 @@ export default function Imsproduct() {
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   // ✅ Load pillars & check if account exists
-  useEffect(() => {
-    const storedPillars = JSON.parse(localStorage.getItem('pillars'));
-    if (storedPillars) setPillars(storedPillars);
+  // useEffect(() => {
+  //   const storedPillars = JSON.parse(localStorage.getItem('pillars'));
+  //   if (storedPillars) setPillars(storedPillars);
 
-    const storedAccounts = JSON.parse(localStorage.getItem('account_ids'));
-    if (storedAccounts && storedAccounts.length > 0) {
-      setHasAccount(true);
-    } else {
+  //   const storedAccounts = JSON.parse(localStorage.getItem('account_ids'));
+  //   if (storedAccounts && storedAccounts.length > 0) {
+  //     setHasAccount(true);
+  //   } else {
+  //     setHasAccount(false);
+  //     setIsModalVisible(true); // ✅ Show modal if no account found
+  //   }
+  //   console.log("storedAccounts:", storedAccounts);
+  // }, []);
+ const cId = JSON.parse(localStorage.getItem('company_cid'));
+  useEffect(() => {
+  const storedPillars = JSON.parse(localStorage.getItem('pillars'));
+   
+  if (storedPillars) setPillars(storedPillars);
+
+  // Fetch accounts from API instead of localStorage
+ const fetchAccounts = async () => {
+    try {
+      const response = await fetch(`http://13.212.15.14:8006/api/accounts/all/${cId}`);
+      const data = await response.json();
+
+      console.log("API accounts data:", data);
+
+      if (data && Array.isArray(data.accounts) && data.accounts.length > 0) {
+        console.log("✅ Accounts found:", data.accounts);
+        setHasAccount(true);
+        setIsModalVisible(false); // ✅ Hide modal if accounts exist
+      } else {
+        console.warn("⚠️ No accounts found");
+        setHasAccount(false);
+        setIsModalVisible(true); // ✅ Show modal if no accounts found
+      }
+    } catch (error) {
+      console.error("❌ Error fetching accounts:", error);
       setHasAccount(false);
-      setIsModalVisible(true); // ✅ Show modal if no account found
+      setIsModalVisible(true); // ✅ Show modal on error
+      alert("Error fetching account data. Please try again later.");
     }
-    console.log("storedAccounts:", storedAccounts);
-  }, []);
+  };
+
+  fetchAccounts();
+}, [cId]);
+
 
   const handleCreateAccount = () => {
     setIsModalVisible(false);

@@ -17,6 +17,7 @@ import {
   Spin,
   Alert
 } from "antd";
+import { useSecurityContext } from "../../../Context/SecurityContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   EyeOutlined,
@@ -115,7 +116,7 @@ const Securitygrp = () => {
   const [selectedData, setSelectedData] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [selectedAccountId, setSelectedAccountId] = useState(null);
-  const API_URL = "http://13.212.15.14:8012/security-groups";
+  const { endpoints } = useSecurityContext();
   const { Option } = Select;
   const accountIds = [...new Set(data.map(item => item.account_id))];
   // Fetch data on mount
@@ -123,7 +124,7 @@ const Securitygrp = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(API_URL);
+        const response = await axios.get(endpoints.securityGroups);
         setData(response.data);
         setFilteredData(response.data); // show all initially
       } catch (error) {
