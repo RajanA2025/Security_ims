@@ -352,7 +352,7 @@ useEffect(() => {
   };
 
   fetchAllData();
-}, []);
+}, [storedAccountId]);
 
 
 

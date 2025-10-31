@@ -28,14 +28,33 @@ const Cloud_Trail = () => {
   const [searchText, setSearchText] = useState("");
 
   const API_URL = "http://13.212.15.14:8012/cloudtrail";
+   let storedAccountId = localStorage.getItem("account_ids");
 
   // Fetch data on load
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(API_URL);
-        setData(response.data);
+        // const response = await axios.get(API_URL);
+        // setData(response.data);
+        const [response] = await Promise.all([
+        axios.get(API_URL),
+       
+      ]);
+
+      const normalizeId = (id) => String(id).trim().toLowerCase();
+      const storedId = normalizeId(storedAccountId);
+
+      if (response?.data && Array.isArray(response.data)) {
+        const filtered2 = response.data.filter((item) => {
+          const itemId =
+            item.account_id || item.accountId || item.ACCOUNT_ID || item.Account_ID;
+          return normalizeId(itemId) === storedId;
+        });
+        console.log("Filtered Data 2222:", filtered2);
+        setData(filtered2);
+    
+      }
       } catch (error) {
         console.error("Error fetching CloudTrail data:", error);
       } finally {
@@ -43,7 +62,7 @@ const Cloud_Trail = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [storedAccountId]);
 
   // Extract username safely
   const getRecordUsername = (record) => {

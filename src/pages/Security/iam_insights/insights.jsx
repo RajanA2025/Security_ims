@@ -124,9 +124,38 @@ const Insights = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(API_URL);
-        setData(response.data);
-        setFilteredData(response.data);
+        let storedAccountId = localStorage.getItem("account_ids");
+
+      try {
+        storedAccountId = JSON.parse(storedAccountId);
+        if (Array.isArray(storedAccountId)) {
+          storedAccountId = storedAccountId[0]; // take first ID
+        }
+      } catch {
+        // keep as string
+      }
+
+        // const response = await axios.get(API_URL);
+        // setData(response.data);
+        // setFilteredData(response.data);
+         const [response1] = await Promise.all([
+        axios.get(API_URL),
+     
+      ]);
+
+      const normalizeId = (id) => String(id).trim().toLowerCase();
+      const storedId = normalizeId(storedAccountId);
+
+      if (response1?.data && Array.isArray(response1.data)) {
+        const filteredData = response1.data.filter((item) => {
+          const itemId =
+            item.account_id || item.accountId || item.ACCOUNT_ID || item.Account_ID;
+          return normalizeId(itemId) === storedId;
+        });
+        console.log("Filtered dataaaaaaaaaaaaa:", filteredData);
+        setData(filteredData);
+        setFilteredData(filteredData);
+      }
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {

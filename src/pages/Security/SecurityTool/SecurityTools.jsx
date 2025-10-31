@@ -27,7 +27,8 @@ const header = { backgroundColor: "#4f46e5", color: "white" };
 const SecurityTools = () => {
   const { Option } = Select;
 
-  const [tabKey, setTabKey] = useState("1");
+  // Make default the KMS tab so its data is fetched on mount
+  const [tabKey, setTabKey] = useState("2");
   const [loading, setLoading] = useState(false);
   const [securityData, setSecurityData] = useState([]);
   const [kmData, setKmData] = useState([]);
@@ -312,7 +313,7 @@ Security & KMS Tools
       </Row>
 
       <Tabs 
-        defaultActiveKey="2" 
+        activeKey={tabKey}
         onChange={key => setTabKey(key)}
         style={{
           marginTop: "0px",

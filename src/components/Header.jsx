@@ -90,7 +90,7 @@ const Header = ({ onDateChange }) => {
             src={logo}
             alt="logo"
             style={{ height: 70, marginRight: 25, cursor: "pointer" }}
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/Imsproduct")}
           />
           <Typography.Title
             level={3}
