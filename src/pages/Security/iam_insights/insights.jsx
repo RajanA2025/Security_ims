@@ -120,22 +120,97 @@ const Insights = () => {
   const [selectedPolicyDetail, setSelectedPolicyDetail] = useState(null);
 
   // Fetch data on mount
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(API_URL);
-        setData(response.data);
-        setFilteredData(response.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     setLoading(true);
+  //     try {
+  //       let storedAccountId = localStorage.getItem("account_ids");
 
-    fetchData();
-  }, []);
+  //     try {
+  //       storedAccountId = JSON.parse(storedAccountId);
+  //       if (Array.isArray(storedAccountId)) {
+  //         storedAccountId = storedAccountId[0]; // take first ID
+  //       }
+  //     } catch {
+  //       // keep as string
+  //     }
+
+  //       // const response = await axios.get(API_URL);
+  //       // setData(response.data);
+  //       // setFilteredData(response.data);
+  //        const [response1] = await Promise.all([
+  //       axios.get(API_URL),
+     
+  //     ]);
+
+  //     const normalizeId = (id) => String(id).trim().toLowerCase();
+  //     const storedId = normalizeId(storedAccountId);
+
+  //     if (response1?.data && Array.isArray(response1.data)) {
+  //       const filteredData = response1.data.filter((item) => {
+  //         const itemId =
+  //           item.account_id || item.accountId || item.ACCOUNT_ID || item.Account_ID;
+  //         return normalizeId(itemId) === storedId;
+  //       });
+  //       console.log("Filtered dataaaaaaaaaaaaa:", filteredData);
+  //       setData(filteredData);
+  //       setFilteredData(filteredData);
+  //     }
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, []);
+
+  useEffect(() => {
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      let storedAccountId = localStorage.getItem("account_ids");
+
+      try {
+        storedAccountId = JSON.parse(storedAccountId);
+      } catch {
+        // If it's not a JSON array, wrap it as an array
+        storedAccountId = [storedAccountId];
+      }
+
+      // Normalize all IDs
+      const normalizeId = (id) => String(id).trim().toLowerCase();
+      const storedIds = Array.isArray(storedAccountId)
+        ? storedAccountId.map(normalizeId)
+        : [normalizeId(storedAccountId)];
+
+      const [response1] = await Promise.all([axios.get(API_URL)]);
+
+      if (response1?.data && Array.isArray(response1.data)) {
+        const filteredData = response1.data.filter((item) => {
+          const itemId =
+            item.account_id ||
+            item.accountId ||
+            item.ACCOUNT_ID ||
+            item.Account_ID;
+
+          return storedIds.includes(normalizeId(itemId));
+        });
+
+        console.log("Filtered Data:", filteredData);
+        setData(filteredData);
+        setFilteredData(filteredData);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, []);
 
   // Helper function to format dates
   const formatDate = (dateString) => {
@@ -403,7 +478,7 @@ const Insights = () => {
   ];
 
   return (
-    <>
+    <div className="p-6">
   <Row gutter={[16, 16]} style={{ marginBottom: 5 }}>
   <Col md={16}>
 
@@ -1384,7 +1459,7 @@ IAM Insights
           51%, 100% { opacity: 0.3; }
         }
       `}</style>
-    </>
+    </div>
   );
 };
 

@@ -11,6 +11,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { AccountCircleOutlined, Login } from "@mui/icons-material";
+import { useAuth } from "../Context/AuthContext";
 import { Typography } from "antd";
 
 const Header = ({ onDateChange }) => {
@@ -45,6 +46,7 @@ const Header = ({ onDateChange }) => {
   // Menu controls
   const handleMenu = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
+  const { logout } = useAuth();
 
   useEffect(() => setLoaded(true), []);
 
@@ -90,7 +92,7 @@ const Header = ({ onDateChange }) => {
             src={logo}
             alt="logo"
             style={{ height: 70, marginRight: 25, cursor: "pointer" }}
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/Imsproduct")}
           />
           <Typography.Title
             level={3}
@@ -124,6 +126,13 @@ const Header = ({ onDateChange }) => {
           <MenuItem
             onClick={() => {
               handleClose();
+              // call context logout which clears localStorage
+              try {
+                logout();
+              } catch (e) {
+                // ignore
+              }
+              // ensure redirect to login
               navigate("/login");
             }}
           >

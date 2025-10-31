@@ -68,8 +68,11 @@ export const CostProvider = ({ children }) => {
 
       const result = await response.json();
       if (!response.ok) throw new Error(result.message || "Login failed");
-
-      if (result.token) localStorage.setItem("auth_token", result.token);
+localStorage.setItem("auth_token", true);
+  // Some backends may return 200 without a token. Treat any successful login (200)
+  // as authenticated: store the token if provided, otherwise store a boolean flag.
+  const authValue = result.token ? result.token : "true";
+  localStorage.setItem("auth_token", authValue);
       if (result.cid) localStorage.setItem("company_cid", result.cid);
 
       return result;
