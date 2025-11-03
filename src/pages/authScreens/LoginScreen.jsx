@@ -28,6 +28,10 @@ export default function LoginScreen() {
       formData.email === "admin@Jit.com" &&
       formData.password === "Test@1234"
     ) {
+      // Set auth state for admin login
+      setAuthLogin("admin-auth");
+      localStorage.setItem("company_cid", "admin");
+      
       setToast({
         type: "success",
         message: "Welcome Admin!",
