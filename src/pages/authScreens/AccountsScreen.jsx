@@ -47,8 +47,8 @@ const PillarDropdown = memo(({ pillars, selected, onChange, error }) => {
 
         updated = hasBoth
           ? selected.filter(
-              (p) => p !== "operational_excellence" && p !== "performance"
-            )
+            (p) => p !== "operational_excellence" && p !== "performance"
+          )
           : [...selected, "operational_excellence", "performance"];
       } else {
         updated = selected.includes(pillarKey)
@@ -78,9 +78,8 @@ const PillarDropdown = memo(({ pillars, selected, onChange, error }) => {
       </label>
 
       <div
-        className={`flex flex-wrap gap-2 p-2 border rounded-lg transition ${
-          error ? "border-red-500" : "border-gray-300"
-        }`}
+        className={`flex flex-wrap gap-2 p-2 border rounded-lg transition ${error ? "border-red-500" : "border-gray-300"
+          }`}
       >
         {available.length === 0 ? (
           <p className="text-gray-500 text-sm italic">No available pillars.</p>
@@ -90,11 +89,10 @@ const PillarDropdown = memo(({ pillars, selected, onChange, error }) => {
               key={item.key}
               type="button"
               onClick={() => toggle(item.key)}
-              className={`px-3 py-1 rounded-full text-sm border transition ${
-                isActive(item.key)
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-              }`}
+              className={`px-3 py-1 rounded-full text-sm border transition ${isActive(item.key)
+                ? "bg-blue-600 text-white border-blue-600"
+                : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+                }`}
             >
               {item.label}
             </button>
@@ -132,11 +130,14 @@ const AccountCard = memo(({ index, acc, errors, updateAccount, removeAccount, ca
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <InputField label="Company CID" value={acc.cid} onChange={() => { }} readOnly />
+
+        {/* ✅ REMOVED Company CID FROM UI */}
+
         <InputField
           label="Account ID"
           value={acc.accountId}
-          onChange={(v) => handleChange("accountId", v)}
+          onChange={(v) => { }}
+          readOnly
           error={errors[`accountId_${index}`]}
           placeholder="Enter account ID"
         />
@@ -178,12 +179,13 @@ const AccountCard = memo(({ index, acc, errors, updateAccount, removeAccount, ca
           pillars={acc.pillars}
           selected={acc.selectedPillars}
           onChange={(v) => handleChange("selectedPillars", v)}
-          error={errors[`pillars_${index}`]} // ✅ Pass error
+          error={errors[`pillars_${index}`]}
         />
       </div>
     </div>
   );
 });
+
 
 export default function AccountsScreen() {
   const { addAccount } = useContext(CostContext);
@@ -207,18 +209,50 @@ export default function AccountsScreen() {
   const [toast, setToast] = useState(null);
   const navigate = useNavigate();
 
+
   useEffect(() => {
     const storedCid = localStorage.getItem("company_cid");
     const storedPillars = JSON.parse(localStorage.getItem("pillars")) || {};
-    if (storedCid) {
-      setFormData((prev) => ({
-        ...prev,
-        accounts: prev.accounts.map((acc, i) =>
-          i === 0 ? { ...acc, cid: storedCid, pillars: storedPillars } : acc
-        ),
-      }));
+    const editData = JSON.parse(localStorage.getItem("edit_account"));
+
+    if (editData) {
+      // ✅ Load edit data into form
+      setFormData({
+        accounts: [
+          {
+            cid: storedCid || "",
+            accountId: editData.account_id || "",
+            accountName: editData.account_name || "",
+            accessKey: editData.access_key || "",
+            secretKey: editData.secret_key || "",
+            bucketName: editData.bucket_name || "",
+            prefix: editData.prefix || "",
+            pillars: storedPillars,
+            selectedPillars: Object.keys(editData.pillars || {}),
+          },
+        ],
+      });
+    } else {
+      // ✅ New Add Mode
+      setFormData({
+        accounts: [
+          {
+            cid: storedCid || "",
+            accountId: "",
+            accountName: "",
+            accessKey: "",
+            secretKey: "",
+            bucketName: "",
+            prefix: "",
+            pillars: storedPillars,
+            selectedPillars: [],
+          },
+        ],
+      });
     }
   }, []);
+
+
 
   const updateAccount = useCallback((index, field, value) => {
     setFormData((prev) => {
@@ -290,6 +324,52 @@ export default function AccountsScreen() {
       return;
     }
 
+    const editData = JSON.parse(localStorage.getItem("edit_account"));
+
+    // ✅ If in Edit Mode → Update API
+    if (editData) {
+      try {
+        const acc = formData.accounts[0];
+        const pillarType = acc.selectedPillars[0]; // pick first selected pillar
+
+        const updateURL = `http://13.212.15.14:8015/api/company/update/${acc.cid}/${acc.accountId}/${pillarType}`;
+
+        const response = await fetch(updateURL, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            cid: acc.cid, // ✅ REQUIRED
+            account_name: acc.accountName,
+            access_key: acc.accessKey,
+            secret_key: acc.secretKey,
+            bucket_name: acc.bucketName,
+            prefix: acc.prefix,
+          }),
+        });
+
+
+        const result = await response.json();
+        console.log("Update Result:", result);
+
+        if (!response.ok) throw new Error(result.message || "Update failed");
+
+        localStorage.removeItem("edit_account");
+        navigate("/imsproduct/accountsmanage");
+
+        setToast({ type: "success", message: "Account Updated Successfully!" });
+        setTimeout(() => setToast(null), 3000);
+
+      } catch (err) {
+        console.error("Update Error:", err);
+        setToast({ type: "error", message: err.message });
+        setTimeout(() => setToast(null), 3000);
+      }
+      return;
+    }
+
+    // ✅ Add Mode (existing code remains unchanged)
     try {
       const payload = {
         accounts: formData.accounts.map((acc) => {
@@ -311,29 +391,21 @@ export default function AccountsScreen() {
         }),
       };
 
-      console.log("📦 Sending Payload:", payload);
       const result = await addAccount(payload);
 
-      if (result?.message === "Accounts added successfully (no duplicates inserted)") {
-        // ✅ Store account IDs in localStorage
+      if (result?.message) {
         const accountIds = formData.accounts.map((acc) => acc.accountId);
         localStorage.setItem("account_ids", JSON.stringify(accountIds));
-
-        setToast({ type: "success", message: result.message });
-        setTimeout(() => setToast(null), 3000);
-
-        // ✅ Navigate after storing
         navigate("/imsproduct");
-      } else {
-        setToast({ type: "error", message: "Failed to add accounts." });
-        setTimeout(() => setToast(null), 3000);
+        setToast({ type: "success", message: result.message });
       }
+
     } catch (err) {
       console.error("Submit Error:", err);
       setToast({ type: "error", message: "Something went wrong. Try again." });
-      setTimeout(() => setToast(null), 3000);
     }
   }, [formData, validateForm, addAccount, navigate]);
+
 
 
 
@@ -357,14 +429,46 @@ export default function AccountsScreen() {
 
         <div className="space-y-5">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-800">Accounts</h2>
+            {/* <h2 className="text-xl font-semibold text-gray-800">Accounts</h2> */}
             <button
-              onClick={handleAddAccount}
-              className="flex items-center space-x-2 bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 text-sm"
+              onClick={() => {
+                handleAddAccount();
+                localStorage.removeItem("edit_account"); // remove edit mode
+
+                const storedCid = localStorage.getItem("company_cid") || "";
+                const storedPillars = JSON.parse(localStorage.getItem("pillars")) || {
+                  cost: false,
+                  security: false,
+                  operational_excellence: false,
+                  performance: false,
+                };
+
+                // ✅ Hard reset form data to empty new form
+                setFormData({
+                  accounts: [
+                    {
+                      cid: storedCid,
+                      accountId: "",
+                      accountName: "",
+                      accessKey: "",
+                      secretKey: "",
+                      bucketName: "",
+                      prefix: "",
+                      pillars: storedPillars,
+                      selectedPillars: [],
+                    },
+                  ],
+                });
+
+                navigate('/imsproduct/accounts'); // no re-mount required since state is updated directly
+              }}
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-5 rounded-lg shadow-md transition-all duration-200"
             >
-              <Plus size={14} />
-              <span>Add Account</span>
+              <Plus size={18} />
+              Add Account
             </button>
+
+
           </div>
 
           {formData.accounts.map((acc, index) => (
@@ -381,14 +485,12 @@ export default function AccountsScreen() {
 
           <div className="flex justify-center mt-6">
             <button
-              onClick={() => {
-                handleSubmit();         
-                navigate('/imsproduct/accounts');  }}
+              onClick={handleSubmit}
               className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 shadow-lg hover:shadow-xl"
-              navigation
             >
               Submit
             </button>
+
           </div>
         </div>
       </div>

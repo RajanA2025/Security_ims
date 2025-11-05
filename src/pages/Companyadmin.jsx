@@ -34,30 +34,30 @@ const Companyadmin = () => {
         // ✅ Dynamically merge all pillar accounts
         const pillarKeys = Object.keys(result).filter((key) => key.endsWith("accounts"));
 
-      const allAccounts = pillarKeys.flatMap((pillarKey) => {
-  const accounts = result[pillarKey] || [];
+        const allAccounts = pillarKeys.flatMap((pillarKey) => {
+          const accounts = result[pillarKey] || [];
 
-  return accounts.map((item, index) => {
-    const type = item.account_type || "unknown"; // e.g., "cost", "security", etc.
+          return accounts.map((item, index) => {
+            const type = item.account_type || "unknown"; // e.g., "cost", "security", etc.
 
-    return {
-      cid: result.cid || index + 1,
-      account_id: item.account_id || "Nill",
-      account_name: item.account_name || "Nill",
-      access_key: item.access_key || "Nill",
-      secret_key: item.secret_key || "Nill",
-      bucket_name: item.bucket_name || "Nill",
-      prefix: item.prefix || "Nill",
-      pillars: {
-        cost: type === "cost",
-        security: type === "security",
-        operational_excellence: type === "operational_excellence",
-        performance: type === "performance",
-      },
-      status: "approved",
-    };
-  });
-});
+            return {
+              cid: result.cid || index + 1,
+              account_id: item.account_id || "Nill",
+              account_name: item.account_name || "Nill",
+              access_key: item.access_key || "Nill",
+              secret_key: item.secret_key || "Nill",
+              bucket_name: item.bucket_name || "Nill",
+              prefix: item.prefix || "Nill",
+              pillars: {
+                cost: type === "cost",
+                security: type === "security",
+                operational_excellence: type === "operational_excellence",
+                performance: type === "performance",
+              },
+              status: "approved",
+            };
+          });
+        });
 
 
         setAccounts(allAccounts);
@@ -102,8 +102,9 @@ const Companyadmin = () => {
 
   // ---------- Handlers ----------
   const handleEdit = (acc) => {
-    setEditingId(acc.cid);
-    setEditData({ ...acc });
+    // Save account data to localStorage for editing
+    localStorage.setItem("edit_account", JSON.stringify(acc));
+    navigate("/imsproduct/accounts"); // same page as add form
   };
 
   const handleSave = () => {
@@ -167,11 +168,11 @@ const Companyadmin = () => {
         ) : error ? (
           <div className="text-center py-6 text-red-500">Error: {error}</div>
         ) : (
-          <table className="min-w-full text-sm">
+          <table className="min-w-full text-sm text-center">
             <thead className="bg-gray-50">
               <tr>
                 {[
-                  "CID",
+                  // "CID",
                   "Account ID",
                   "Account Name",
                   "Access Key",
@@ -184,7 +185,7 @@ const Companyadmin = () => {
                 ].map((header) => (
                   <th
                     key={header}
-                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
                     {header}
                   </th>
@@ -194,7 +195,7 @@ const Companyadmin = () => {
             <tbody className="divide-y divide-gray-200">
               {filteredAccounts.map((acc) => (
                 <tr key={acc.cid} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">{acc.cid}</td>
+                  {/* <td className="px-4 py-3">{acc.cid}</td> */}
                   <td className="px-4 py-3">{acc.account_id}</td>
                   <td className="px-4 py-3">{acc.account_name}</td>
                   <td className="px-4 py-3">{acc.access_key}</td>
@@ -202,7 +203,7 @@ const Companyadmin = () => {
                   <td className="px-4 py-3">{acc.bucket_name}</td>
                   <td className="px-4 py-3">{acc.prefix}</td>
                   <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex  justify-center flex-wrap gap-1">
                       {Object.entries(acc.pillars)
                         .filter(([_, value]) => value)
                         .map(([pillar]) => (
@@ -216,6 +217,7 @@ const Companyadmin = () => {
                     </div>
                   </td>
                   <td className="px-4 py-3">
+                    <div className="flex justify-center">
                     <span
                       className={`px-2 py-1 text-xs font-medium rounded-full ${acc.status === "approved"
                         ? "bg-green-100 text-green-700"
@@ -226,8 +228,9 @@ const Companyadmin = () => {
                     >
                       {acc.status}
                     </span>
+                    </div>
                   </td>
-                  <td className="px-4 py-3 text-right space-x-2">
+                  <td className="px-4 py-3 text-center space-x-2">
                     {editingId === acc.cid ? (
                       <>
                         <button

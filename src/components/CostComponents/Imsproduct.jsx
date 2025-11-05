@@ -39,39 +39,39 @@ export default function Imsproduct() {
   //   }
   //   console.log("storedAccounts:", storedAccounts);
   // }, []);
- const cId = JSON.parse(localStorage.getItem('company_cid'));
+  const cId = JSON.parse(localStorage.getItem('company_cid'));
   useEffect(() => {
-  const storedPillars = JSON.parse(localStorage.getItem('pillars'));
-   
-  if (storedPillars) setPillars(storedPillars);
+    const storedPillars = JSON.parse(localStorage.getItem('pillars'));
 
-  // Fetch accounts from API instead of localStorage
- const fetchAccounts = async () => {
-    try {
-      const response = await fetch(`http://13.212.15.14:8006/api/accounts/all/${cId}`);
-      const data = await response.json();
+    if (storedPillars) setPillars(storedPillars);
 
-      console.log("API accounts data:", data);
+    // Fetch accounts from API instead of localStorage
+    const fetchAccounts = async () => {
+      try {
+        const response = await fetch(`http://13.212.15.14:8006/api/accounts/all/${cId}`);
+        const data = await response.json();
 
-      if (data && Array.isArray(data.accounts) && data.accounts.length > 0) {
-        console.log("✅ Accounts found:", data.accounts);
-        setHasAccount(true);
-        setIsModalVisible(false); // ✅ Hide modal if accounts exist
-      } else {
-        console.warn("⚠️ No accounts found");
+        console.log("API accounts data:", data);
+
+        if (data && Array.isArray(data.accounts) && data.accounts.length > 0) {
+          console.log("✅ Accounts found:", data.accounts);
+          setHasAccount(true);
+          setIsModalVisible(false); // ✅ Hide modal if accounts exist
+        } else {
+          console.warn("⚠️ No accounts found");
+          setHasAccount(false);
+          setIsModalVisible(true); // ✅ Show modal if no accounts found
+        }
+      } catch (error) {
+        console.error("❌ Error fetching accounts:", error);
         setHasAccount(false);
-        setIsModalVisible(true); // ✅ Show modal if no accounts found
+        setIsModalVisible(true); // ✅ Show modal on error
+        alert("Error fetching account data. Please try again later.");
       }
-    } catch (error) {
-      console.error("❌ Error fetching accounts:", error);
-      setHasAccount(false);
-      setIsModalVisible(true); // ✅ Show modal on error
-      alert("Error fetching account data. Please try again later.");
-    }
-  };
+    };
 
-  fetchAccounts();
-}, [cId]);
+    fetchAccounts();
+  }, [cId]);
 
 
   const handleCreateAccount = () => {
@@ -140,12 +140,16 @@ export default function Imsproduct() {
       {hasAccount && (
         <div className="w-full flex justify-end mb-10">
           <button
-            onClick={() => navigate('/imsproduct/accounts')}
+            onClick={() => {
+              localStorage.removeItem("edit_account"); // ✅ ensures form opens blank
+              navigate('/imsproduct/accounts');
+            }}
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-5 rounded-lg shadow-md transition-all duration-200"
           >
             <Plus size={18} />
             Add Account
           </button>
+
         </div>
       )}
 
