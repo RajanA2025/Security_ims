@@ -28,7 +28,7 @@ const Admin = () => {
           company_name: item.company_name || "N/A",
           admin_name: item.admin_name || "N/A", // ✅ ADD THIS LINE
           mail_id: item.email || "N/A",
-          password: "********", // 🔐 password shouldn't come from backend
+          password: "Test@1234", // 🔐 password shouldn't come from backend
           features: {
             cost: !!item.cost,
             security: !!item.security,
@@ -45,13 +45,13 @@ const Admin = () => {
 
     fetchCompanies();
     setTimeout((
-      
-    ) => {fetchCompanies()},2000);
+
+    ) => { fetchCompanies() }, 2000);
 
   }, [getAllCompanies]);
 
- 
-    
+
+
 
   // 🔍 Filtered Accounts
   const filteredAccounts = useMemo(() => {
@@ -238,8 +238,7 @@ const Admin = () => {
                         onChange={(e) =>
                           setEditData({ ...editData, mail_id: e.target.value })
                         }
-                        className="border rounded px-2 py-1 w-full"
-                      />
+                        className="border rounded px-2 py-1 w-full !text-green-800" />
                     ) : (
                       acc.mail_id
                     )}
