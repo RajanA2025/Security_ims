@@ -139,18 +139,18 @@ const Admin = () => {
           </div>
 
           {/* Search Bar */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="relative flex-1 md:max-w-md">
+          <div className="flex items-center justify-end gap-4 w-full">
+            <div className="relative w-64">
               <Search
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               />
               <input
                 type="text"
                 placeholder="Search by ID, name, or email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-gray-300 rounded-lg pl-8 pr-3 py-1.5 text-sm font-normal focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 

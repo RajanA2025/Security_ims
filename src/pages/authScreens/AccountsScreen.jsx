@@ -1,23 +1,35 @@
 import React, { useState, useEffect, useCallback, useContext, memo } from "react";
 import { useNavigate } from 'react-router-dom';
 
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Eye, EyeOff } from "lucide-react";
 import { CostContext } from "../../Context/CostContext";
 
-const InputField = memo(({ label, value, onChange, type = "text", placeholder, error, readOnly }) => (
+const InputField = memo(({ label, value, onChange, type = "text", placeholder, error, readOnly, showPasswordToggle = false, onTogglePassword }) => (
   <div className="space-y-1.5">
     <label className="block text-sm font-medium text-gray-700">
       {label} {label !== "Company CID" && <span className="text-red-500">*</span>}
     </label>
-    <input
-      type={type}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      readOnly={readOnly}
-      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${error ? "border-red-500" : "border-gray-300"
-        } ${readOnly ? "bg-gray-200 text-gray-500" : "bg-white"}`}
-    />
+    <div className="relative">
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        readOnly={readOnly}
+        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-10 ${error ? "border-red-500" : "border-gray-300"
+          } ${readOnly ? "bg-gray-200 text-gray-500" : "bg-white"}`}
+      />
+      {showPasswordToggle && (
+        <button
+          type="button"
+          onClick={onTogglePassword}
+          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
+          tabIndex="-1"
+        >
+          {type === "password" ? <Eye size={18} /> : <EyeOff size={18} />}
+        </button>
+      )}
+    </div>
     {error && <p className="text-red-500 text-sm">{error}</p>}
   </div>
 ));
@@ -155,14 +167,18 @@ const AccountCard = memo(({ index, acc, errors, updateAccount, removeAccount, ca
           error={errors[`accessKey_${index}`]}
           placeholder="Enter access key"
         />
-        <InputField
-          label="Secret Key"
-          type="password"
-          value={acc.secretKey}
-          onChange={(v) => handleChange("secretKey", v)}
-          error={errors[`secretKey_${index}`]}
-          placeholder="Enter secret key"
-        />
+        <div className="relative">
+          <InputField
+            label="Secret Key"
+            type={acc.showSecretKey ? "text" : "password"}
+            value={acc.secretKey}
+            onChange={(v) => handleChange("secretKey", v)}
+            error={errors[`secretKey_${index}`]}
+            placeholder="Enter secret key"
+            showPasswordToggle
+            onTogglePassword={() => handleChange("showSecretKey", !acc.showSecretKey)}
+          />
+        </div>
         <InputField
           label="Bucket Name"
           value={acc.bucketName}
@@ -428,8 +444,7 @@ export default function AccountsScreen() {
         </div>
 
         <div className="space-y-5">
-          <div className="flex justify-between items-center">
-            {/* <h2 className="text-xl font-semibold text-gray-800">Accounts</h2> */}
+          <div className="flex justify-end">
             <button
               onClick={() => {
                 handleAddAccount();
