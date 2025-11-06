@@ -136,8 +136,8 @@ const AccountCard = memo(({ index, acc, errors, updateAccount, removeAccount, ca
         <InputField
           label="Account ID"
           value={acc.accountId}
-          onChange={(v) => { }}
-          readOnly
+          onChange={(v) => handleChange("accountId", v)}
+          // readOnly
           error={errors[`accountId_${index}`]}
           placeholder="Enter account ID"
         />
