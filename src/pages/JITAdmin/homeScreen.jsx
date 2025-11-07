@@ -33,7 +33,7 @@ const Admin = () => {
             cost: !!item.cost,
             security: !!item.security,
             operational_excellence: !!item.operational_excellence,
-            performance: !!item.performance,
+            // performance: !!item.performance,
           },
           status: "active",
         }));
@@ -140,7 +140,7 @@ const Admin = () => {
 
           {/* Search Bar */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="relative flex-1 md:max-w-md">
+            <div className="relative w-full md:w-[250px]">
               <Search
                 size={18}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"

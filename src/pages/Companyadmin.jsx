@@ -15,6 +15,10 @@ const Companyadmin = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const navigate = useNavigate();
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState(null);
+
+
 
   // 🔹 Fetch cost accounts dynamically
   useEffect(() => {
@@ -26,7 +30,7 @@ const Companyadmin = () => {
         const cid = localStorage.getItem("company_cid");
         if (!cid) throw new Error("Company ID not found. Please log in again.");
 
-        const response = await fetch(`http://13.212.15.14:8006/api/accounts/all/${cid}`);
+        const response = await fetch(`http://13.212.15.14:8016/api/account/all`);
         const result = await response.json();
 
         if (!response.ok) throw new Error(result.message || "Failed to fetch accounts");
@@ -34,30 +38,27 @@ const Companyadmin = () => {
         // ✅ Dynamically merge all pillar accounts
         const pillarKeys = Object.keys(result).filter((key) => key.endsWith("accounts"));
 
+
         const allAccounts = pillarKeys.flatMap((pillarKey) => {
           const accounts = result[pillarKey] || [];
 
-          return accounts.map((item, index) => {
-            const type = item.account_type || "unknown"; // e.g., "cost", "security", etc.
-
-            return {
-              cid: result.cid || index + 1,
-              account_id: item.account_id || "Nill",
-              account_name: item.account_name || "Nill",
-              access_key: item.access_key || "Nill",
-              secret_key: item.secret_key || "Nill",
-              bucket_name: item.bucket_name || "Nill",
-              prefix: item.prefix || "Nill",
-              pillars: {
-                cost: type === "cost",
-                security: type === "security",
-                operational_excellence: type === "operational_excellence",
-                performance: type === "performance",
-              },
-              status: "approved",
-            };
-          });
+          return accounts.map((item) => ({
+            cid: item.cid,
+            account_id: item.account_id,
+            account_name: item.account_name,
+            access_key: item.access_key,
+            secret_key: item.secret_key,
+            bucket_name: item.bucket_name,
+            prefix: item.prefix,
+            pillars: {
+              cost: item.cost,
+              security: item.security,
+              perfops: item.perfops
+            },
+            status: "approved"
+          }));
         });
+
 
 
         setAccounts(allAccounts);
@@ -114,11 +115,68 @@ const Companyadmin = () => {
     setEditingId(null);
   };
 
-  const handleDelete = (cid) => {
-    if (window.confirm("Are you sure you want to delete this account?")) {
-      setAccounts(accounts.filter((acc) => acc.cid !== cid));
+  const deleteEntireAccount = async () => {
+    try {
+      await axios.delete(`http://13.212.15.14:8016/api/account/delete`, {
+        data: {
+          cid: selectedAccount.cid,
+          account_id: selectedAccount.account_id,
+          account_name: selectedAccount.account_name,
+          access_key: selectedAccount.access_key,
+          secret_key: selectedAccount.secret_key,
+          bucket_name: selectedAccount.bucket_name,
+          prefix: selectedAccount.prefix,
+          cost: selectedAccount.pillars.cost,
+          security: selectedAccount.pillars.security,
+          perfops: selectedAccount.pillars.perfops
+        }
+      });
+
+      setAccounts(accounts.filter(a => a.account_id !== selectedAccount.account_id));
+    } catch (err) {
+      console.error("Delete Entire Account Error:", err);
+    } finally {
+      setShowDeleteModal(false);
     }
   };
+
+
+
+  const deletePillar = async (pillarType) => {
+    try {
+      await axios.delete(`http://13.212.15.14:8016/api/account/delete`, {
+        data: {
+          cid: selectedAccount.cid,
+          account_id: selectedAccount.account_id,
+          account_name: selectedAccount.account_name,
+          access_key: selectedAccount.access_key,
+          secret_key: selectedAccount.secret_key,
+          bucket_name: selectedAccount.bucket_name,
+          prefix: selectedAccount.prefix,
+          cost: pillarType === "cost" ? false : selectedAccount.pillars.cost,
+          security: pillarType === "security" ? false : selectedAccount.pillars.security,
+          perfops: pillarType === "perfops" ? false : selectedAccount.pillars.perfops
+        }
+      });
+
+      setAccounts(accounts.map(a => {
+        if (a.account_id === selectedAccount.account_id) {
+          return {
+            ...a,
+            pillars: { ...a.pillars, [pillarType]: false }
+          };
+        }
+        return a;
+      }));
+
+    } catch (err) {
+      console.error("Delete Pillar Error:", err);
+    } finally {
+      setShowDeleteModal(false);
+    }
+  };
+
+
 
   return (
     <div className="min-h-screen bg-gray-100 p-0">
@@ -200,34 +258,43 @@ const Companyadmin = () => {
                   <td className="px-4 py-3">{acc.account_name}</td>
                   <td className="px-4 py-3">{acc.access_key}</td>
                   <td className="px-4 py-3">••••••••</td>
-                  <td className="px-4 py-3">{acc.bucket_name}</td>
-                  <td className="px-4 py-3">{acc.prefix}</td>
+                  <td className="px-4 py-3">{acc.bucket_name || "Nil"}</td>
+                  <td className="px-4 py-3">{acc.prefix || "Nil"}</td>
                   <td className="px-4 py-3">
                     <div className="flex  justify-center flex-wrap gap-1">
                       {Object.entries(acc.pillars)
                         .filter(([_, value]) => value)
-                        .map(([pillar]) => (
-                          <span
-                            key={pillar}
-                            className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium"
-                          >
-                            {pillar}
-                          </span>
-                        ))}
+                        .map(([pillar]) => {
+                          const PillarNames = {
+                            cost: "Cost",
+                            security: "Security",
+                            perfops: "operational & performance"
+                          };
+
+                          return (
+                            <span
+                              key={pillar}
+                              className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium capitalize"
+                            >
+                              {PillarNames[pillar] || pillar}
+                            </span>
+                          );
+                        })}
+
                     </div>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex justify-center">
-                    <span
-                      className={`px-2 py-1 text-xs font-medium rounded-full ${acc.status === "approved"
-                        ? "bg-green-100 text-green-700"
-                        : acc.status === "pending"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-red-100 text-red-700"
-                        }`}
-                    >
-                      {acc.status}
-                    </span>
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${acc.status === "approved"
+                          ? "bg-green-100 text-green-700"
+                          : acc.status === "pending"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-red-100 text-red-700"
+                          }`}
+                      >
+                        {acc.status}
+                      </span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-center space-x-2">
@@ -255,11 +322,15 @@ const Companyadmin = () => {
                           <Edit size={16} />
                         </button>
                         <button
-                          onClick={() => handleDelete(acc.cid)}
+                          onClick={() => {
+                            setSelectedAccount(acc);
+                            setShowDeleteModal(true);
+                          }}
                           className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
                         >
                           <Trash2 size={16} />
                         </button>
+
                       </>
                     )}
                   </td>
@@ -275,6 +346,37 @@ const Companyadmin = () => {
           </div>
         )}
       </div>
+
+
+      {showDeleteModal && selectedAccount && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white rounded-lg p-6 shadow-lg w-80">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Are you sure you want to delete this account?
+            </h3>
+            <p className="text-sm text-gray-600 mt-2">
+              This action is permanent and cannot be undone.
+            </p>
+
+            <button
+              onClick={deleteEntireAccount}
+              className="w-full mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-semibold"
+            >
+              Yes, Delete Account
+            </button>
+
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              className="w-full mt-2 bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+
+      )}
+
+
     </div>
   );
 };
