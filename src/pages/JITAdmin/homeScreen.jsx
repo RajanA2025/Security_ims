@@ -28,12 +28,12 @@ const Admin = () => {
           company_name: item.company_name || "N/A",
           admin_name: item.admin_name || "N/A", // ✅ ADD THIS LINE
           mail_id: item.email || "N/A",
-          password: "********", // 🔐 password shouldn't come from backend
+          password: "Test@1234", // 🔐 password shouldn't come from backend
           features: {
             cost: !!item.cost,
             security: !!item.security,
             operational_excellence: !!item.operational_excellence,
-            performance: !!item.performance,
+            // performance: !!item.performance,
           },
           status: "active",
         }));
@@ -44,7 +44,13 @@ const Admin = () => {
     };
 
     fetchCompanies();
+    setTimeout((
+
+    ) => { fetchCompanies() }, 2000);
+
   }, [getAllCompanies]);
+
+
 
 
   // 🔍 Filtered Accounts
@@ -134,7 +140,7 @@ const Admin = () => {
 
           {/* Search Bar */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="relative flex-1 md:max-w-md">
+            <div className="relative w-full md:w-[250px]">
               <Search
                 size={18}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
@@ -232,8 +238,7 @@ const Admin = () => {
                         onChange={(e) =>
                           setEditData({ ...editData, mail_id: e.target.value })
                         }
-                        className="border rounded px-2 py-1 w-full"
-                      />
+                        className="border rounded px-2 py-1 w-full !text-green-800" />
                     ) : (
                       acc.mail_id
                     )}

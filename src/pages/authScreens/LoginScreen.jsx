@@ -5,7 +5,9 @@ import { useAuth } from "../../Context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export default function LoginScreen() {
-  const { loginCompany, loading } = useContext(CostContext);
+  const { loginCompany, } = useContext(CostContext);
+  const [loginLoading, setLoginLoading] = useState(false);
+
   const { login: setAuthLogin } = useAuth();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -22,86 +24,76 @@ export default function LoginScreen() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoginLoading(true);
 
-    // ✅ Hardcoded Admin Login
-    if (
-      formData.email === "admin@Jit.com" &&
-      formData.password === "Test@1234"
-    ) {
-      // Set auth state for admin login
-      setAuthLogin("admin-auth");
-      localStorage.setItem("company_cid", "admin");
-      
-      setToast({
-        type: "success",
-        message: "Welcome Admin!",
-        // subMessage: "Redirecting to Admin Companies...",
-      });
-      setTimeout(() => {
-        setToast(null);
-        navigate("/admin");
-      }, 2000);
-      return;
-    }
+    try {
+      // ✅ Hardcoded Admin Login
+      if (
+        formData.email === "admin@Jit.com" &&
+        formData.password === "Test@1234"
+      ) {
+        setAuthLogin("admin-auth");
+        localStorage.setItem("company_cid", "admin");
 
-    // ✅ Normal company login
-    const result = await loginCompany(formData);
+        setToast({ type: "success", message: "Welcome Admin!" });
+        setTimeout(() => {
+          setToast(null);
+          navigate("/admin");
+        }, 2000);
+        return;
+      }
 
-    if (result?.message === "Login successful" && result?.cid) {
-      // ensure auth context knows we're logged in (token stored by CostContext)
-      if (result.token) setAuthLogin(result.token);
-      else if (localStorage.getItem("auth_token")) setAuthLogin(localStorage.getItem("auth_token"));
-      // Store CID and active pillars in localStorage
-      localStorage.setItem("company_cid", result.cid);
+      // ✅ Normal company login
+      const result = await loginCompany(formData);
 
-      const pillars = {
-        cost: result.cost,
-        security: result.security,
-        operational_excellence: result.operational_excellence,
-        performance: result.performance,
-      };
-      localStorage.setItem("pillars", JSON.stringify(pillars));
+      if (result?.message === "Login successful" && result?.cid) {
+        if (result.token) setAuthLogin(result.token);
+        else if (localStorage.getItem("auth_token"))
+          setAuthLogin(localStorage.getItem("auth_token"));
 
-      // Toast with active pillars
-      const activePillars = Object.entries(pillars)
-        .filter(([_, value]) => value)
-        .map(([key]) =>
-          key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
-        );
+        localStorage.setItem("company_cid", result.cid);
 
-      const pillarsText =
-        activePillars.length > 0
-          ? `Enabled Pillars: ${activePillars.join(", ")}`
-          : "No active pillars found.";
+        const pillars = {
+          cost: result.cost,
+          security: result.security,
+          operational_excellence: result.operational_excellence,
+          performance: result.performance,
+        };
+        localStorage.setItem("pillars", JSON.stringify(pillars));
 
-      setToast({
-        type: "success",
-        message: `Welcome ${result.admin_name || "User"}!`,
-        // subMessage: pillarsText,
-      });
+        setToast({
+          type: "success",
+          message: `Welcome ${result.admin_name || "User"}!`,
+        });
 
-      setTimeout(() => {
-        setToast(null);
-        navigate("/Imsproduct");
-      }, 2500);
-    } else {
+        setTimeout(() => {
+          setToast(null);
+          navigate("/Imsproduct");
+        }, 2500);
+        return;
+      }
+
+      // ❌ On failed login
       setToast({
         type: "error",
         message: "Login failed!",
         subMessage: result?.error || "Please check your credentials.",
       });
       setTimeout(() => setToast(null), 3000);
+    } finally {
+      // ✅ Always stop the loading spinner
+      setLoginLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-white to-indigo-50 px-4 relative">
       {/* ✅ Toast */}
       {toast && (
         <div
-          className={`fixed top-5 right-5 px-5 py-3 rounded-lg shadow-lg text-white text-sm font-medium transition-all duration-500 ${
-            toast.type === "success" ? "bg-green-500" : "bg-red-500"
-          }`}
+          className={`fixed top-5 right-5 px-5 py-3 rounded-lg shadow-lg text-white text-sm font-medium transition-all duration-500 ${toast.type === "success" ? "bg-green-500" : "bg-red-500"
+            }`}
         >
           <p>{toast.message}</p>
           {toast.subMessage && (
@@ -170,14 +162,13 @@ export default function LoginScreen() {
 
           <button
             type="submit"
-            disabled={loading}
-            className={`w-full py-3 rounded-lg font-medium text-white transition-all duration-200 ${
-              loading
-                ? "bg-indigo-400 cursor-not-allowed"
-                : "bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg"
-            }`}
+            disabled={loginLoading}
+            className={`w-full py-3 rounded-lg font-medium text-white transition-all duration-200 ${loginLoading
+              ? "bg-indigo-400 cursor-not-allowed"
+              : "bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg"
+              }`}
           >
-            {loading ? "Logging in..." : "Login"}
+            {loginLoading ? "Logging in..." : "Login"}
           </button>
         </form>
       </div>

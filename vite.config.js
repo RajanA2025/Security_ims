@@ -12,6 +12,7 @@ module.exports = defineConfig({
   },
   server: {
     host: true, // Listen on all network interfaces
+    open: true, // Open the browser on server start
     port: 5173,
     strictPort: true,
     hmr: {

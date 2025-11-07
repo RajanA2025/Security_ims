@@ -91,7 +91,7 @@ localStorage.setItem("auth_token", true);
       setLoading(true);
       setError(null);
       const token = localStorage.getItem("auth_token");
-      const response = await fetch("http://13.212.15.14:8006/api/accounts/add", {
+      const response = await fetch("http://13.212.15.14:8016/api/account/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useContext, memo } from "react";
 import { useNavigate } from 'react-router-dom';
-
 import { Plus, Minus } from "lucide-react";
 import { CostContext } from "../../Context/CostContext";
 
+// ---------------- Input Field ----------------
 const InputField = memo(({ label, value, onChange, type = "text", placeholder, error, readOnly }) => (
   <div className="space-y-1.5">
     <label className="block text-sm font-medium text-gray-700">
@@ -15,91 +15,61 @@ const InputField = memo(({ label, value, onChange, type = "text", placeholder, e
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       readOnly={readOnly}
-      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${error ? "border-red-500" : "border-gray-300"
-        } ${readOnly ? "bg-gray-200 text-gray-500" : "bg-white"}`}
+      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${error ? "border-red-500" : "border-gray-300"} ${readOnly ? "bg-gray-200 text-gray-500" : "bg-white"}`}
     />
     {error && <p className="text-red-500 text-sm">{error}</p>}
   </div>
 ));
 
+// ---------------- Pillar Dropdown ----------------
 const PillarDropdown = memo(({ pillars, selected, onChange, error }) => {
-  // ✅ Combine operational_excellence & performance into one button
+  // Map backend/localStorage keys to dropdown keys
+  const mappedPillars = {
+    cost: pillars.cost,
+    security: pillars.security,
+    operational_performance: pillars.operational_excellence || pillars.performance, // merge both
+  };
+
   const available = [
     { key: "cost", label: "Cost" },
     { key: "security", label: "Security" },
     { key: "operational_performance", label: "Operational & Performance" },
-  ].filter((item) => {
-    if (item.key === "operational_performance") {
-      return pillars?.operational_excellence || pillars?.performance;
-    }
-    return pillars?.[item.key];
-  });
+  ].filter(item => mappedPillars[item.key]); // only show if true
 
   const toggle = useCallback(
     (pillarKey) => {
       let updated = [...selected];
-
-      if (pillarKey === "operational_performance") {
-        // ✅ Toggle both operational_excellence & performance together
-        const hasBoth =
-          selected.includes("operational_excellence") &&
-          selected.includes("performance");
-
-        updated = hasBoth
-          ? selected.filter(
-              (p) => p !== "operational_excellence" && p !== "performance"
-            )
-          : [...selected, "operational_excellence", "performance"];
-      } else {
-        updated = selected.includes(pillarKey)
-          ? selected.filter((p) => p !== pillarKey)
-          : [...selected, pillarKey];
-      }
-
+      updated = updated.includes(pillarKey)
+        ? updated.filter((p) => p !== pillarKey)
+        : [...selected, pillarKey];
       onChange(updated);
     },
     [selected, onChange]
   );
 
-  const isActive = (pillarKey) => {
-    if (pillarKey === "operational_performance") {
-      return (
-        selected.includes("operational_excellence") &&
-        selected.includes("performance")
-      );
-    }
-    return selected.includes(pillarKey);
-  };
+  const isActive = (pillarKey) => selected.includes(pillarKey);
 
   return (
     <div className="space-y-1.5">
       <label className="block text-sm font-medium text-gray-700">
-        Select Pillars (Multiple) <span className="text-red-500">*</span>
+        Select Pillars<span className="text-red-500">*</span>
       </label>
 
-      <div
-        className={`flex flex-wrap gap-2 p-2 border rounded-lg transition ${
-          error ? "border-red-500" : "border-gray-300"
-        }`}
-      >
-        {available.length === 0 ? (
-          <p className="text-gray-500 text-sm italic">No available pillars.</p>
-        ) : (
-          available.map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              onClick={() => toggle(item.key)}
-              className={`px-3 py-1 rounded-full text-sm border transition ${
-                isActive(item.key)
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+      <div className={`flex flex-wrap gap-2 p-2 border rounded-lg transition ${error ? "border-red-500" : "border-gray-300"}`}>
+        {available.length === 0 && <p className="text-gray-500 text-sm">No pillars available</p>}
+        {available.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => toggle(item.key)}
+            className={`px-3 py-1 rounded-full text-sm border transition ${isActive(item.key)
+              ? "bg-blue-600 text-white border-blue-600"
+              : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
               }`}
-            >
-              {item.label}
-            </button>
-          ))
-        )}
+          >
+            {item.label}
+          </button>
+        ))}
       </div>
 
       {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
@@ -107,14 +77,14 @@ const PillarDropdown = memo(({ pillars, selected, onChange, error }) => {
   );
 });
 
-
-
-
+// ---------------- Account Card ----------------
 const AccountCard = memo(({ index, acc, errors, updateAccount, removeAccount, canRemove }) => {
   const handleChange = useCallback(
     (field, value) => updateAccount(index, field, value),
     [index, updateAccount]
   );
+
+  const [isEditMode, setIsEditMode] = useState(() => !!localStorage.getItem("edit_account"));
 
   return (
     <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
@@ -132,11 +102,11 @@ const AccountCard = memo(({ index, acc, errors, updateAccount, removeAccount, ca
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <InputField label="Company CID" value={acc.cid} onChange={() => { }} readOnly />
         <InputField
           label="Account ID"
           value={acc.accountId}
           onChange={(v) => handleChange("accountId", v)}
+          readOnly={isEditMode}
           error={errors[`accountId_${index}`]}
           placeholder="Enter account ID"
         />
@@ -162,31 +132,43 @@ const AccountCard = memo(({ index, acc, errors, updateAccount, removeAccount, ca
           error={errors[`secretKey_${index}`]}
           placeholder="Enter secret key"
         />
-        <InputField
-          label="Bucket Name"
-          value={acc.bucketName}
-          onChange={(v) => handleChange("bucketName", v)}
-          placeholder="Enter bucket name"
-        />
-        <InputField
-          label="Prefix"
-          value={acc.prefix}
-          onChange={(v) => handleChange("prefix", v)}
-          placeholder="Enter prefix (e.g., data/)"
-        />
+
+        {/* ✅ Only show these if cost pillar is true */}
+        {acc.pillars?.cost && (
+          <>
+            <InputField
+              label="Bucket Name"
+              value={acc.bucketName}
+              onChange={(v) => handleChange("bucketName", v)}
+              placeholder="Enter bucket name"
+            />
+            <InputField
+              label="Prefix"
+              value={acc.prefix}
+              onChange={(v) => handleChange("prefix", v)}
+              placeholder="Enter prefix (e.g., data/)"
+            />
+          </>
+        )}
+
         <PillarDropdown
           pillars={acc.pillars}
           selected={acc.selectedPillars}
           onChange={(v) => handleChange("selectedPillars", v)}
-          error={errors[`pillars_${index}`]} // ✅ Pass error
+          error={errors[`pillars_${index}`]}
         />
       </div>
+
     </div>
   );
 });
 
+// ---------------- Main Screen ----------------
 export default function AccountsScreen() {
   const { addAccount } = useContext(CostContext);
+  const navigate = useNavigate();
+
+  const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({
     accounts: [
       {
@@ -202,24 +184,39 @@ export default function AccountsScreen() {
       },
     ],
   });
-
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState(null);
-  const navigate = useNavigate();
 
+  // ---------------- Load edit data ----------------
   useEffect(() => {
-    const storedCid = localStorage.getItem("company_cid");
+    const editData = JSON.parse(localStorage.getItem("edit_account"));
+    const storedCid = localStorage.getItem("company_cid") || "";
     const storedPillars = JSON.parse(localStorage.getItem("pillars")) || {};
-    if (storedCid) {
-      setFormData((prev) => ({
-        ...prev,
-        accounts: prev.accounts.map((acc, i) =>
-          i === 0 ? { ...acc, cid: storedCid, pillars: storedPillars } : acc
-        ),
-      }));
-    }
+
+    if (editData) setIsEditMode(true);
+
+    setFormData({
+      accounts: [
+        {
+          cid: storedCid,
+          accountId: editData?.account_id || "",
+          accountName: editData?.account_name || "",
+          accessKey: editData?.access_key || "",
+          secretKey: editData?.secret_key || "",
+          bucketName: editData?.bucket_name || "",
+          prefix: editData?.prefix || "",
+          pillars: storedPillars,
+          selectedPillars: [
+            ...(editData?.pillars?.cost ? ["cost"] : []),
+            ...(editData?.pillars?.security ? ["security"] : []),
+            ...(editData?.pillars?.perfops ? ["operational_performance"] : []),
+          ],
+        },
+      ],
+    });
   }, []);
 
+  // ---------------- Update account ----------------
   const updateAccount = useCallback((index, field, value) => {
     setFormData((prev) => {
       const updatedAccounts = [...prev.accounts];
@@ -228,15 +225,10 @@ export default function AccountsScreen() {
     });
   }, []);
 
+  // ---------------- Add / Remove account ----------------
   const handleAddAccount = useCallback(() => {
     const storedCid = localStorage.getItem("company_cid") || "";
-    const storedPillars = JSON.parse(localStorage.getItem("pillars")) || {
-      cost: false,
-      security: false,
-      operational_excellence: false,
-      performance: false,
-    };
-
+    const storedPillars = JSON.parse(localStorage.getItem("pillars")) || {};
     setFormData((prev) => ({
       ...prev,
       accounts: [
@@ -263,26 +255,21 @@ export default function AccountsScreen() {
     }));
   }, []);
 
+  // ---------------- Validation ----------------
   const validateForm = useCallback(() => {
     const newErrors = {};
-
     formData.accounts.forEach((acc, i) => {
       if (!acc.accountId.trim()) newErrors[`accountId_${i}`] = "Account ID required";
       if (!acc.accountName.trim()) newErrors[`accountName_${i}`] = "Account name required";
       if (!acc.accessKey.trim()) newErrors[`accessKey_${i}`] = "Access key required";
       if (!acc.secretKey.trim()) newErrors[`secretKey_${i}`] = "Secret key required";
-
-      // ✅ Require at least one pillar to be selected
-      if (!acc.selectedPillars || acc.selectedPillars.length === 0) {
-        newErrors[`pillars_${i}`] = "Select at least one pillar";
-      }
+      if (!acc.selectedPillars || acc.selectedPillars.length === 0) newErrors[`pillars_${i}`] = "Select at least one pillar";
     });
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [formData]);
 
-
+  // ---------------- Submit ----------------
   const handleSubmit = useCallback(async () => {
     if (!validateForm()) {
       setToast({ type: "error", message: "Please fill all required fields." });
@@ -290,61 +277,57 @@ export default function AccountsScreen() {
       return;
     }
 
+    const acc = formData.accounts[0];
+    const editData = JSON.parse(localStorage.getItem("edit_account"));
+
+    const payload = {
+      cid: Number(acc.cid),
+      account_id: acc.accountId,
+      account_name: acc.accountName,
+      access_key: acc.accessKey,
+      secret_key: acc.secretKey,
+      bucket_name: acc.bucketName,
+      prefix: acc.prefix,
+      cost: acc.selectedPillars.includes("cost"),
+      security: acc.selectedPillars.includes("security"),
+      perfops: acc.selectedPillars.includes("operational_performance"),
+    };
+
     try {
-      const payload = {
-        accounts: formData.accounts.map((acc) => {
-          const selectedPillarsObj = {};
-          acc.selectedPillars.forEach((pillar) => {
-            selectedPillarsObj[pillar] = true;
-          });
-
-          return {
-            cid: acc.cid || 0,
-            account_id: acc.accountId,
-            account_name: acc.accountName,
-            access_key: acc.accessKey,
-            secret_key: acc.secretKey,
-            bucket_name: acc.bucketName,
-            prefix: acc.prefix,
-            pillars: selectedPillarsObj,
-          };
-        }),
-      };
-
-      console.log("📦 Sending Payload:", payload);
-      const result = await addAccount(payload);
-
-      if (result?.message === "Accounts added successfully (no duplicates inserted)") {
-        // ✅ Store account IDs in localStorage
-        const accountIds = formData.accounts.map((acc) => acc.accountId);
-        localStorage.setItem("account_ids", JSON.stringify(accountIds));
-
-        setToast({ type: "success", message: result.message });
-        setTimeout(() => setToast(null), 3000);
-
-        // ✅ Navigate after storing
-        navigate("/imsproduct");
+      let response;
+      if (editData) {
+        response = await fetch(`http://13.212.15.14:8016/api/account/update`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
       } else {
-        setToast({ type: "error", message: "Failed to add accounts." });
-        setTimeout(() => setToast(null), 3000);
+        response = await fetch("http://13.212.15.14:8016/api/account/add", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
       }
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Request failed");
+
+      localStorage.removeItem("edit_account");
+      setToast({ type: "success", message: editData ? "Account Updated" : "Account Created" });
+      setTimeout(() => setToast(null), 3000);
+      navigate("/imsproduct/accountsmanage");
     } catch (err) {
       console.error("Submit Error:", err);
-      setToast({ type: "error", message: "Something went wrong. Try again." });
+      setToast({ type: "error", message: err.message || "Something went wrong" });
       setTimeout(() => setToast(null), 3000);
     }
-  }, [formData, validateForm, addAccount, navigate]);
+  }, [formData, validateForm, navigate]);
 
-
-
+  // ---------------- Render ----------------
   return (
     <div className="min-h-screen bg-gradient-to-br flex items-center justify-center p-6">
-      {/* ✅ Toast */}
       {toast && (
-        <div
-          className={`fixed top-5 right-5 px-5 py-3 rounded-lg shadow-lg text-white text-sm font-medium transition-all duration-500 ${toast.type === "success" ? "bg-green-500" : "bg-red-500"
-            }`}
-        >
+        <div className={`fixed top-5 right-5 px-5 py-3 rounded-lg shadow-lg text-white text-sm font-medium transition-all duration-500 ${toast.type === "success" ? "bg-green-500" : "bg-red-500"}`}>
           {toast.message}
         </div>
       )}
@@ -356,15 +339,16 @@ export default function AccountsScreen() {
         </div>
 
         <div className="space-y-5">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-800">Accounts</h2>
-            <button
-              onClick={handleAddAccount}
-              className="flex items-center space-x-2 bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 text-sm"
-            >
-              <Plus size={14} />
-              <span>Add Account</span>
-            </button>
+          <div className="flex justify-end items-center">
+            {!isEditMode && (
+              <button
+                onClick={handleAddAccount}
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-5 rounded-lg shadow-md transition-all duration-200"
+              >
+                <Plus size={18} />
+                Add Account
+              </button>
+            )}
           </div>
 
           {formData.accounts.map((acc, index) => (
@@ -381,11 +365,8 @@ export default function AccountsScreen() {
 
           <div className="flex justify-center mt-6">
             <button
-              onClick={() => {
-                handleSubmit();         
-                navigate('/imsproduct/accounts');  }}
+              onClick={handleSubmit}
               className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 shadow-lg hover:shadow-xl"
-              navigation
             >
               Submit
             </button>

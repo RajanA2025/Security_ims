@@ -205,8 +205,11 @@ const CompanyForm = () => {
             {["companyName", "name", "mailId", "password"].map((field) => (
               <div key={field}>
                 <label className="block text-sm font-semibold text-gray-700 mb-1 capitalize">
-                  {field.replace(/([A-Z])/g, " $1")}
+                  {field === "password"
+                    ? (isEdit ? "Change Password" : "Password")
+                    : field.replace(/([A-Z])/g, " $1")}
                 </label>
+
                 <div className="relative">
                   {field === "companyName" && (
                     <Building2
@@ -248,8 +251,10 @@ const CompanyForm = () => {
                     placeholder={`Enter ${field
                       .replace(/([A-Z])/g, " $1")
                       .toLowerCase()}`}
-                    className={`w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${errors[field] ? "border-red-500" : "border-gray-300"
-                      }`}
+                    className={`w-full pl-10 pr-10 py-2 border rounded-lg transition 
+  ${errors[field] ? "border-red-500" : "border-gray-300"}
+  ${isEdit && field === "mailId" ? "bg-gray-200 text-gray-600 cursor-not-allowed" : "focus:ring-2 focus:ring-blue-500 focus:border-blue-500"}
+`}
                     disabled={isEdit && field === "mailId"} // lock email when editing
                   />
 
