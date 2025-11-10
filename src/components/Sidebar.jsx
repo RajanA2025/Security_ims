@@ -40,7 +40,7 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
 
   // ✅ Path detection
   const isSecurity = location.pathname.toLowerCase().startsWith("/security");
-  const isOperational = location.pathname.toLowerCase().startsWith("/operational");
+  const isOperational = location.pathname.toLowerCase().startsWith("/perfops");
   const isAdmin = location.pathname.toLowerCase().startsWith("/admin");
   const isProduct = location.pathname.toLowerCase().startsWith("/imsproduct");
 
@@ -64,20 +64,20 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
   ];
 
   const navItems1 = [
-    { icon: <MdDashboard size={30} />, label: "Dashboard", path: "/operational" },
+    { icon: <MdDashboard size={30} />, label: "Dashboard", path: "/perfops" },
     {
       icon: <MdBusiness size={30} />,
       label: "Business",
       badge: true,
       subMenu: [
-        { icon: <MdBusiness size={24} />, label: "Snapshot", path: "/operational/snapshot" },
-        { label: "AMI", path: "/operational/ami" }
+        { icon: <MdBusiness size={24} />, label: "Snapshot", path: "/perfops/snapshot" },
+        { label: "AMI", path: "/perfops/ami" }
       ]
     },
-    { icon: <MdAccessibility size={30} />, label: "Observability", path: "/operational/observability" },
-    { icon: <MdCloudySnowing size={30} />, label: "Cloud Watch", path: "/operational/cloudwatch" },
-    { icon: <MdMonitor size={30} />, label: "Monitoring", path: "/operational/monitoring" },
-    { icon: <MdRampRight size={30} />, label: "RightSizing", path: "/operational/rightsizing" }
+    { icon: <MdAccessibility size={30} />, label: "Observability", path: "/perfops/observability" },
+    { icon: <MdCloudySnowing size={30} />, label: "Cloud Watch", path: "/perfops/cloudwatch" },
+    { icon: <MdMonitor size={30} />, label: "Monitoring", path: "/perfops/monitoring" },
+    { icon: <MdRampRight size={30} />, label: "RightSizing", path: "/perfops/rightsizing" }
   ];
 
   const navItems2 = [

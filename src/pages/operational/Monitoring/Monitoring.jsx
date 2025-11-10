@@ -47,7 +47,7 @@ const Monitoring = () => {
   // Format usage values to ensure they're properly formatted with 2 decimal places
   const formatUsageValue = (value) => {
     if (value === null || value === undefined) return '0.00%';
-    
+
     // If it's already a string with % sign, ensure it has 2 decimal places
     if (typeof value === 'string' && value.endsWith('%')) {
       const num = parseFloat(value);
@@ -56,13 +56,13 @@ const Monitoring = () => {
       }
       return value;
     }
-    
+
     // If it's a number, format with 2 decimal places and add %
     const num = parseFloat(value);
     if (!isNaN(num)) {
       return `${num.toFixed(2)}%`;
     }
-    
+
     return '0.00%';
   };
 
@@ -71,10 +71,10 @@ const Monitoring = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      const apiUrl = 'http://13.212.15.14:8008/performance';
+
+      const apiUrl = 'http://13.212.15.14:8005/performance';
       console.log('Fetching data from:', apiUrl);
-      
+
       const response = await axios({
         method: 'get',
         url: apiUrl,
@@ -84,13 +84,13 @@ const Monitoring = () => {
         },
         timeout: 10000 // 10 seconds timeout
       });
-      
+
       console.log('API Response:', response);
-      
+
       // The API returns { data: [...] }, so we need to access response.data.data
       const responseData = response.data?.data || response.data || [];
       console.log('Received data:', responseData);
-      
+
       if (!Array.isArray(responseData) || responseData.length === 0) {
         setError({
           title: 'No Data Available',
@@ -101,7 +101,7 @@ const Monitoring = () => {
         setFilteredData([]);
         return;
       }
-      
+
       // Transform the API response to match our expected format
       const formattedData = responseData.map((item, index) => ({
         key: item.id || `item-${index}`, // Ant Design requires 'key' for table rows
@@ -121,37 +121,35 @@ const Monitoring = () => {
         weeklySizingRecommendation: item.weekly_sizing_recommendation || item.weeklySizingRecommendation,
         monthlySizingRecommendation: item.monthly_sizing_recommendation || item.monthlySizingRecommendation
       }));
-      
-      // Extract unique values for filters
-      const regions = [...new Set(formattedData
-        .map(item => item.region)
-        .filter(region => region && region !== 'N/A')
-      )].sort();
-      
-      const accountIds = [...new Set(formattedData
-        .map(item => item.accountId)
-        .filter(accountId => accountId && accountId !== '')
-      )].sort();
 
-      const accountNames = [...new Set(formattedData
-        .map(item => item.accountName)
-        .filter(accountName => accountName && accountName !== 'N/A')
-      )].sort();
-      
+      // Extract unique values for filters
+      // After: const formattedData = responseData.map(...);
+
+      const regions = [...new Set(formattedData.map(item => item.region))].sort();
+      const accountIds = [...new Set(formattedData.map(item => item.accountId))].sort();
+      const accountNames = [...new Set(formattedData.map(item => item.accountName))].sort();
+
       setUniqueRegions(regions);
       setUniqueAccountIds(accountIds);
       setUniqueAccountNames(accountNames);
-      
-      console.log('Formatted data:', formattedData);
-      setPerformanceData(formattedData);
-      setFilteredData(formattedData);
-      
+
+      // ✅ Apply localStorage filter here
+      const storedIds = JSON.parse(localStorage.getItem("account_ids")) || [];
+
+      const filteredByLocalAccounts = storedIds.length > 0
+        ? formattedData.filter(item => storedIds.includes(item.accountId))
+        : formattedData;
+
+      setPerformanceData(filteredByLocalAccounts);
+      setFilteredData(filteredByLocalAccounts);
+
+
     } catch (err) {
       console.error('Error fetching performance data:', err);
-      
+
       let errorMessage = err.message;
       let errorType = 'error';
-      
+
       if (err.code === 'ECONNABORTED') {
         errorMessage = 'Request timeout: The server took too long to respond.';
       } else if (err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
@@ -162,14 +160,14 @@ const Monitoring = () => {
         // Server responded with an error status
         errorMessage = `Server Error (${err.response.status}): ${err.response.data?.message || err.response.statusText}`;
       }
-      
+
       setError({
         title: 'Failed to Load Data',
         message: errorMessage,
         type: errorType,
         showRetry: true
       });
-      
+
       // Mock data for testing when API fails
       const mockData = [
         {
@@ -217,13 +215,13 @@ const Monitoring = () => {
           diskUsage: '91.00%'
         }
       ];
-      
+
       setPerformanceData(mockData);
       setFilteredData(mockData);
       setUniqueRegions(['us-east-1', 'us-west-2', 'eu-west-1', 'ap-south-1']);
       setUniqueAccountIds(['ACC-001', 'ACC-002', 'ACC-003']);
       setUniqueAccountNames(['Production Account', 'Development Account', 'Staging Account']);
-      
+
     } finally {
       setLoading(false);
     }
@@ -237,25 +235,25 @@ const Monitoring = () => {
   // Apply filters
   useEffect(() => {
     let result = [...performanceData];
-    
+
     if (filters.accountId) {
-      result = result.filter(item => 
+      result = result.filter(item =>
         item.accountId.toLowerCase().includes(filters.accountId.toLowerCase())
       );
     }
 
     if (filters.accountName) {
-      result = result.filter(item => 
+      result = result.filter(item =>
         item.accountName.toLowerCase().includes(filters.accountName.toLowerCase())
       );
     }
-    
+
     if (filters.region) {
-      result = result.filter(item => 
+      result = result.filter(item =>
         item.region.toLowerCase().includes(filters.region.toLowerCase())
       );
     }
-    
+
     setFilteredData(result);
   }, [filters, performanceData]);
 
@@ -290,102 +288,102 @@ const Monitoring = () => {
     return 'success';
   };
 
-// Table columns configuration with filtering only
-const columns = [
-  {
-    title: 'SI. No',
-    dataIndex: 'slNo',
-    key: 'slNo',
-    width: 80,
-    fixed: 'left',
-    render: (_, __, index) => index + 1,
-  },
-  {
-    title: 'Account ID',
-    dataIndex: 'accountId',
-    key: 'accountId',
-    width: 120,
-    fixed: 'left',
-    render: (text) => <Text strong>{text}</Text>,
-    filters: uniqueAccountIds.map((accountId) => ({
-      text: accountId,
-      value: accountId,
-    })),
-    onFilter: (value, record) => record.accountId === value,
-    filterSearch: true,
-  },
-  {
-    title: 'Account Name',
-    dataIndex: 'accountName',
-    key: 'accountName',
-    width: 150,
-    ellipsis: true,
-    filters: uniqueAccountNames.map((accountName) => ({
-      text: accountName,
-      value: accountName,
-    })),
-    onFilter: (value, record) => record.accountName === value,
-    filterSearch: true,
-  },
-  {
-    title: 'Region',
-    dataIndex: 'region',
-    key: 'region',
-    width: 120,
-    render: (text) => (
-      <Tag color="blue" style={{ fontSize: '12px' }}>
-        {text}
-      </Tag>
-    ),
-    filters: uniqueRegions.map((region) => ({
-      text: region,
-      value: region,
-    })),
-    onFilter: (value, record) => record.region === value,
-    filterSearch: true,
-  },
-  {
-    title: 'Instance ID',
-    dataIndex: 'instanceId',
-    key: 'instanceId',
-    width: 180,
-    ellipsis: true,
-    render: (text) => <Text code>{text}</Text>,
-  },
-  {
-    title: 'CPU Usage',
-    dataIndex: 'cpuUsage',
-    key: 'cpuUsage',
-    width: 120,
-    render: (text) => (
-      <Tag color={getUsageColor(text)} style={{ minWidth: '60px', textAlign: 'center' }}>
-        {text}
-      </Tag>
-    ),
-  }
-  // {
-  //   title: 'Memory Usage',
-  //   dataIndex: 'memoryUsage',
-  //   key: 'memoryUsage',
-  //   width: 120,
-  //   render: (text) => (
-  //     <Tag color={getUsageColor(text)} style={{ minWidth: '60px', textAlign: 'center' }}>
-  //       {text}
-  //     </Tag>
-  //   ),
-  // },
-  // {
-  //   title: 'Disk Usage',
-  //   dataIndex: 'diskUsage',
-  //   key: 'diskUsage',
-  //   width: 120,
-  //   render: (text) => (
-  //     <Tag color={getUsageColor(text)} style={{ minWidth: '60px', textAlign: 'center' }}>
-  //       {text}
-  //     </Tag>
-  //   ),
-  // },
-];
+  // Table columns configuration with filtering only
+  const columns = [
+    {
+      title: 'SI. No',
+      dataIndex: 'slNo',
+      key: 'slNo',
+      width: 80,
+      fixed: 'left',
+      render: (_, __, index) => index + 1,
+    },
+    {
+      title: 'Account ID',
+      dataIndex: 'accountId',
+      key: 'accountId',
+      width: 120,
+      fixed: 'left',
+      render: (text) => <Text strong>{text}</Text>,
+      filters: uniqueAccountIds.map((accountId) => ({
+        text: accountId,
+        value: accountId,
+      })),
+      onFilter: (value, record) => record.accountId === value,
+      filterSearch: true,
+    },
+    {
+      title: 'Account Name',
+      dataIndex: 'accountName',
+      key: 'accountName',
+      width: 150,
+      ellipsis: true,
+      filters: uniqueAccountNames.map((accountName) => ({
+        text: accountName,
+        value: accountName,
+      })),
+      onFilter: (value, record) => record.accountName === value,
+      filterSearch: true,
+    },
+    {
+      title: 'Region',
+      dataIndex: 'region',
+      key: 'region',
+      width: 120,
+      render: (text) => (
+        <Tag color="blue" style={{ fontSize: '12px' }}>
+          {text}
+        </Tag>
+      ),
+      filters: uniqueRegions.map((region) => ({
+        text: region,
+        value: region,
+      })),
+      onFilter: (value, record) => record.region === value,
+      filterSearch: true,
+    },
+    {
+      title: 'Instance ID',
+      dataIndex: 'instanceId',
+      key: 'instanceId',
+      width: 180,
+      ellipsis: true,
+      render: (text) => <Text code>{text}</Text>,
+    },
+    {
+      title: 'CPU Usage',
+      dataIndex: 'cpuUsage',
+      key: 'cpuUsage',
+      width: 120,
+      render: (text) => (
+        <Tag color={getUsageColor(text)} style={{ minWidth: '60px', textAlign: 'center' }}>
+          {text}
+        </Tag>
+      ),
+    }
+    // {
+    //   title: 'Memory Usage',
+    //   dataIndex: 'memoryUsage',
+    //   key: 'memoryUsage',
+    //   width: 120,
+    //   render: (text) => (
+    //     <Tag color={getUsageColor(text)} style={{ minWidth: '60px', textAlign: 'center' }}>
+    //       {text}
+    //     </Tag>
+    //   ),
+    // },
+    // {
+    //   title: 'Disk Usage',
+    //   dataIndex: 'diskUsage',
+    //   key: 'diskUsage',
+    //   width: 120,
+    //   render: (text) => (
+    //     <Tag color={getUsageColor(text)} style={{ minWidth: '60px', textAlign: 'center' }}>
+    //       {text}
+    //     </Tag>
+    //   ),
+    // },
+  ];
 
   // Loading state
   if (loading) {
@@ -432,9 +430,9 @@ const columns = [
     <div style={{ padding: '0 0 24px 0' }}>
       <div style={{ maxWidth: '100%', margin: 0, padding: '0 0' }}>
         {/* Header with Filters */}
-        <Row gutter={[16, 8]} style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 16}}>
+        <Row gutter={[16, 8]} style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <Col xs={24} md={12}>
-            <Typography.Title 
+            <Typography.Title
               level={4}
               style={{
                 fontFamily: "'Roboto', 'Segoe UI', sans-serif",
@@ -449,7 +447,7 @@ const columns = [
           </Col>
           <Col xs={24} md={12}>
             <Row gutter={[8, 8]} justify="end">
-             
+
               <Col xs={8} sm={6}>
                 <Select
                   showSearch
@@ -506,14 +504,14 @@ const columns = [
               />
             </Card>
           </Col>
-          
+
           <Col xs={24} sm={12} lg={6}>
             <Card>
               <Statistic
                 title="Healthy Instances"
-                value={filteredData.filter(d => 
-                  parseFloat(d.cpuUsage) < 60 && 
-                  parseFloat(d.memoryUsage) < 60 && 
+                value={filteredData.filter(d =>
+                  parseFloat(d.cpuUsage) < 60 &&
+                  parseFloat(d.memoryUsage) < 60 &&
                   parseFloat(d.diskUsage) < 60
                 ).length}
                 prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
@@ -521,12 +519,12 @@ const columns = [
               />
             </Card>
           </Col>
-          
+
           <Col xs={24} sm={12} lg={6}>
             <Card>
               <Statistic
                 title="Warning"
-                value={filteredData.filter(d => 
+                value={filteredData.filter(d =>
                   (parseFloat(d.cpuUsage) >= 50 && parseFloat(d.cpuUsage) < 80) ||
                   (parseFloat(d.memoryUsage) >= 50 && parseFloat(d.memoryUsage) < 80) ||
                   (parseFloat(d.diskUsage) >= 50 && parseFloat(d.diskUsage) < 80)
@@ -536,12 +534,12 @@ const columns = [
               />
             </Card>
           </Col>
-          
+
           <Col xs={24} sm={12} lg={6}>
             <Card>
               <Statistic
                 title="Critical"
-                value={filteredData.filter(d => 
+                value={filteredData.filter(d =>
                   parseFloat(d.cpuUsage) >= 80 ||
                   parseFloat(d.memoryUsage) >= 80 ||
                   parseFloat(d.diskUsage) >= 80

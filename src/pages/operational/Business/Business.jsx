@@ -35,7 +35,16 @@ const Business = () => {
       setLoading(true);
       try {
         const response = await axios.get(API_URL);
-        setData(response.data);
+
+        // Get stored Account IDs from localStorage
+        const storedIds = JSON.parse(localStorage.getItem("account_ids")) || [];
+
+        // If "ALL" is included → show everything
+        const filtered = storedIds.includes("ALL")
+          ? response.data
+          : response.data.filter(item => storedIds.includes(item.account_id));
+
+        setData(filtered);
       } catch (error) {
         console.error("Error fetching CloudTrail data:", error);
       } finally {
@@ -44,6 +53,7 @@ const Business = () => {
     };
     fetchData();
   }, []);
+
 
   // Extract username safely
   const getRecordUsername = (record) => {
@@ -91,7 +101,7 @@ const Business = () => {
       ),
       dataIndex: "account_id",
       key: "account_id",
-    //   width: 100, 
+      //   width: 100, 
       filters: accountIds.map(id => ({ text: id, value: id })),
       onFilter: (value, record) => record.account_id === value
     },
@@ -105,7 +115,7 @@ const Business = () => {
         </span>
       ),
       key: "account_name",
-    //   width: 100,
+      //   width: 100,
       render: (_, record) => getRecordUsername(record)
     },
     {
@@ -124,44 +134,44 @@ const Business = () => {
       onFilter: (value, record) => record.snapshot_name === value
     },
     {
-        title: "SnapShot Age",
-        dataIndex: "snapshot_age_days",
-        key: "snapshot_age_days",
-        width: 100,
-        render: (value) => {
-          if (value == null) {
-            return '-'; // 
-          }
-          let color = "#52c41a";
-          let blink = false;
-  
-          if (value > 90) {
-            color = "#ff4d4f";
-            blink = true;
-          } else if (value > 60) {
-            color = "#fa8c16";
-          } else if (value > 30) {
-            color = "#faad14";
-          }
-  
-          return (
-            <span
-              style={{
-                color,
-                fontWeight: "bold",
-                animation: blink ? "blink 1s infinite" : "none"
-              }}
-            >
-              {value} days
-            </span>
-          );
+      title: "SnapShot Age",
+      dataIndex: "snapshot_age_days",
+      key: "snapshot_age_days",
+      width: 100,
+      render: (value) => {
+        if (value == null) {
+          return '-'; // 
         }
-      },
+        let color = "#52c41a";
+        let blink = false;
+
+        if (value > 90) {
+          color = "#ff4d4f";
+          blink = true;
+        } else if (value > 60) {
+          color = "#fa8c16";
+        } else if (value > 30) {
+          color = "#faad14";
+        }
+
+        return (
+          <span
+            style={{
+              color,
+              fontWeight: "bold",
+              animation: blink ? "blink 1s infinite" : "none"
+            }}
+          >
+            {value} days
+          </span>
+        );
+      }
+    },
     {
       title: "Orphaned Volume",
       dataIndex: "orphaned_volume_or_attached",
       key: "orphaned_volume_or_attached",
-    //   width: 100,
+      //   width: 100,
       render: (value) => {
         // Support both boolean and string statuses
         // if (typeof value === "boolean") {
@@ -235,32 +245,32 @@ const Business = () => {
 
   return (
     <>
-     
+
 
       {/* Search input */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 5}}>
-      <Col md={20}>
-      <Typography.Title 
-  level={4}
-  style={{
-    fontFamily: "'Roboto', 'Segoe UI', sans-serif",
-    fontSize: "20px",
-    fontWeight: 500,
-    color: "black",
-    margin: 0
-  }}
->
-SnapShots
-</Typography.Title>
-  </Col>
-  <Col md={4}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 5 }}>
+        <Col md={20}>
+          <Typography.Title
+            level={4}
+            style={{
+              fontFamily: "'Roboto', 'Segoe UI', sans-serif",
+              fontSize: "20px",
+              fontWeight: 500,
+              color: "black",
+              margin: 0
+            }}
+          >
+            SnapShots
+          </Typography.Title>
+        </Col>
+        <Col md={4}>
           <Input
             placeholder="Search by Account Name"
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={handleSearch}
             allowClear
-            // style={{ width: 220 }}
+          // style={{ width: 220 }}
           />
         </Col>
       </Row>

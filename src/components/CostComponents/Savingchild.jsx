@@ -76,7 +76,22 @@ const SavingsChild = () => {
   const [rightsizingFilter, setRightsizingFilter] = useState("underutilized_ec2");
 
   const [filter, setFilter] = useState("All");
+  const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
 
+  const filterByAccounts = (data) => {
+  if (!storedAccountIds.length) return data;
+  return data.filter(item => storedAccountIds.includes(item.account_id));
+};
+
+const fetchKeyPairs = async () => {
+  setLoading(true);
+  try {
+    const res = await axios.get(`${API_BASE_URL}/keypairs2`);
+    setSecurityData(filterByAccounts(res.data));
+  } finally {
+    setLoading(false);
+  }
+};
   useEffect(() => {
     const fetchData = async () => {
       try {

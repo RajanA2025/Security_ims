@@ -47,7 +47,7 @@ const operatorMap = {
 
 const headerStyle = { backgroundColor: "#4f46e5", color: "white" };
 
-const API_URL = "http://13.212.15.14:8016/cloudwatch";
+const API_URL = "http://13.212.15.14:8012/cloudwatch";
 
 const Business = () => {
     const [data, setData] = useState([]);
@@ -62,7 +62,15 @@ const Business = () => {
             setLoading(true);
             try {
                 const { data } = await axios.get(API_URL);
-                setData(data);
+
+                const storedIds = JSON.parse(localStorage.getItem("account_ids") || "[]");
+
+                const filtered = storedIds.length > 0
+                    ? data.filter(item => storedIds.includes(item.account_id))
+                    : data;
+
+                setData(filtered);
+
             } catch (error) {
                 console.error("Error fetching CloudWatch data:", error);
             } finally {
@@ -71,6 +79,7 @@ const Business = () => {
         };
         fetchData();
     }, []);
+
 
     // 🔹 Extract username safely
     const getRecordUsername = (record) =>

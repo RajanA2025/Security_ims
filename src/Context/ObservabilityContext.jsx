@@ -4,7 +4,7 @@ import axios from "axios";
 const ObservabilityContext = createContext();
 
 export const ObservabilityProvider = ({ children }) => {
-  const API_BASE_URL = "http://13.212.15.14:8016";
+  const API_BASE_URL = "http://13.212.15.14:8012";
 
   const [loading, setLoading] = useState(false);
   const [securityData, setSecurityData] = useState([]);
@@ -13,12 +13,23 @@ export const ObservabilityProvider = ({ children }) => {
   const [s3Data, setS3Data] = useState([]);
   const [ec2Data, setEc2Data] = useState([]);
 
+  // ✅ Get stored account IDs from localStorage
+  const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
+
+  // ✅ Filter helper
+  const filterByAccounts = (data) => {
+    if (!storedAccountIds.length) return data;
+    return data.filter((item) =>
+      storedAccountIds.includes(item.account_id) // Adjust key if needed
+    );
+  };
+
   // fetch functions
   const fetchKeyPairs = async () => {
     setLoading(true);
     try {
       const res = await axios.get(`${API_BASE_URL}/keypairs2`);
-      setSecurityData(res.data);
+      setSecurityData(filterByAccounts(res.data));
     } finally {
       setLoading(false);
     }
@@ -28,7 +39,7 @@ export const ObservabilityProvider = ({ children }) => {
     setLoading(true);
     try {
       const res = await axios.get(`${API_BASE_URL}/orphaned-eip`);
-      setEipData(res.data);
+      setEipData(filterByAccounts(res.data));
     } finally {
       setLoading(false);
     }
@@ -38,7 +49,7 @@ export const ObservabilityProvider = ({ children }) => {
     setLoading(true);
     try {
       const res = await axios.get(`${API_BASE_URL}/orphaned-volumes`);
-      setVolumeData(res.data);
+      setVolumeData(filterByAccounts(res.data));
     } finally {
       setLoading(false);
     }
@@ -48,7 +59,7 @@ export const ObservabilityProvider = ({ children }) => {
     setLoading(true);
     try {
       const res = await axios.get(`${API_BASE_URL}/s3`);
-      setS3Data(res.data);
+      setS3Data(filterByAccounts(res.data));
     } finally {
       setLoading(false);
     }
@@ -58,13 +69,13 @@ export const ObservabilityProvider = ({ children }) => {
     setLoading(true);
     try {
       const res = await axios.get(`${API_BASE_URL}/ec2`);
-      setEc2Data(res.data);
+      setEc2Data(filterByAccounts(res.data));
     } finally {
       setLoading(false);
     }
   };
 
-  // Optionally: fetch everything once on mount
+  // fetch everything once on mount
   useEffect(() => {
     fetchKeyPairs();
     fetchEIP();

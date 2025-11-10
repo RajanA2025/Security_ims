@@ -60,7 +60,7 @@ const Observability = () => {
     ec2Data,
   } = useObservability();
   // API base URL
-  const API_BASE_URL = "http://13.212.15.14:8016";
+  const API_BASE_URL = "http://13.212.15.14:8012";
   
   // Fetch data
   // useEffect(() => {
