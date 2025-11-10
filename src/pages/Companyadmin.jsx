@@ -180,10 +180,10 @@ const Companyadmin = () => {
       {/* ---------- Header ---------- */}
 
       {/* ---------- Headers ---------- */}
-      <div className="px-0 py-4 mb-6">
+      <div className="px-0 py-4 mb-1">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">
+            <h1 className="text-2xl font-bold text-gray-800 mb-3">
               Account Management
             </h1>
           </div>

@@ -130,7 +130,7 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-0">
       {/* Header */}
-      <div className="px-0 py-4 mb-6">
+      <div className="px-0 py-4 mb-2">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 ">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
