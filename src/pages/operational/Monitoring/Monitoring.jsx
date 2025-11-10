@@ -430,7 +430,7 @@ const Monitoring = () => {
     <div style={{ padding: '0 0 24px 0' }}>
       <div style={{ maxWidth: '100%', margin: 0, padding: '0 0' }}>
         {/* Header with Filters */}
-        <Row gutter={[16, 8]} style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <Row gutter={[16, 8]} style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 16, marginTop:10 }}>
           <Col xs={24} md={12}>
             <Typography.Title
               level={4}

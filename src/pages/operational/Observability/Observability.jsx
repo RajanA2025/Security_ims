@@ -513,7 +513,7 @@ const Observability = () => {
 
   return (
     <>
-      <Row gutter={[16, 8]} style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 16}} >
+      <Row gutter={[16, 8]} style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 16,marginTop:10 }} >
       <Col xs={24} md={12} >
             <Typography.Title 
               level={4}
