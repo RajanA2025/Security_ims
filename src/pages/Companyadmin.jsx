@@ -35,14 +35,9 @@ const Companyadmin = () => {
 
         if (!response.ok) throw new Error(result.message || "Failed to fetch accounts");
 
-        // ✅ Dynamically merge all pillar accounts
         const pillarKeys = Object.keys(result).filter((key) => key.endsWith("accounts"));
-
-
         const allAccounts = pillarKeys.flatMap((pillarKey) => {
-          const accounts = result[pillarKey] || [];
-
-          return accounts.map((item) => ({
+          return (result[pillarKey] || []).map((item) => ({
             cid: item.cid,
             account_id: item.account_id,
             account_name: item.account_name,
@@ -59,9 +54,10 @@ const Companyadmin = () => {
           }));
         });
 
+        // ✅ Filter by company cid here
+        const filteredByCid = allAccounts.filter(acc => String(acc.cid) === String(cid));
+        setAccounts(filteredByCid);
 
-
-        setAccounts(allAccounts);
       } catch (err) {
         console.error("Fetch Accounts Error:", err);
         setError(err.message);
@@ -72,6 +68,7 @@ const Companyadmin = () => {
 
     fetchAccounts();
   }, []);
+
 
 
   // ---------- Derived Stats ----------
@@ -230,7 +227,6 @@ const Companyadmin = () => {
             <thead className="bg-gray-50">
               <tr>
                 {[
-                  // "CID",
                   "Account ID",
                   "Account Name",
                   "Access Key",
@@ -250,6 +246,7 @@ const Companyadmin = () => {
                 ))}
               </tr>
             </thead>
+
             <tbody className="divide-y divide-gray-200">
               {filteredAccounts.map((acc) => (
                 <tr key={acc.cid} className="hover:bg-gray-50">
