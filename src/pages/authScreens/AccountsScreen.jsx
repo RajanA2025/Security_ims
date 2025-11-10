@@ -270,58 +270,107 @@ export default function AccountsScreen() {
   }, [formData]);
 
   // ---------------- Submit ----------------
+  // const handleSubmit = useCallback(async () => {
+  //   if (!validateForm()) {
+  //     setToast({ type: "error", message: "Please fill all required fields." });
+  //     setTimeout(() => setToast(null), 3000);
+  //     return;
+  //   }
+
+  //   const acc = formData.accounts[0];
+  //   const editData = JSON.parse(localStorage.getItem("edit_account"));
+
+  //   const payload = {
+  //     cid: Number(acc.cid),
+  //     account_id: acc.accountId,
+  //     account_name: acc.accountName,
+  //     access_key: acc.accessKey,
+  //     secret_key: acc.secretKey,
+  //     bucket_name: acc.bucketName,
+  //     prefix: acc.prefix,
+  //     cost: acc.selectedPillars.includes("cost"),
+  //     security: acc.selectedPillars.includes("security"),
+  //     perfops: acc.selectedPillars.includes("operational_performance"),
+  //   };
+
+  //   try {
+  //     let response;
+  //     if (editData) {
+  //       response = await fetch(`http://13.212.15.14:8016/api/account/update`, {
+  //         method: "PUT",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify(payload),
+  //       });
+  //     } else {
+  //       response = await fetch("http://13.212.15.14:8016/api/account/add", {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify(payload),
+  //       });
+  //     }
+
+  //     const result = await response.json();
+  //     if (!response.ok) throw new Error(result.message || "Request failed");
+
+  //     localStorage.removeItem("edit_account");
+  //     setToast({ type: "success", message: editData ? "Account Updated" : "Account Created" });
+  //     setTimeout(() => setToast(null), 3000);
+  //     navigate("/imsproduct/accountsmanage");
+  //   } catch (err) {
+  //     console.error("Submit Error:", err);
+  //     setToast({ type: "error", message: err.message || "Something went wrong" });
+  //     setTimeout(() => setToast(null), 3000);
+  //   }
+  // }, [formData, validateForm, navigate]);
   const handleSubmit = useCallback(async () => {
-    if (!validateForm()) {
-      setToast({ type: "error", message: "Please fill all required fields." });
-      setTimeout(() => setToast(null), 3000);
-      return;
-    }
+  if (!validateForm()) {
+    setToast({ type: "error", message: "Please fill all required fields." });
+    setTimeout(() => setToast(null), 3000);
+    return;
+  }
 
-    const acc = formData.accounts[0];
-    const editData = JSON.parse(localStorage.getItem("edit_account"));
+  const editData = JSON.parse(localStorage.getItem("edit_account"));
+  const isEdit = !!editData;
 
-    const payload = {
-      cid: Number(acc.cid),
-      account_id: acc.accountId,
-      account_name: acc.accountName,
-      access_key: acc.accessKey,
-      secret_key: acc.secretKey,
-      bucket_name: acc.bucketName,
-      prefix: acc.prefix,
-      cost: acc.selectedPillars.includes("cost"),
-      security: acc.selectedPillars.includes("security"),
-      perfops: acc.selectedPillars.includes("operational_performance"),
-    };
+  try {
+    for (const acc of formData.accounts) {
+      const payload = {
+        cid: Number(acc.cid),
+        account_id: acc.accountId,
+        account_name: acc.accountName,
+        access_key: acc.accessKey,
+        secret_key: acc.secretKey,
+        bucket_name: acc.bucketName,
+        prefix: acc.prefix,
+        cost: acc.selectedPillars.includes("cost"),
+        security: acc.selectedPillars.includes("security"),
+        perfops: acc.selectedPillars.includes("operational_performance"),
+      };
 
-    try {
-      let response;
-      if (editData) {
-        response = await fetch(`http://13.212.15.14:8016/api/account/update`, {
-          method: "PUT",
+      await fetch(
+        isEdit
+          ? "http://13.212.15.14:8016/api/account/update"
+          : "http://13.212.15.14:8016/api/account/add",
+        {
+          method: isEdit ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        });
-      } else {
-        response = await fetch("http://13.212.15.14:8016/api/account/add", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      }
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Request failed");
-
-      localStorage.removeItem("edit_account");
-      setToast({ type: "success", message: editData ? "Account Updated" : "Account Created" });
-      setTimeout(() => setToast(null), 3000);
-      navigate("/imsproduct/accountsmanage");
-    } catch (err) {
-      console.error("Submit Error:", err);
-      setToast({ type: "error", message: err.message || "Something went wrong" });
-      setTimeout(() => setToast(null), 3000);
+        }
+      );
     }
-  }, [formData, validateForm, navigate]);
+
+    localStorage.removeItem("edit_account");
+    setToast({ type: "success", message: isEdit ? "Accounts Updated" : "Accounts Created" });
+    setTimeout(() => setToast(null), 3000);
+    navigate("/imsproduct/accountsmanage");
+  } catch (err) {
+    console.error("Submit Error:", err);
+    setToast({ type: "error", message: err.message || "Something went wrong" });
+    setTimeout(() => setToast(null), 3000);
+  }
+}, [formData, validateForm]);
+
+  
 
   // ---------------- Render ----------------
   return (
