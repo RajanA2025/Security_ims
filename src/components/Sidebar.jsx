@@ -92,9 +92,9 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
   ];
 
   const navItemsProduct = [
-    { icon: <MdDashboard size={30} />, label: "IMS Dashboard", path: "/imsproduct" },
+    { icon: <MdDashboard size={30} />, label: "Dashboard", path: "/imsproduct" },
     // { icon: <MdProductionQuantityLimits size={30} />, label: "Products", path: "/imsproduct/products" },
-    { icon: <MdAccountCircle size={30} />, label: "Account Manage", path: "/imsproduct/accountsmanage" }
+    { icon: <MdAccountCircle size={30} />, label: "Account", path: "/imsproduct/accountsmanage" }
   ];
 
   // ✅ Handle navigation and submenu toggle
