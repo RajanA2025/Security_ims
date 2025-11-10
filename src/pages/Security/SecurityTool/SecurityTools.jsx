@@ -354,7 +354,7 @@ Security & KMS Tools
           padding: "0px"
         }}
       >
-         <Tabs.TabPane tab="KMS" key="2">
+         <Tabs.TabPane tab="KMS" key="1">
           <Table
             columns={columns1}
             dataSource={kmData.filter(item =>
@@ -365,7 +365,7 @@ Security & KMS Tools
             pagination={{ pageSize: 8 }}
           />
         </Tabs.TabPane>
-        <Tabs.TabPane tab="Security" key="1">
+        <Tabs.TabPane tab="Security" key="2">
           <Table
             columns={columns}
             dataSource={securityData.filter(item =>

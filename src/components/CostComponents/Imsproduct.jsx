@@ -88,7 +88,7 @@ export default function Imsproduct() {
     }
 
     try {
-      const url = `http://13.212.15.14:8006/api/accounts/${cid}/${pillar}`;
+      const url = `http://13.212.15.14:8016/api/accounts/${cid}/${pillar}`;
       console.log("Sending request to:", url);
 
       const response = await axios.get(url);
@@ -262,7 +262,7 @@ export default function Imsproduct() {
             whileHover={isOperationalActive ? 'hover' : ''}
             variants={cardAnimation}
             viewport={{ once: true }}
-            onClick={() => isOperationalActive && handleCardClick('operational')}
+            onClick={() => isOperationalActive && handleCardClick('perfops')}
             style={{ cursor: isOperationalActive ? 'pointer' : 'not-allowed' }}
           >
             <Card

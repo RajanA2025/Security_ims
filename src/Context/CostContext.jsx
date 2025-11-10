@@ -68,11 +68,11 @@ export const CostProvider = ({ children }) => {
 
       const result = await response.json();
       if (!response.ok) throw new Error(result.message || "Login failed");
-localStorage.setItem("auth_token", true);
-  // Some backends may return 200 without a token. Treat any successful login (200)
-  // as authenticated: store the token if provided, otherwise store a boolean flag.
-  const authValue = result.token ? result.token : "true";
-  localStorage.setItem("auth_token", authValue);
+      localStorage.setItem("auth_token", true);
+      // Some backends may return 200 without a token. Treat any successful login (200)
+      // as authenticated: store the token if provided, otherwise store a boolean flag.
+      const authValue = result.token ? result.token : "true";
+      localStorage.setItem("auth_token", authValue);
       if (result.cid) localStorage.setItem("company_cid", result.cid);
 
       return result;
@@ -235,7 +235,11 @@ localStorage.setItem("auth_token", true);
         setApps(appList);
 
         // Process tags
-        const processedTagData = Array.isArray(tagsJson)
+        // Get selected account from filters or localStorage
+        // const selectedAcc = filters.account_id || localStorage.getItem("account_ids");
+
+        // Process + Filter tags by selected account
+        let processedTagData = Array.isArray(tagsJson)
           ? tagsJson.map((res, i) => ({
             id: res.id || i + 1,
             account_name: res.account_name || "",
@@ -246,6 +250,22 @@ localStorage.setItem("auth_token", true);
             tags: res.tags || {},
           }))
           : [];
+
+        // Apply filter only if selectedAcc exists and is not ALL
+        const storedIds = JSON.parse(localStorage.getItem("account_ids")) || [];
+
+        const selectedAcc =
+          filters.account_id && filters.account_id !== "ALL"
+            ? filters.account_id
+            : storedIds[0] || null;
+
+        if (selectedAcc) {
+          processedTagData = processedTagData.filter(
+            (item) => String(item.account_id) === String(selectedAcc)
+          );
+        }
+
+
 
         // Compute tagging summary
         const requiredTags = ["Name", "Owner", "Project", "Environment"];

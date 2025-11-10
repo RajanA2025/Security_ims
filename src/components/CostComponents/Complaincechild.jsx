@@ -5,6 +5,9 @@ import { CostContext } from "../../Context/CostContext";
 const Compliancechild = () => {
   const { tagData, loading, error } = useContext(CostContext);
 
+
+  console.log("first", tagData);
+
   const requiredTags = ["Name", "Owner", "Project", "Environment"];
 
   // ✅ Get account IDs from localStorage
