@@ -124,50 +124,93 @@ const Securitygrp = () => {
    let storedAccountId = localStorage.getItem("account_ids");
 
   useEffect(() => {
+    // const fetchData = async () => {
+    //   setLoading(true);
+    //   try {
+
+    //   try {
+    //     storedAccountId = JSON.parse(storedAccountId);
+    //     if (Array.isArray(storedAccountId)) {
+    //       storedAccountId = storedAccountId[0]; // take first ID
+    //     }
+    //   } catch {
+    //     // keep as string
+    //   }
+
+    //     // const response = await axios.get(API_URL);
+    //     // setData(response.data);
+    //     // setFilteredData(response.data); // show all initially
+        
+    //   const [response] = await Promise.all([
+    //     axios.get(API_URL),
+       
+    //   ]);
+
+    //   const normalizeId = (id) => String(id).trim().toLowerCase();
+    //   const storedId = normalizeId(storedAccountId);
+
+    //   if (response?.data && Array.isArray(response.data)) {
+    //     const filtered2 = response.data.filter((item) => {
+    //       const itemId =
+    //         item.account_id || item.accountId || item.ACCOUNT_ID || item.Account_ID;
+    //       return normalizeId(itemId) === storedId;
+    //     });
+    //     console.log("Filtered Data 2:", filtered2);
+    //     setData(filtered2);
+    //     setFilteredData(filtered2);
+    //   }
+
+      
+    //   } catch (error) {
+    //     console.error("Error fetching data:", error);
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // };
+
     const fetchData = async () => {
       setLoading(true);
       try {
-
-      try {
-        storedAccountId = JSON.parse(storedAccountId);
-        if (Array.isArray(storedAccountId)) {
-          storedAccountId = storedAccountId[0]; // take first ID
+        let storedAccountId = localStorage.getItem("account_ids");
+    
+        // Parse storedAccountId safely
+        try {
+          storedAccountId = JSON.parse(storedAccountId);
+        } catch {
+          storedAccountId = [storedAccountId]; // wrap single ID into array
         }
-      } catch {
-        // keep as string
-      }
-
-        // const response = await axios.get(API_URL);
-        // setData(response.data);
-        // setFilteredData(response.data); // show all initially
-        
-      const [response] = await Promise.all([
-        axios.get(API_URL),
-       
-      ]);
-
-      const normalizeId = (id) => String(id).trim().toLowerCase();
-      const storedId = normalizeId(storedAccountId);
-
-      if (response?.data && Array.isArray(response.data)) {
-        const filtered2 = response.data.filter((item) => {
-          const itemId =
-            item.account_id || item.accountId || item.ACCOUNT_ID || item.Account_ID;
-          return normalizeId(itemId) === storedId;
-        });
-        console.log("Filtered Data 2:", filtered2);
-        setData(filtered2);
-        setFilteredData(filtered2);
-      }
-
-      
+    
+        // Normalize all IDs
+        const normalizeId = (id) => String(id).trim().toLowerCase();
+        const storedIds = Array.isArray(storedAccountId)
+          ? storedAccountId.map(normalizeId)
+          : [normalizeId(storedAccountId)];
+    
+        const [response] = await Promise.all([axios.get(API_URL)]);
+    
+        if (response?.data && Array.isArray(response.data)) {
+    
+          const filteredData = response.data.filter((item) => {
+            const itemId =
+              item.account_id ||
+              item.accountId ||
+              item.ACCOUNT_ID ||
+              item.Account_ID;
+    
+            return storedIds.includes(normalizeId(itemId));
+          });
+    
+          console.log("Filtered Data 2:", filteredData);
+          setData(filteredData);
+          setFilteredData(filteredData);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
-
+    
     fetchData();
   }, [storedAccountId]);
 

@@ -210,7 +210,7 @@ const Business = () => {
     return (
         <>
             {/* Header & Search */}
-            <Row gutter={[16, 16]} style={{ marginBottom: 5 }}>
+            <Row gutter={[16, 16]} style={{ marginBottom: 10 , marginTop:15 }}>
                 <Col md={20}>
                     <Typography.Title
                         level={4}

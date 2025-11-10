@@ -275,7 +275,7 @@ const filteredData = accountFilteredData.filter(item =>
      
 
       {/* Search input */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 5}}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 5,marginTop:10 }}>
       <Col md={20}>
       <Typography.Title 
   level={4}
