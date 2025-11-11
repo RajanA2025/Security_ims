@@ -80,7 +80,7 @@ const Admin = () => {
     if (!window.confirm("Are you sure you want to delete this company?")) return;
 
     try {
-      const response = await fetch(`http://13.212.15.14:8006/api/company/delete/${cid}`, {
+      const response = await fetch(`http://47.130.218.97:8006/api/company/delete/${cid}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

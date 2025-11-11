@@ -28,7 +28,7 @@ const Cloud_Trail = () => {
   const [selectedData, setSelectedData] = useState(null);
   const [searchText, setSearchText] = useState("");
 
-  const API_URL = "http://13.212.15.14:8012/cloudtrail";
+  const API_URL = "http://47.130.218.97:8012/cloudtrail";
    let storedAccountId = localStorage.getItem("account_ids");
 
   // Fetch data on load

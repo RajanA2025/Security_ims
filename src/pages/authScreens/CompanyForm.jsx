@@ -134,7 +134,7 @@ const CompanyForm = () => {
       let res;
       if (isEdit) {
         // ✅ Update existing company
-        const response = await fetch("http://13.212.15.14:8006/api/company/update", {
+        const response = await fetch("http://47.130.218.97:8006/api/company/update", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),

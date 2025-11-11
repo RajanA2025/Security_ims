@@ -80,7 +80,7 @@ const RightSizing = () => {
       setLoading(true);
       setError(null);
 
-      const apiUrl = 'http://13.212.15.14:8005/performance';
+      const apiUrl = 'http://47.130.218.97:8005/performance';
       console.log('Fetching data from:', apiUrl);
 
       const response = await axios({
