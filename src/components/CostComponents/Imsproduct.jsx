@@ -24,7 +24,7 @@ export default function Imsproduct() {
   });
   const [hasAccount, setHasAccount] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL1;
   // ✅ Load pillars & check if account exists
   // useEffect(() => {
   //   const storedPillars = JSON.parse(localStorage.getItem('pillars'));
@@ -48,7 +48,7 @@ export default function Imsproduct() {
     // Fetch accounts from API instead of localStorage
     const fetchAccounts = async () => {
       try {
-        const response = await fetch(`http://47.130.218.97:8006/api/accounts/all/${cId}`);
+        const response = await fetch(`${apiBaseUrl}/api/accounts/all/${cId}`);
         const data = await response.json();
 
         console.log("API accounts data:", data);

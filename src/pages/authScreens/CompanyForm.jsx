@@ -23,8 +23,7 @@ const CompanyForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState(null);
   const [errors, setErrors] = useState({});
-
-  console.log("Edit company data:", location.state?.company);
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL1;
 
 
   // ✅ Initialize formData (prefill if editing)
@@ -134,7 +133,7 @@ const CompanyForm = () => {
       let res;
       if (isEdit) {
         // ✅ Update existing company
-        const response = await fetch("http://47.130.218.97:8006/api/company/update", {
+        const response = await fetch(`${apiBaseUrl}/api/company/update`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
