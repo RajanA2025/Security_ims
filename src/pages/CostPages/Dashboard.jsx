@@ -37,7 +37,14 @@ const Dashboard = () => {
   const [forecastAmount, setForecastAmount] = useState(0);
   const [change, setChange] = useState(null);
   const [top5Services, setTop5Services] = useState([]);
+useEffect(() => {
+  const timer = setTimeout(() => {
+    handleReset();
+  }, 500); 
 
+
+  return () => clearTimeout(timer);
+}, []);
   /** ================== Derive dashboard values ================== */
   useEffect(() => {
     if (!costData) return;
@@ -55,6 +62,7 @@ const Dashboard = () => {
     setTop5Services(costData.top_5?.top_services_current_month || []);
   }, [costData]);
 
+  
   /** ================== Handlers ================== */
   const handleContextChange = (val) => {
     setContext(val);
@@ -106,6 +114,8 @@ const Dashboard = () => {
       })),
     },
   ];
+
+
 
 
   /** ================== Render ================== */
@@ -176,7 +186,7 @@ const Dashboard = () => {
       </Row>
 
       {/* ========== Main Grid ========== */}
-      <Row gutter={[16, 16]} style={{ marginTop: 10 }}>
+      <Row gutter={[16, 16]} style={{ marginTop: 10, padding: "0px 10px" }}>
         {/* Left Section */}
         <Col xs={24} md={12} lg={8}>
           <Row gutter={[16, 16]}>
