@@ -131,7 +131,7 @@ export default function AntdNestedTable({ selectedAccount }) {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const { data } = await axios.get("http://13.212.15.14:8002/instances");
+        const { data } = await axios.get("http://47.130.218.97:8002/instances");
         const results = data.results || [];
 
         const storedAccounts = JSON.parse(localStorage.getItem("account_ids")) || [];

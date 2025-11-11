@@ -12,7 +12,7 @@ const Admin = () => {
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState(null);
   const [visiblePasswords, setVisiblePasswords] = useState({});
-
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL1;
   // ✅ Fetch data from API
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -44,9 +44,9 @@ const Admin = () => {
     };
 
     fetchCompanies();
-    setTimeout((
+    // setTimeout((
 
-    ) => { fetchCompanies() }, 2000);
+    // ) => { fetchCompanies() }, 2000);
 
   }, [getAllCompanies]);
 
@@ -80,7 +80,7 @@ const Admin = () => {
     if (!window.confirm("Are you sure you want to delete this company?")) return;
 
     try {
-      const response = await fetch(`http://47.130.218.97:8006/api/company/delete/${cid}`, {
+      const response = await fetch(`${apiBaseUrl}/api/company/delete/${cid}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
