@@ -27,7 +27,7 @@ const Amis = () => {
   const [selectedData, setSelectedData] = useState(null);
   const [searchText, setSearchText] = useState("");
 
-  const API_URL = "http://13.212.15.14:8012/amis";
+  const API_URL = "http://47.130.218.97:8012/amis";
 
   // Fetch data on load
   useEffect(() => {

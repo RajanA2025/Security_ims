@@ -296,13 +296,13 @@ export default function AccountsScreen() {
   //   try {
   //     let response;
   //     if (editData) {
-  //       response = await fetch(`http://13.212.15.14:8016/api/account/update`, {
+  //       response = await fetch(`http://47.130.218.97:8016/api/account/update`, {
   //         method: "PUT",
   //         headers: { "Content-Type": "application/json" },
   //         body: JSON.stringify(payload),
   //       });
   //     } else {
-  //       response = await fetch("http://13.212.15.14:8016/api/account/add", {
+  //       response = await fetch("http://47.130.218.97:8016/api/account/add", {
   //         method: "POST",
   //         headers: { "Content-Type": "application/json" },
   //         body: JSON.stringify(payload),
@@ -349,8 +349,8 @@ export default function AccountsScreen() {
 
       await fetch(
         isEdit
-          ? "http://13.212.15.14:8016/api/account/update"
-          : "http://13.212.15.14:8016/api/account/add",
+          ? "http://47.130.218.97:8016/api/account/update"
+          : "http://47.130.218.97:8016/api/account/add",
         {
           method: isEdit ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },

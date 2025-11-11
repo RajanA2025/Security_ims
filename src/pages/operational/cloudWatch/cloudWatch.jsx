@@ -47,7 +47,7 @@ const operatorMap = {
 
 const headerStyle = { backgroundColor: "#4f46e5", color: "white" };
 
-const API_URL = "http://13.212.15.14:8012/cloudwatch";
+const API_URL = "http://47.130.218.97:8012/cloudwatch";
 
 const Business = () => {
     const [data, setData] = useState([]);

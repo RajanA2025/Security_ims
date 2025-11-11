@@ -48,7 +48,7 @@ export default function Imsproduct() {
     // Fetch accounts from API instead of localStorage
     const fetchAccounts = async () => {
       try {
-        const response = await fetch(`http://13.212.15.14:8006/api/accounts/all/${cId}`);
+        const response = await fetch(`http://47.130.218.97:8006/api/accounts/all/${cId}`);
         const data = await response.json();
 
         console.log("API accounts data:", data);
@@ -88,7 +88,7 @@ export default function Imsproduct() {
     }
 
     try {
-      const url = `http://13.212.15.14:8016/api/accounts/${cid}/${pillar}`;
+      const url = `http://47.130.218.97:8016/api/accounts/${cid}/${pillar}`;
       console.log("Sending request to:", url);
 
       const response = await axios.get(url);

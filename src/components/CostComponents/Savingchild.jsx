@@ -95,7 +95,7 @@ const fetchKeyPairs = async () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get("http://13.212.15.14:8003/resources");
+        const res = await axios.get("http://47.130.218.97:8003/resources");
         const data = res.data;
 
         // ✅ Get stored account IDs from localStorage

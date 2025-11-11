@@ -120,7 +120,7 @@ const Securitygrp = () => {
   const { Option } = Select;
   const accountIds = [...new Set(data.map(item => item.account_id))];
   // Fetch data on mount
-  const API_URL = "http://13.212.15.14:8012/security-groups";
+  const API_URL = "http://47.130.218.97:8012/security-groups";
    let storedAccountId = localStorage.getItem("account_ids");
 
   useEffect(() => {

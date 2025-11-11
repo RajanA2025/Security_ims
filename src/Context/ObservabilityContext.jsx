@@ -4,7 +4,7 @@ import axios from "axios";
 const ObservabilityContext = createContext();
 
 export const ObservabilityProvider = ({ children }) => {
-  const API_BASE_URL = "http://13.212.15.14:8012";
+  const API_BASE_URL = "http://47.130.218.97:8012";
 
   const [loading, setLoading] = useState(false);
   const [securityData, setSecurityData] = useState([]);

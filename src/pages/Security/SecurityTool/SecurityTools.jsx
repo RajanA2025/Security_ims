@@ -63,7 +63,7 @@ const SecurityTools = () => {
 
       // ✅ Step 2: Fetch API data
       if (tabKey === "2") {
-        const res = await axios.get("http://13.212.15.14:8012/tools");
+        const res = await axios.get("http://47.130.218.97:8012/tools");
         if (Array.isArray(res.data)) {
           // Filter only matching account_id
           const filtered = res.data.filter(
@@ -74,7 +74,7 @@ const SecurityTools = () => {
           setSecurityData(filtered);
         }
       } else if (tabKey === "1") {
-        const res = await axios.get("http://13.212.15.14:8012/kms");
+        const res = await axios.get("http://47.130.218.97:8012/kms");
         if (Array.isArray(res.data)) {
           // Filter only matching account_id
           const filtered = res.data.filter(

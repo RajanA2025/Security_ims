@@ -108,7 +108,7 @@ function Dashboard() {
   const fetchPerformanceData = async () => {
     try {
       setLoading(true)
-      const apiUrl = 'http://13.212.15.14:8005/performance'
+      const apiUrl = 'http://47.130.218.97:8005/performance'
       const response = await axios.get(apiUrl)
 
       const result = (response.data.data || []).map((item) => ({

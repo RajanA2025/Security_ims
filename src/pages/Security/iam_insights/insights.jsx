@@ -110,7 +110,7 @@ const Insights = () => {
   const [selectedData1, setSelectedData1] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [selectedAccountId, setSelectedAccountId] = useState(null);
-  const API_URL = "http://13.212.15.14:8012/iam";
+  const API_URL = "http://47.130.218.97:8012/iam";
   const { Option } = Select;
   const accountIds = [...new Set(data.map(item => item.account_id))];
 

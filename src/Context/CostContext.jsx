@@ -40,7 +40,7 @@ export const CostProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch("http://13.212.15.14:8006/api/company/register", {
+      const response = await fetch("http://47.130.218.97:8006/api/company/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(companyData),
@@ -60,7 +60,7 @@ export const CostProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch("http://13.212.15.14:8006/api/company/login", {
+      const response = await fetch("http://47.130.218.97:8006/api/company/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(loginData),
@@ -91,7 +91,7 @@ export const CostProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem("auth_token");
-      const response = await fetch("http://13.212.15.14:8016/api/account/add", {
+      const response = await fetch("http://47.130.218.97:8016/api/account/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -125,7 +125,7 @@ export const CostProvider = ({ children }) => {
       setError(null);
 
       const token = localStorage.getItem("auth_token");
-      const response = await fetch("http://13.212.15.14:8006/api/company/all", {
+      const response = await fetch("http://47.130.218.97:8006/api/company/all", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -159,7 +159,7 @@ export const CostProvider = ({ children }) => {
       if (!cid) throw new Error("Company ID not found. Please log in again.");
 
       // 🔸 Dynamic endpoint using template literal
-      const response = await fetch(`http://13.212.15.14:8006/api/accounts/all/${cid}`, {
+      const response = await fetch(`http://47.130.218.97:8006/api/accounts/all/${cid}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -202,7 +202,7 @@ export const CostProvider = ({ children }) => {
         console.log("🔹 Sending POST body:", postBody);
 
         // POST request instead of GET
-        const costUrl = `http://13.212.15.14:8021/cost-summary`;
+        const costUrl = `http://47.130.218.97:8021/cost-summary`;
 
         const [costRes, resourcesRes, tagRes] = await Promise.all([
           fetch(costUrl, {
@@ -210,8 +210,8 @@ export const CostProvider = ({ children }) => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(postBody),
           }),
-          fetch("http://13.212.15.14:8003/resources"),
-          fetch("http://13.212.15.14:8007/tags"),
+          fetch("http://47.130.218.97:8003/resources"),
+          fetch("http://47.130.218.97:8007/tags"),
         ]);
 
         if (!costRes.ok || !resourcesRes.ok || !tagRes.ok)
