@@ -17,7 +17,7 @@ import SecurityGroup from './pages/Security/security_group/Securitygrp';
 import CloudTrail from './pages/Security/Cloud_Trail/Cloud_Trail';
 import SecurityTools from './pages/Security/SecurityTool/SecurityTools';
 
-// Operational
+// Operational    
 import Business from './pages/operational/Business/Business';
 import Dashboard1 from './pages/operational/Dashboard';
 import Ami from './pages/operational/Amis';

@@ -61,31 +61,55 @@ export const Complaincedashmain = () => {
 
   const [autoStartStopData, setAutoStartStopData] = useState({ total: 0, enabled: 0 });
 
-  useEffect(() => {
-    const fetchInstances = async () => {
+useEffect(() => {
+  const fetchInstances = async () => {
+    try {
+      const response = await fetch("http://47.130.218.97:8004/instances");
+      const data = await response.json();
+
+      let stored = localStorage.getItem("account_ids");
+
+      // Normalize localStorage value to array
       try {
-        const response = await fetch("http://47.130.218.97:8004/instances");
-        const data = await response.json();
-
-        const accounts = JSON.parse(localStorage.getItem("account_ids"))?.map(String) || [];
-
-        const filtered = data.filter(
-          (item) => accounts.includes(String(item.account_id))
-        );
-
-        const total = filtered.length;
-        const enabled = filtered.filter(
-          (item) => item.auto_start_stop === true || item.auto_start_stop === 1
-        ).length;
-
-        setAutoStartStopData({ total, enabled });
-      } catch (err) {
-        console.error("Instance API Error:", err);
+        stored = JSON.parse(stored);
+      } catch {
+        stored = stored ? [stored] : [];
       }
-    };
 
-    fetchInstances();
-  }, []);
+      let accounts = Array.isArray(stored) ? stored.map(String) : [String(stored)];
+
+      // Remove "ALL" - if ALL was selected → show everything
+      accounts = accounts.filter((id) => id !== "ALL");
+
+      // ✅ If ALL → don't filter
+      const filtered = accounts.length > 0
+        ? data.filter((item) => accounts.includes(String(item.account_id)))
+        : data;
+
+      const total = filtered.length;
+
+      // ✅ Correct enabled detection using auto_enabled field
+      const enabled = filtered.filter(
+        (item) =>
+          String(item.auto_enabled).toUpperCase() === "YES"
+      ).length;
+
+      setAutoStartStopData({ total, enabled });
+
+      console.log("✅ Accounts Used:", accounts);
+      console.log("✅ Filtered Instance Count:", total);
+      console.log("✅ Enabled Count:", enabled);
+
+    } catch (err) {
+      console.error("Instance API Error:", err);
+    }
+  };
+
+  fetchInstances();
+}, []);
+
+
+
 
 
 
@@ -187,18 +211,18 @@ export const Complaincedashmain = () => {
         <div style={{ display: "flex", marginTop: 50, justifyContent: "center", alignItems: "center", height: "100%" }}>
           <Tooltip title={`Enabled: ${enabled} | Disabled: ${disabled}`}>
             <Progress
-  type="circle"
-  percent={enabledPercent}
-  strokeColor={enabled === 0 ? "#bfbfbf" : "#52c41a"}   // grey when disabled
-  trailColor={enabled === 0 ? "#e6e6e6" : "#d9f7be"}     // background ring
-  strokeWidth={10}
-  size={150}
-  format={() => (
-    <span style={{ color: enabled === 0 ? "#000" : "#52c41a", fontWeight: 600 }}>
-      {enabledPercent}%
-    </span>
-  )}
-/>
+              type="circle"
+              percent={enabledPercent}
+              strokeColor={enabled === 0 ? "#bfbfbf" : "#52c41a"}   // grey when disabled
+              trailColor={enabled === 0 ? "#e6e6e6" : "#d9f7be"}     // background ring
+              strokeWidth={10}
+              size={150}
+              format={() => (
+                <span style={{ color: enabled === 0 ? "#000" : "#52c41a", fontWeight: 600 }}>
+                  {enabledPercent}%
+                </span>
+              )}
+            />
 
 
           </Tooltip>

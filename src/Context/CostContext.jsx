@@ -251,19 +251,21 @@ export const CostProvider = ({ children }) => {
           }))
           : [];
 
-        // Apply filter only if selectedAcc exists and is not ALL
+        // Apply multi-account filtering
         const storedIds = JSON.parse(localStorage.getItem("account_ids")) || [];
 
-        const selectedAcc =
-          filters.account_id && filters.account_id !== "ALL"
-            ? filters.account_id
-            : storedIds[0] || null;
-
-        if (selectedAcc) {
+        if (filters.account_id && filters.account_id !== "ALL") {
+          // Single account selected
           processedTagData = processedTagData.filter(
-            (item) => String(item.account_id) === String(selectedAcc)
+            (item) => String(item.account_id) === String(filters.account_id)
+          );
+        } else {
+          // Multiple stored accounts filter
+          processedTagData = processedTagData.filter((item) =>
+            storedIds.includes(String(item.account_id))
           );
         }
+
 
 
 

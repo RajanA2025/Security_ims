@@ -296,7 +296,7 @@ const Insights = () => {
   const API_URL = "http://47.130.218.97:8012/iam";
   const API_URL1 = "http://47.130.218.97:8012/security-groups";
   const storedAccountId = localStorage.getItem("account_ids");
-  console.log('first', storedAccountId)
+
   // useEffect(() => {
   //   const fetchAllData = async () => {
   //     setLoading(true);

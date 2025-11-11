@@ -571,8 +571,8 @@ const fetchKeyPairs = async () => {
               <Card bordered hoverable onClick={() => setActiveTab("rightsizing")}>
                 <h3>Rightsizing</h3>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: 8 }}>
-                  <Tag color="cyan">{rightsizing[rightsizingFilter]?.length || 0}</Tag>
-                  <Text strong style={{ color: "cyan" }}>
+                  <Tag color="green" icon={<DollarOutlined />}>{rightsizing[rightsizingFilter]?.length || 0}</Tag>
+                  <Text strong style={{ color: "green" }}>
                     Total Savings: ${calculateTotal(rightsizing[rightsizingFilter], "costSaving").toFixed(2)}
                   </Text>
                 </div>
