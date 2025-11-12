@@ -33,8 +33,8 @@ const Header = ({ onDateChange }) => {
   const path = location.pathname.toLowerCase();
   const layout = path.startsWith("/security")
     ? "Security"
-    : path.startsWith("/operational")
-    ? "Operational Excellence"
+    : path.startsWith("/perfops")
+    ? "Performance & Operational Excellence"
     : path.startsWith("/imsproduct")
     ? "IMS Product"
     : path.startsWith("/admin")

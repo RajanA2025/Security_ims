@@ -9,49 +9,99 @@ const Chart = ({ labels, data }) => {
 
     const myChart = echarts.init(chartRef.current);
 
+    // ✅ Generate stable random colors for each label
+    let labelColors = {};
+    const sortedLabels = Array.from(labels).sort();
+
+    sortedLabels.forEach((label) => {
+      if (!labelColors[label]) {
+        labelColors[label] =
+          "#" + Math.floor(Math.random() * 16777215).toString(16);
+      }
+    });
+
     const option = {
-       title: {
-          subtext: 'OverAll Count',
-          left: 'center'
+      backgroundColor: '#fff',
+      textStyle: {
+        color: '#333',
+        fontFamily: 'Roboto, sans-serif',
+        fontSize: 12,
+      },
+      title: {
+        subtext: 'Overall Count',
+        left: 'center',
+        subtextStyle: {
+          fontSize: 13,
+          fontWeight: 600,
+          color: '#333',
+          fontFamily: 'Roboto, sans-serif',
         },
+      },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        textStyle: { fontSize: 11, color: '#333' },
+        backgroundColor: '#f9f9f9',
+        borderColor: '#ccc',
+        borderWidth: 1,
+      },
       xAxis: {
         type: 'category',
         data: labels,
         axisLabel: {
-          interval: 0,   // force all labels to show
-          rotate: 20,    // rotate for readability
+          rotate: 20,
+          fontSize: 12,
+          fontWeight: 500,
+          color: '#333',
         },
+        axisLine: { lineStyle: { color: '#888' } },
       },
       yAxis: {
         type: 'value',
+        axisLabel: {
+          fontSize: 12,
+          color: '#333',
+        },
+        splitLine: { lineStyle: { color: '#eee' } },
       },
       series: [
         {
-          data: data,
+          data: data.map((val, i) => ({
+            value: val,
+            itemStyle: { color: labelColors[labels[i]] }, // 🎨 dynamic color per label
+          })),
           type: 'bar',
-          itemStyle: {
-            color: '#5470C6', // optional: custom bar color
+          barMaxWidth: 30,
+          label: {
+            show: true,
+            position: 'top',
+            color: '#333',
+            fontSize: 11,
+            fontWeight: 500,
           },
         },
       ],
-      tooltip: {
-        show: true,
-        trigger: 'axis',
-      },
     };
-    
 
     myChart.setOption(option);
+    const handleResize = () => myChart.resize();
+    window.addEventListener('resize', handleResize);
 
     return () => {
       myChart.dispose();
+      window.removeEventListener('resize', handleResize);
     };
   }, [labels, data]);
 
   return (
     <div
       ref={chartRef}
-      style={{ width: '100%', height: '250px' }}
+      style={{
+        width: '100%',
+        height: '250px',
+        background: '#fff',
+        borderRadius: '8px',
+      }}
     />
   );
 };

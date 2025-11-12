@@ -1,156 +1,229 @@
-import { Col, Row, Card, Typography, Tooltip } from 'antd'
+import { Col, Row, Card, Typography, Tooltip } from "antd";
 import {
   BarChartOutlined,
   CheckCircleOutlined,
   ExclamationCircleOutlined,
   CloseCircleOutlined,
-  InfoCircleOutlined
-} from '@ant-design/icons'
-import React, { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import DonutChart from '../../components/dashboard/donutchart'
-import Chart from "../../components/dashboard/chart"
-import HalfPieChart from "../../components/dashboard/halfpiechart"
-import Linechart from "../../components/dashboard/linechart"
-import axios from 'axios'
+  InfoCircleOutlined,
+} from "@ant-design/icons";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import DonutChart from "../../components/dashboard/donutchart";
+import Chart from "../../components/dashboard/chart";
+import HalfPieChart from "../../components/dashboard/halfpiechart";
+import axios from "axios";
 import { useObservability } from "../../Context/ObservabilityContext";
 
-// Get Tooltip Text
+const { Title } = Typography;
+
+// Tooltip text
 const getTooltipText = (title) => {
   const tooltips = {
-    "Total Instances": "Total number of EC2 instances being monitored across all regions and accounts.",
-    "Healthy Instances": "Instances with CPU, Memory, and Disk usage below 60% threshold.",
-    "Warning": "Instances with resource usage between 60-80% that require attention.",
-    "Critical": "Instances with resource usage above 80% that need immediate attention."
-  }
-  return tooltips[title] || "Performance monitoring metric"
-}
+    "Total Instances":
+      "Total number of EC2 instances being monitored across all regions and accounts.",
+    "Healthy Instances":
+      "Instances with CPU, Memory, and Disk usage below 60% threshold.",
+    Warning:
+      "Instances with resource usage between 60-80% that require attention.",
+    Critical:
+      "Instances with resource usage above 80% that need immediate attention.",
+  };
+  return tooltips[title] || "Performance monitoring metric";
+};
 
-// Animations
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } }
-}
-
+// Animation variants
 const cardVariants = {
   hidden: { opacity: 0, y: 20, scale: 0.95 },
-  visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 100, damping: 12 } },
-  hover: { y: -8, scale: 1.02, boxShadow: "0 20px 40px rgba(0,0,0,0.12)", transition: { type: "spring", stiffness: 300, damping: 20 } }
-}
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: "spring", stiffness: 100, damping: 12 },
+  },
+  hover: {
+    y: -8,
+    scale: 1.02,
+    boxShadow: "0 20px 40px rgba(0,0,0,0.12)",
+    transition: { type: "spring", stiffness: 300, damping: 20 },
+  },
+};
 
-const titleVariants = {
-  hidden: { opacity: 0, x: -20 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut" } }
-}
+const SectionTitle = ({ children, delay = 0 }) => (
+  <motion.div
+    initial={{ opacity: 0, x: -20 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ delay, duration: 0.6 }}
+  >
+    <Title
+      level={4}
+      style={{
+        fontSize: "18px",
+        fontWeight: 600,
+        color: "#0f172a",
+        margin: "0 0 16px 0",
+      }}
+    >
+      {children}
+    </Title>
+    <motion.div
+      initial={{ width: 0 }}
+      animate={{ width: "60px" }}
+      transition={{ delay: delay + 0.3, duration: 0.8 }}
+      style={{
+        height: "3px",
+        backgroundColor: "#0284c7",
+        borderRadius: "2px",
+        marginTop: "4px",
+      }}
+    />
+  </motion.div>
+);
 
-// Animated Stat Card
 const AnimatedStatCard = ({ icon, title, value, color, index = 0 }) => (
   <motion.div variants={cardVariants} initial="hidden" animate="visible" whileHover="hover">
     <Card
       hoverable={false}
-      style={{ height: '100%', borderRadius: '12px', border: 'none', background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
-      bodyStyle={{ padding: '24px' }}
+      style={{
+        borderRadius: "10px",
+        border: "none",
+        background: "#fff",
+        boxShadow: "0px 2px 6px rgba(0,0,0,0.1)",
+        height: "100%",
+      }}
+      bodyStyle={{ padding: "20px" }}
     >
       <div style={{ textAlign: "center" }}>
-        <motion.div initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }} transition={{ delay: index * 0.1, type: "spring", stiffness: 200 }} style={{ marginBottom: '16px' }}>
-          {React.cloneElement(icon, { style: { fontSize: 32, color: color } })}
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: index * 0.1 }}
+          style={{ marginBottom: "12px" }}
+        >
+          {React.cloneElement(icon, { style: { fontSize: 36, color: color } })}
         </motion.div>
 
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: index * 0.1 + 0.3, type: "spring", stiffness: 300 }} style={{ marginBottom: '16px' }}>
-          <motion.h1
-            style={{ fontSize: '48px', fontWeight: 'bold', margin: '0', background: `linear-gradient(135deg, ${color}, #1890ff)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textAlign: 'center' }}
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 2, repeat: Infinity, repeatType: "reverse", delay: index * 0.2 }}
-          >
-            {value}
-          </motion.h1>
-        </motion.div>
+        <motion.h1
+          style={{
+            fontSize: "38px",
+            fontWeight: "700",
+            margin: "0",
+            background: `linear-gradient(135deg, ${color}, #0284c7)`,
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
+        >
+          {value}
+        </motion.h1>
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 + 0.4 }}>
-          <div style={{ fontWeight: "600", fontSize: '16px', color: '#666', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-            {title}
-            <Tooltip placement="top" title={getTooltipText(title)}>
-              <InfoCircleOutlined style={{ color: '#1890ff', cursor: 'pointer' }} />
-            </Tooltip>
-          </div>
-        </motion.div>
+        <div
+          style={{
+            fontWeight: 600,
+            fontSize: "15px",
+            color: "#334155",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          {title}
+          <Tooltip placement="top" title={getTooltipText(title)}>
+            <InfoCircleOutlined style={{ color: "#0284c7", cursor: "pointer" }} />
+          </Tooltip>
+        </div>
       </div>
     </Card>
   </motion.div>
-)
-
-const SectionTitle = ({ children, delay = 0 }) => (
-  <motion.div variants={titleVariants} initial="hidden" animate="visible" transition={{ delay }}>
-    <Typography.Title level={4} style={{ fontSize: "20px", fontWeight: 600, color: "#1a1a1a", margin: "0 0 24px 0" }}>
-      {children}
-      <motion.div initial={{ width: 0 }} animate={{ width: '60px' }} transition={{ delay: delay + 0.3, duration: 0.8 }} style={{ height: '3px', backgroundColor: '#1890ff', borderRadius: '2px', marginTop: '8px' }} />
-    </Typography.Title>
-  </motion.div>
-)
+);
 
 const LoadingState = () => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px', flexDirection: 'column', gap: '16px' }}>
-    <motion.div animate={{ rotate: 360, scale: [1, 1.2, 1] }} transition={{ rotate: { duration: 2, repeat: Infinity, ease: "linear" }, scale: { duration: 1, repeat: Infinity } }}
-      style={{ width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #1890ff', borderRadius: '50%' }} />
-    <motion.p animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity }}>Loading dashboard data...</motion.p>
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "200px",
+      flexDirection: "column",
+      gap: "16px",
+    }}
+  >
+    <motion.div
+      animate={{ rotate: 360 }}
+      transition={{
+        duration: 2,
+        repeat: Infinity,
+        ease: "linear",
+      }}
+      style={{
+        width: "40px",
+        height: "40px",
+        border: "4px solid #e2e8f0",
+        borderTop: "4px solid #0284c7",
+        borderRadius: "50%",
+      }}
+    />
+    <motion.p
+      animate={{ opacity: [0.5, 1, 0.5] }}
+      transition={{ duration: 1.5, repeat: Infinity }}
+      style={{ color: "#475569" }}
+    >
+      Loading dashboard data...
+    </motion.p>
   </motion.div>
-)
+);
 
 function Dashboard() {
-  const [performanceData, setPerformanceData] = useState([])
-  const [loading, setLoading] = useState(true)
-
+  const [performanceData, setPerformanceData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { securityData, eipData, volumeData, s3Data, ec2Data } = useObservability();
-
-  // ✅ Account Filter
   const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
 
   const fetchPerformanceData = async () => {
     try {
-      setLoading(true)
-      const apiUrl = 'http://47.130.218.97:8005/performance'
-      const response = await axios.get(apiUrl)
-
-      const result = (response.data.data || []).map((item) => ({
+      setLoading(true);
+      const { data } = await axios.get("http://47.130.218.97:8005/performance");
+      const result = (data.data || []).map((item) => ({
         id: item.id,
         accountId: String(item.account_id).trim(),
-        accountName: String(item.account_name).trim(),
-        region: String(item.region).trim(),
-        instanceId: String(item.instance_id).trim(),
         cpuUsage: Number(item.cpu_utilization).toFixed(2),
         memoryUsage: Number(item.memory_utilization).toFixed(2),
         diskUsage: Number(item.disk_utilization).toFixed(2),
-      }))
-
-      // ✅ Apply Filter Here
-      const filtered = storedAccountIds.length ? result.filter(r => storedAccountIds.includes(r.accountId)) : result;
+      }));
+      const filtered = storedAccountIds.length
+        ? result.filter((r) => storedAccountIds.includes(r.accountId))
+        : result;
       setPerformanceData(filtered);
-
     } catch (err) {
-      console.error('Error fetching performance data:', err)
-      setPerformanceData([])
+      console.error("Error fetching performance data:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  useEffect(() => { fetchPerformanceData() }, [])
+  useEffect(() => {
+    fetchPerformanceData();
+  }, []);
 
-  // Stats
-  const totalInstances = performanceData.length
-  const healthyInstances = performanceData.filter(d => d.cpuUsage < 60 && d.memoryUsage < 60 && d.diskUsage < 60).length
-  const warningInstances = performanceData.filter(d =>
-    (d.cpuUsage >= 60 && d.cpuUsage < 80) ||
-    (d.memoryUsage >= 60 && d.memoryUsage < 80) ||
-    (d.diskUsage >= 60 && d.diskUsage < 80)
-  ).length
-  const criticalInstances = performanceData.filter(d =>
-    d.cpuUsage >= 80 || d.memoryUsage >= 80 || d.diskUsage >= 80
-  ).length
+  const totalInstances = performanceData.length;
+  const healthyInstances = performanceData.filter(
+    (d) => d.cpuUsage < 60 && d.memoryUsage < 60 && d.diskUsage < 60
+  ).length;
+  const warningInstances = performanceData.filter(
+    (d) =>
+      (d.cpuUsage >= 60 && d.cpuUsage < 80) ||
+      (d.memoryUsage >= 60 && d.memoryUsage < 80) ||
+      (d.diskUsage >= 60 && d.diskUsage < 80)
+  ).length;
+  const criticalInstances = performanceData.filter(
+    (d) => d.cpuUsage >= 80 || d.memoryUsage >= 80 || d.diskUsage >= 80
+  ).length;
 
-  const labelss = ['OrphanedkeyPair','OrphanedEIP', 'Volume', 'S3', 'EC2']
-  const orphaned = securityData.filter(inst => inst.status =="Orphaned").length;
-
+  const orphaned = securityData.filter((inst) => inst.status === "Orphaned").length;
   const data = [
     orphaned,
     eipData?.length || 0,
@@ -158,43 +231,115 @@ function Dashboard() {
     s3Data?.length || 0,
     ec2Data?.length || 0,
   ];
+  const labels = ["Orphaned KeyPair", "Orphaned EIP", "Volume", "S3", "EC2"];
 
-  const runningCount = ec2Data.filter(inst => inst.state === "running").length;
-  const stoppedCount = ec2Data.filter(inst => inst.state === "stopped").length;
-
+  const runningCount = ec2Data.filter((inst) => inst.state === "running").length;
+  const stoppedCount = ec2Data.filter((inst) => inst.state === "stopped").length;
   const labels1 = ["Running", "Stopped"];
   const data1 = [runningCount, stoppedCount];
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} style={{ padding: '10px', background: '#f8faff', minHeight: '100vh' }}>
-      <SectionTitle delay={0}>Performance Overview</SectionTitle>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      style={{
+        padding: "24px",
+        background: "#f8fafc",
+        minHeight: "100vh",
+      }}
+    >
+      <SectionTitle>Performance Overview</SectionTitle>
 
       <AnimatePresence mode="wait">
-        {loading ? (<LoadingState key="loading" />) : (
+        {loading ? (
+          <LoadingState key="loading" />
+        ) : (
           <motion.div key="content">
-            <motion.div variants={containerVariants} initial="hidden" animate="visible" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '48px' }}>
-              <AnimatedStatCard icon={<BarChartOutlined />} title="Total Instances" value={totalInstances} color="#1890ff" index={0} />
-              <AnimatedStatCard icon={<CheckCircleOutlined />} title="Healthy Instances" value={healthyInstances} color="#52c41a" index={1} />
-              <AnimatedStatCard icon={<ExclamationCircleOutlined />} title="Warning" value={warningInstances} color="#faad14" index={2} />
-              <AnimatedStatCard icon={<CloseCircleOutlined />} title="Critical" value={criticalInstances} color="#ff4d4f" index={3} />
-            </motion.div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                gap: "20px",
+                marginBottom: "40px",
+              }}
+            >
+              <AnimatedStatCard
+                icon={<BarChartOutlined />}
+                title="Total Instances"
+                value={totalInstances}
+                color="#0284c7"
+                index={0}
+              />
+              <AnimatedStatCard
+                icon={<CheckCircleOutlined />}
+                title="Healthy Instances"
+                value={healthyInstances}
+                color="#22c55e"
+                index={1}
+              />
+              <AnimatedStatCard
+                icon={<ExclamationCircleOutlined />}
+                title="Warning"
+                value={warningInstances}
+                color="#facc15"
+                index={2}
+              />
+              <AnimatedStatCard
+                icon={<CloseCircleOutlined />}
+                title="Critical"
+                value={criticalInstances}
+                color="#ef4444"
+                index={3}
+              />
+            </div>
 
-            <SectionTitle delay={0.5}>Observability</SectionTitle>
+            <SectionTitle delay={0.4}>Observability</SectionTitle>
             <Row gutter={[16, 16]}>
-              <Col md={15}><Card style={{ borderRadius: '12px' }}><Chart labels={labelss} data={data} title="overall Observability" /></Card></Col>
-              <Col md={9}><Card style={{ borderRadius: '12px' }}><HalfPieChart labels={labels1} data={data1} /></Card></Col>
+              <Col md={15}>
+                <Card
+                  style={{
+                    borderRadius: "10px",
+                    boxShadow: "0px 2px 6px rgba(0,0,0,0.1)",
+                    background: "#fff",
+                  }}
+                >
+                  <Chart labels={labels} data={data} title="Overall Observability" />
+                </Card>
+              </Col>
+              <Col md={9}>
+                <Card
+                  style={{
+                    borderRadius: "10px",
+                    boxShadow: "0px 2px 6px rgba(0,0,0,0.1)",
+                    background: "#fff",
+                  }}
+                >
+                  <HalfPieChart labels={labels1} data={data1} />
+                </Card>
+              </Col>
             </Row>
 
-            <br/>
-            <SectionTitle delay={0.5}>Snapshot</SectionTitle>
+            <br />
+            <SectionTitle delay={0.6}>Snapshot</SectionTitle>
             <Row gutter={[16, 16]}>
-              <Col md={9}><Card style={{ borderRadius: '12px', padding:"10px" }}><DonutChart /></Card></Col>
+              <Col md={9}>
+                <Card
+                  style={{
+                    borderRadius: "10px",
+                    boxShadow: "0px 2px 6px rgba(0,0,0,0.1)",
+                    background: "#fff",
+                  }}
+                >
+                  <DonutChart />
+                </Card>
+              </Col>
             </Row>
           </motion.div>
         )}
       </AnimatePresence>
     </motion.div>
-  )
+  );
 }
 
-export default Dashboard
+export default Dashboard;
