@@ -9,8 +9,14 @@ import {
   MenuItem,
   Menu,
   useTheme,
+  Tooltip,
+  Divider,
 } from "@mui/material";
-import { AccountCircleOutlined, Login } from "@mui/icons-material";
+import {
+  AccountCircleOutlined,
+  Login,
+  AccessTime,
+} from "@mui/icons-material";
 import { useAuth } from "../Context/AuthContext";
 import { Typography } from "antd";
 
@@ -18,102 +24,165 @@ const Header = ({ onDateChange }) => {
   const theme = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
-
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [context, setContext] = useState("Account");
-  const [loaded, setLoaded] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
-
-  // Detect section
-  const path = location.pathname.toLowerCase();
-
-  const isSecurity = path.startsWith("/security");
-  const isOperational = path.startsWith("/operational");
-  const isAdmin = path.startsWith("/admin");
-  const isImsProduct = path.startsWith("/imsproduct");
-
-  const layout = isSecurity
-    ? "1"
-    : isOperational
-    ? "2"
-    : isAdmin
-    ? "4"
-    : isImsProduct
-    ? "3"
-    : "";
-
-  // Menu controls
-  const handleMenu = (event) => setAnchorEl(event.currentTarget);
-  const handleClose = () => setAnchorEl(null);
   const { logout } = useAuth();
 
-  useEffect(() => setLoaded(true), []);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState("");
 
+  // Path detection
+  const path = location.pathname.toLowerCase();
+  const layout = path.startsWith("/security")
+    ? "Security"
+    : path.startsWith("/operational")
+    ? "Operational Excellence"
+    : path.startsWith("/imsproduct")
+    ? "IMS Product"
+    : path.startsWith("/admin")
+    ? "Admin"
+    : "Cost";
+
+  // Menu handlers
+  const handleMenu = (e) => setAnchorEl(e.currentTarget);
+  const handleClose = () => setAnchorEl(null);
+
+  // Dynamic last updated text
   useEffect(() => {
-    if (startDate && endDate && context) {
-      onDateChange({ startDate, endDate, context });
-    }
-  }, [startDate, endDate, context, onDateChange]);
-
-  const handleReset = () => {
-    setStartDate("");
-    setEndDate("");
-  };
-
-  // ✅ Title logic (IMS Product included)
-  const getHeaderTitle = () => {
-    switch (layout) {
-      case "1":
-        return "Security";
-      case "2":
-        return "Operational Excellence";
-      case "3":
-        return "IMS Product";
-      case "4":
-        return "Admin";
-      default:
-        return "Cost Management";
-    }
-  };
+    const updateTime = () => {
+      const now = new Date();
+      const days = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      const date = now.toLocaleDateString("en-GB");
+      const day = days[now.getDay()];
+      const time = now.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+      setLastUpdated(`Last updated: ${date}, ${day}, Time: 2:00 PM`);
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <AppBar
       position="static"
-      elevation={2}
+      elevation={3}
       sx={{
         bgcolor: "white",
-        color: theme.palette.text.primary,
+        color: "black",
+        borderBottom: "1px solid #eaeaea",
       }}
     >
-      <Toolbar sx={{ justifyContent: "space-between", flexWrap: "wrap" }}>
-        <Box sx={{ display: "flex", alignItems: "center" }}>
+      <Toolbar
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          px: { xs: 2, sm: 2, md: 2 },
+          py: 1,
+          flexWrap: "wrap",
+          gap: 2,
+        }}
+      >
+        {/* LEFT SIDE */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <img
             src={logo}
             alt="logo"
-            style={{ height: 70, marginRight: 25, cursor: "pointer" }}
-            onClick={() => navigate("/Imsproduct")}
-          />
-          <Typography.Title
-            level={3}
             style={{
-              fontFamily:
-                "Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif",
-              fontSize: "23px",
-              fontWeight: 700,
-              color: "black",
-              margin: 0,
+              height: 55,
+              cursor: "pointer",
             }}
-          >
-            {getHeaderTitle()}
-          </Typography.Title>
+            onClick={() => navigate("/imsproduct")}
+          />
+          <Box>
+            <Typography.Title
+              level={4}
+              style={{
+                margin: 0,
+                fontWeight: 700,
+                fontSize: "21px",
+                letterSpacing: "0.2px",
+                color: "#222",
+              }}
+            >
+              {layout}
+            </Typography.Title>
+            <Typography.Text
+              style={{
+                fontSize: 13,
+                color: "#777",
+                fontWeight: 500,
+              }}
+            >
+              Insight Management System
+            </Typography.Text>
+          </Box>
         </Box>
 
-        {/* User Menu */}
-        <IconButton onClick={handleMenu}>
-          <AccountCircleOutlined fontSize="medium" />
-        </IconButton>
+        {/* RIGHT SIDE */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2.5,
+            flexWrap: "wrap",
+          }}
+        >
+          {/* Last Updated */}
+          <Tooltip>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                bgcolor: "#f2f5fa",
+                px: 2,
+                py: 0.6,
+                borderRadius: 2,
+                border: "1px solid #e2e8f0",
+              }}
+            >
+              <AccessTime sx={{ fontSize: 18, mr: 1, color: "#6b7280" }} />
+              <Typography.Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "#374151",
+                }}
+              >
+                {lastUpdated}
+              </Typography.Text>
+            </Box>
+          </Tooltip>
 
+          <Divider
+            orientation="vertical"
+            flexItem
+            // sx={{ bgcolor: "#ddd", height: 24 }}
+          />
+
+          {/* Profile Menu */}
+          <IconButton
+            onClick={handleMenu}
+            sx={{
+              color: "#374151",
+              "&:hover": { bgcolor: "#f3f4f6" },
+            }}
+          >
+            <AccountCircleOutlined fontSize="medium" />
+          </IconButton>
+        </Box>
+
+        {/* Dropdown Menu */}
         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
           <MenuItem
             onClick={() => {
@@ -126,13 +195,9 @@ const Header = ({ onDateChange }) => {
           <MenuItem
             onClick={() => {
               handleClose();
-              // call context logout which clears localStorage
               try {
                 logout();
-              } catch (e) {
-                // ignore
-              }
-              // ensure redirect to login
+              } catch (e) {}
               navigate("/login");
             }}
           >
