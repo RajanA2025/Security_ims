@@ -61,57 +61,52 @@ export const Complaincedashmain = () => {
 
   const [autoStartStopData, setAutoStartStopData] = useState({ total: 0, enabled: 0 });
 
-useEffect(() => {
-  const fetchInstances = async () => {
-    try {
-      const response = await fetch("http://47.130.218.97:8004/instances");
-      const data = await response.json();
-
-      let stored = localStorage.getItem("account_ids");
-
-      // Normalize localStorage value to array
+  useEffect(() => {
+    const fetchInstances = async () => {
       try {
-        stored = JSON.parse(stored);
-      } catch {
-        stored = stored ? [stored] : [];
+        const response = await fetch("http://47.130.218.97:8004/instances");
+        const data = await response.json();
+
+        let stored = localStorage.getItem("account_ids");
+
+        // Normalize localStorage value to array
+        try {
+          stored = JSON.parse(stored);
+        } catch {
+          stored = stored ? [stored] : [];
+        }
+
+        let accounts = Array.isArray(stored) ? stored.map(String) : [String(stored)];
+
+        // Remove "ALL" - if ALL was selected → show everything
+        accounts = accounts.filter((id) => id !== "ALL");
+
+        // ✅ If ALL → don't filter
+        const filtered = accounts.length > 0
+          ? data.filter((item) => accounts.includes(String(item.account_id)))
+          : data;
+
+        const total = filtered.length;
+
+        // ✅ Correct enabled detection using auto_enabled field
+        const enabled = filtered.filter(
+          (item) =>
+            String(item.auto_enabled).toUpperCase() === "YES"
+        ).length;
+
+        setAutoStartStopData({ total, enabled });
+
+        console.log("✅ Accounts Used:", accounts);
+        console.log("✅ Filtered Instance Count:", total);
+        console.log("✅ Enabled Count:", enabled);
+
+      } catch (err) {
+        console.error("Instance API Error:", err);
       }
+    };
 
-      let accounts = Array.isArray(stored) ? stored.map(String) : [String(stored)];
-
-      // Remove "ALL" - if ALL was selected → show everything
-      accounts = accounts.filter((id) => id !== "ALL");
-
-      // ✅ If ALL → don't filter
-      const filtered = accounts.length > 0
-        ? data.filter((item) => accounts.includes(String(item.account_id)))
-        : data;
-
-      const total = filtered.length;
-
-      // ✅ Correct enabled detection using auto_enabled field
-      const enabled = filtered.filter(
-        (item) =>
-          String(item.auto_enabled).toUpperCase() === "YES"
-      ).length;
-
-      setAutoStartStopData({ total, enabled });
-
-      console.log("✅ Accounts Used:", accounts);
-      console.log("✅ Filtered Instance Count:", total);
-      console.log("✅ Enabled Count:", enabled);
-
-    } catch (err) {
-      console.error("Instance API Error:", err);
-    }
-  };
-
-  fetchInstances();
-}, []);
-
-
-
-
-
+    fetchInstances();
+  }, []);
 
   // ✅ Calculate compliance values
   const compliance = {
@@ -309,7 +304,7 @@ useEffect(() => {
   };
 
   return (
-    <div style={{ fontFamily: "'Roboto', sans-serif", padding: "25px 10px" }}>
+    <div style={{ fontFamily: "'Roboto', sans-serif", padding: "0px 10px" }}>
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={24} md={12} lg={8}><AutoStartStopCard /></Col>
         <Col xs={24} sm={24} md={12} lg={8}><CostBreakdownCard /></Col>

@@ -9,7 +9,7 @@ const Chart = ({ labels, data }) => {
 
     const myChart = echarts.init(chartRef.current);
 
-    // ✅ Generate stable random colors for each label
+    // Stable colors
     let labelColors = {};
     const sortedLabels = Array.from(labels).sort();
 
@@ -22,74 +22,123 @@ const Chart = ({ labels, data }) => {
 
     const option = {
       backgroundColor: '#fff',
+
+      // Grid for padding
+      grid: {
+        top: 40,
+        left: 20,
+        right: 20,
+        bottom: 0,
+        containLabel: true,
+      },
+
+      // SAME FONT STYLE as DonutChart
       textStyle: {
-        color: '#333',
-        fontFamily: 'Roboto, sans-serif',
+        fontFamily: "Roboto, sans-serif",
+        color: "#333",
         fontSize: 12,
       },
+
+      // SAME TITLE STYLE
       title: {
-        subtext: 'Overall Count',
-        left: 'center',
+        subtext: "Overall Count",
+        left: "center",
         subtextStyle: {
-          fontSize: 13,
+          fontSize: 14,
           fontWeight: 600,
-          color: '#333',
-          fontFamily: 'Roboto, sans-serif',
+          color: "#000000ff",
+          fontFamily: "Roboto, sans-serif",
         },
       },
+
+      // SAME TOOLTIP STYLE
       tooltip: {
-        trigger: 'axis',
-        axisPointer: { type: 'shadow' },
-        textStyle: { fontSize: 11, color: '#333' },
-        backgroundColor: '#f9f9f9',
-        borderColor: '#ccc',
+        trigger: "axis",
+        backgroundColor: "#f9f9f9",
+        borderColor: "#ddd",
         borderWidth: 1,
+        textStyle: {
+          fontSize: 12,
+          color: "#333",
+        },
+        axisPointer: { type: "shadow" },
       },
+
+      // 🔥 SAME LEGEND STYLE as DonutChart
+      legend: {
+        bottom: "5%",
+        left: "center",
+        orient: "horizontal",
+        textStyle: {
+          fontSize: 12,
+          fontWeight: 500,
+          color: "#333",
+        },
+      },
+
       xAxis: {
-        type: 'category',
+        type: "category",
         data: labels,
         axisLabel: {
           rotate: 20,
+          color: "rgba(0, 0, 0, 0.7)",
+          fontWeight: 600,
           fontSize: 12,
-          fontWeight: 500,
-          color: '#333',
+          fontFamily: "Roboto, sans-serif",
         },
-        axisLine: { lineStyle: { color: '#888' } },
+        axisLine: { lineStyle: { color: "#888" } },
       },
+
       yAxis: {
-        type: 'value',
+        type: "value",
         axisLabel: {
+          color: "rgba(0, 0, 0, 0.7)",
+          fontWeight: 600,
           fontSize: 12,
-          color: '#333',
+          fontFamily: "Roboto, sans-serif",
         },
-        splitLine: { lineStyle: { color: '#eee' } },
+        splitLine: {
+          lineStyle: { color: "#eee" },
+        },
       },
+
+      // BAR SERIES
       series: [
         {
+          type: "bar",
+          barMaxWidth: 30,
           data: data.map((val, i) => ({
             value: val,
-            itemStyle: { color: labelColors[labels[i]] }, // 🎨 dynamic color per label
+            itemStyle: { color: labelColors[labels[i]] },
           })),
-          type: 'bar',
-          barMaxWidth: 30,
+
+          // SAME EMPHASIS STYLE as Donut Chart
+          emphasis: {
+            itemStyle: {
+              shadowBlur: 10,
+              shadowOffsetX: 0,
+              shadowColor: "rgba(0, 0, 0, 0.5)",
+            },
+          },
+
           label: {
             show: true,
-            position: 'top',
-            color: '#333',
-            fontSize: 11,
-            fontWeight: 500,
+            position: "top",
+            fontSize: 12,
+            fontWeight: 600,
+            color: "#333",
           },
         },
       ],
     };
 
     myChart.setOption(option);
-    const handleResize = () => myChart.resize();
-    window.addEventListener('resize', handleResize);
+    const resize = () => myChart.resize();
+    window.addEventListener("resize", resize);
 
     return () => {
       myChart.dispose();
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", resize);
     };
   }, [labels, data]);
 
@@ -97,10 +146,10 @@ const Chart = ({ labels, data }) => {
     <div
       ref={chartRef}
       style={{
-        width: '100%',
-        height: '250px',
-        background: '#fff',
-        borderRadius: '8px',
+        width: "100%",
+        height: "250px",
+        background: "#fff",
+        padding: 0,
       }}
     />
   );
