@@ -37,14 +37,14 @@ const Dashboard = () => {
   const [forecastAmount, setForecastAmount] = useState(0);
   const [change, setChange] = useState(null);
   const [top5Services, setTop5Services] = useState([]);
-useEffect(() => {
-  const timer = setTimeout(() => {
-    handleReset();
-  }, 500); 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleReset();
+    }, 500);
 
 
-  return () => clearTimeout(timer);
-}, []);
+    return () => clearTimeout(timer);
+  }, []);
   /** ================== Derive dashboard values ================== */
   useEffect(() => {
     if (!costData) return;
@@ -62,7 +62,7 @@ useEffect(() => {
     setTop5Services(costData.top_5?.top_services_current_month || []);
   }, [costData]);
 
-  
+
   /** ================== Handlers ================== */
   const handleContextChange = (val) => {
     setContext(val);
@@ -219,26 +219,38 @@ useEffect(() => {
                   <div
                     style={{
                       display: "flex",
-                      flexWrap: "wrap", // ✅ responsive wrapping
+                      flexWrap: "nowrap",       // ❌ stop wrapping
                       alignItems: "center",
                       justifyContent: "center",
                       gap: "6px",
                       marginTop: 8,
                       textAlign: "center",
+                      minWidth: 140,            // ✅ prevents shrinking
+                      overflow: "hidden",       // prevents content overflow issues
                     }}
                   >
                     {change < 0 ? (
-                      <LuTrendingDown style={{ fontSize: 20, color: "#16a34a" }} />
+                      <LuTrendingDown style={{ fontSize: 20, color: "#16a34a", flexShrink: 0 }} />
                     ) : (
-                      <LuTrendingUp style={{ fontSize: 20, color: "#dc2626" }} />
+                      <LuTrendingUp style={{ fontSize: 20, color: "#dc2626", flexShrink: 0 }} />
                     )}
-                    <Text strong style={{ color: change < 0 ? "#16a34a" : "#dc2626" }}>
+
+                    <Text strong style={{
+                      color: change < 0 ? "#16a34a" : "#dc2626",
+                      whiteSpace: "nowrap",      // ❌ do NOT allow line break
+                      flexShrink: 0
+                    }}>
                       {Math.abs(change).toFixed(1)}%
                     </Text>
-                    <Text type="secondary" style={{ whiteSpace: "nowrap" }}>
+
+                    <Text
+                      type="secondary"
+                      style={{ whiteSpace: "nowrap", flexShrink: 1 ,}}
+                    >
                       from last month.
                     </Text>
                   </div>
+
                 )}
               </Card>
             </Col>

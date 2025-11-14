@@ -162,18 +162,33 @@ const BarChart = () => {
     return chart;
   };
 
-  useEffect(() => {
-    if (!loading && costData) {
-      chartInstanceRef.current = updateChart(chartRef);
-    }
+useEffect(() => {
+  if (!loading && costData) {
+    chartInstanceRef.current = updateChart(chartRef);
+  }
 
-    const resizeHandler = () => {
-      chartInstanceRef.current?.resize();
-      modalChartInstanceRef.current?.resize();
-    };
-    window.addEventListener("resize", resizeHandler);
-    return () => window.removeEventListener("resize", resizeHandler);
-  }, [range, costData, loading]);
+  // Window resize
+  const resizeHandler = () => {
+    chartInstanceRef.current?.resize();
+    modalChartInstanceRef.current?.resize();
+  };
+  window.addEventListener("resize", resizeHandler);
+
+  // ⭐ Observe container resize (sidebar expand)
+  let resizeObserver = new ResizeObserver(() => {
+    chartInstanceRef.current?.resize();
+  });
+
+  if (chartRef.current) {
+    resizeObserver.observe(chartRef.current.parentElement);
+  }
+
+  return () => {
+    window.removeEventListener("resize", resizeHandler);
+    resizeObserver.disconnect();
+  };
+}, [range, costData, loading]);
+
 
   if (loading) return <Spin tip="Loading..." />;
   if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
@@ -247,7 +262,7 @@ const BarChart = () => {
           style={{
             flexGrow: 1,
             width: "100%",
-            minHeight: 475,
+            minHeight: 460,
             imageRendering: "pixelated",
             transform: "none",
           }}

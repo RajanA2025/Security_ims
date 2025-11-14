@@ -148,7 +148,7 @@ export const Complaincedashmain = () => {
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      borderRadius: 12,
+      borderRadius: 5,
       borderTop: border,
       padding: 10,
       width: "100%",
