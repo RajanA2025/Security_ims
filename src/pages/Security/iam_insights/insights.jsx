@@ -778,7 +778,7 @@ IAM Insights
                   borderRadius: '12px',
                   border: 'none',
                   background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                 }}
                 bodyStyle={{ padding: '24px' }}
               >

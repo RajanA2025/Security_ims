@@ -28,7 +28,7 @@ const Chart = ({ labels, data }) => {
         top: 40,
         left: 20,
         right: 20,
-        bottom: 0,
+        bottom: 15,
         containLabel: true,
       },
 
@@ -80,7 +80,7 @@ const Chart = ({ labels, data }) => {
         type: "category",
         data: labels,
         axisLabel: {
-          rotate: 20,
+          // rotate: 20,
           color: "rgba(0, 0, 0, 0.7)",
           fontWeight: 600,
           fontSize: 12,

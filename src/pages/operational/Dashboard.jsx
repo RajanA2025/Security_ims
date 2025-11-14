@@ -60,7 +60,7 @@ const SectionTitle = ({ children, delay = 0 }) => (
         fontSize: "18px",
         fontWeight: 600,
         color: "#0f172a",
-        margin: "0 0 16px 0",
+        margin: "0 0 0px 0",
       }}
     >
       {children}
@@ -73,7 +73,8 @@ const SectionTitle = ({ children, delay = 0 }) => (
         height: "3px",
         backgroundColor: "#0284c7",
         borderRadius: "2px",
-        marginTop: "4px",
+        margin: "5px 0px 10px 0px",
+
       }}
     />
   </motion.div>
@@ -81,7 +82,7 @@ const SectionTitle = ({ children, delay = 0 }) => (
 
 const AnimatedStatCard = ({ icon, title, value, color, index = 0 }) => (
   <motion.div variants={cardVariants} initial="hidden" animate="visible" whileHover="hover">
-    <Card
+    <Card 
       hoverable={false}
       style={{
         borderRadius: "10px",
@@ -89,6 +90,7 @@ const AnimatedStatCard = ({ icon, title, value, color, index = 0 }) => (
         background: "#fff",
         boxShadow: "0px 2px 6px rgba(0,0,0,0.1)",
         height: "100%",
+        borderTop: `4px solid ${color}`,  // <-- Add this line
       }}
       bodyStyle={{ padding: "20px" }}
     >
@@ -303,6 +305,7 @@ function Dashboard() {
                     borderRadius: "10px",
                     boxShadow: "0px 2px 6px rgba(0,0,0,0.1)",
                     background: "#fff",
+                    
                   }}
                 >
                   <Chart labels={labels} data={data} title="Overall Observability" />

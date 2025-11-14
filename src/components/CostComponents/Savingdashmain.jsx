@@ -122,6 +122,7 @@ export const Savingdashmain = () => {
 
   const headerStyle = {
     display: "flex",
+    
     justifyContent: "space-between",
     alignItems: "center",
   };

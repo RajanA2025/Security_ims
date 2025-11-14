@@ -132,7 +132,8 @@ const StatCard = ({
         borderRadius: '12px',
         border: 'none',
         background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+        borderTop: `5px solid ${strokeColor}`,
       }}
       bodyStyle={{ padding: '24px' }}
     >
@@ -292,7 +293,6 @@ const Insights = () => {
   const [data1, setData1] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const API_URL = "http://47.130.218.97:8012/iam";
   const API_URL1 = "http://47.130.218.97:8012/security-groups";
   const storedAccountId = localStorage.getItem("account_ids");
