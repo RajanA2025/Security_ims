@@ -323,7 +323,7 @@ const Companyadmin = () => {
                             setSelectedAccount(acc);
                             setShowDeleteModal(true);
                           }}
-                          className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+                          className="p-2 m-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
                         >
                           <Trash2 size={16} />
                         </button>

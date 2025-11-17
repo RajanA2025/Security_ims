@@ -208,7 +208,7 @@ const Business = () => {
     );
 
     return (
-        <>
+        < div className="p-3">
             {/* Header & Search */}
             <Row gutter={[16, 16]} style={{ marginBottom: 10 , marginTop:15 }}>
                 <Col md={20}>
@@ -217,10 +217,11 @@ const Business = () => {
                         style={{
                             fontFamily: "'Roboto', 'Segoe UI', sans-serif",
                             fontSize: "20px",
-                            fontWeight: 500,
-                            color: "black",
+                            fontWeight: 600,
+                          color: "#1f2937",
                             margin: 0,
                         }}
+                          
                     >
                         Cloud-Watch
                     </Typography.Title>
@@ -248,63 +249,6 @@ const Business = () => {
                 pagination={{ pageSize: 8 }}
             />
 
-            {/* Modal */}
-            {/* <Modal
-        title={`${selectedData?.account_name || ""} - Account Details`}
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        footer={null}
-        width={900}
-      >
-        {selectedData && (
-          <Card
-            size="small"
-            title="Information"
-            style={{ marginBottom: 16 }}
-            headStyle={headerStyle}
-          >
-            <Descriptions bordered column={2} size="small">
-              <Descriptions.Item label="Account ID">
-                {selectedData.account_id}
-              </Descriptions.Item>
-              <Descriptions.Item label="Account Name">
-                {getRecordUsername(selectedData)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Instance ID">
-                {selectedData.instance_id || "-"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Instance Name">
-                {selectedData.instance_name || "-"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Namespace">
-                {selectedData.namespace || "-"}
-              </Descriptions.Item>
-              <Descriptions.Item label="State Value">
-                {selectedData.state_value || "-"}
-              </Descriptions.Item>
-              <Descriptions.Item label="State Updated">
-                {selectedData.state_updated || "-"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Evaluation Periods">
-                {selectedData.evaluation_periods}
-              </Descriptions.Item>
-              <Descriptions.Item label="Period">
-                {selectedData.period}
-              </Descriptions.Item>
-              <Descriptions.Item label="Statistic">
-                {selectedData.statistic || "-"}
-              </Descriptions.Item>
-              <Descriptions.Item label="History Event Time">
-                {selectedData.history_event_time || "-"}
-              </Descriptions.Item>
-              <Descriptions.Item label="History Summary">
-                {selectedData.history_summary || "-"}
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
-        )}
-      </Modal> */}
-            {/* Modal */}
             <Modal
                 title={`${selectedData?.account_name || ""} - Account Details`}
                 open={isModalOpen}
@@ -385,7 +329,7 @@ const Business = () => {
                 )}
             </Modal>
 
-        </>
+        </div>
     );
 };
 

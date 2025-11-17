@@ -326,7 +326,7 @@ const Securitygrp = () => {
   ];
 
   return (
-    <div className="p-5">
+    <div className="p-3">
     
 <Row gutter={[16, 16]} style={{ marginBottom: 5 }}>
   <Col md={16}>

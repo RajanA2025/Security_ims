@@ -220,7 +220,7 @@ const Business = () => {
   ];
 
   return (
-    <>
+    <div className="p-3">
       {/* Search */}
       <Row gutter={[16, 16]} style={{ marginBottom: 10, marginTop: 10 }}>
         <Col md={20}>
@@ -229,8 +229,8 @@ const Business = () => {
             style={{
               fontFamily: "Roboto, Segoe UI, sans-serif",
               fontSize: "20px",
-              fontWeight: 500,
-              color: "black",
+               fontWeight: 600,
+                          color: "#1f2937",
               margin: 0
             }}
           >
@@ -286,7 +286,7 @@ const Business = () => {
           </Card>
         )}
       </Modal>
-    </>
+    </div>
   );
 };
 

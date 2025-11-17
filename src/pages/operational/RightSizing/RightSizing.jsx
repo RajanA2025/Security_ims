@@ -460,8 +460,8 @@ const RightSizing = () => {
   }
 
   return (
-    <div style={{ padding: '0 0 24px 0' }}>
-      <div style={{ maxWidth: '100%', margin: 0, padding: '0 0' }}>
+    // <div style={{ padding: '0 0 24px 0' }}>
+      <div className='p-4' style={{ maxWidth: '100%'}}>
         {/* Header with Filters */}
         <Row gutter={[16, 8]} style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 4 ,marginTop:10}}>
           <Col xs={24} md={12}>
@@ -563,7 +563,7 @@ const RightSizing = () => {
           className="custom-table"
         />
       </div>
-    </div>
+    // </div>
   );
 }
 

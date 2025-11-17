@@ -271,7 +271,7 @@ const filteredData = accountFilteredData.filter(item =>
 
 
   return (
-    <>
+    < div className="p-3">
      
 
       {/* Search input */}
@@ -282,8 +282,8 @@ const filteredData = accountFilteredData.filter(item =>
   style={{
     fontFamily: "'Roboto', 'Segoe UI', sans-serif",
     fontSize: "20px",
-    fontWeight: 500,
-    color: "black",
+     fontWeight: 600,
+                          color: "#1f2937",
     margin: 0
   }}
 >
@@ -341,7 +341,7 @@ AMI
           </Card>
         )}
       </Modal>
-    </>
+    </div>
   );
 };
 

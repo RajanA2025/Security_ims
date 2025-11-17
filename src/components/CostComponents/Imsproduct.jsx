@@ -157,7 +157,7 @@ export default function Imsproduct() {
 
 
       {/* ✅ Cards Section */}
-      <Row gutter={32} justify="center">
+      <Row gutter={[16, 16]} justify="center">        
         {/* COST CARD */}
         <Col>
           <motion.div

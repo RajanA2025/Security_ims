@@ -217,7 +217,7 @@ useEffect(() => {
   );
 
   return (
-    <div className="p-6">
+    <div className="p-3">
      
 
       {/* Search input */}

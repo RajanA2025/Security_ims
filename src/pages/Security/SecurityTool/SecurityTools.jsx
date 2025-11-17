@@ -307,7 +307,7 @@ const SecurityTools = () => {
   ];
 
   return (
-    <div className="p-6">
+    <div className="p-3">
 
 
       <Row gutter={[16, 16]} style={{ justifyContent: "flex-end" }}>

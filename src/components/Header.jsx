@@ -8,20 +8,19 @@ import {
   IconButton,
   MenuItem,
   Menu,
-  useTheme,
-  Tooltip,
   Divider,
+  useTheme,
+  useMediaQuery,
+  Tooltip,
 } from "@mui/material";
-import {
-  AccountCircleOutlined,
-  Login,
-  AccessTime,
-} from "@mui/icons-material";
+import { AccountCircleOutlined, Login, AccessTime } from "@mui/icons-material";
+import { Menu as MenuIcon } from "@mui/icons-material";
 import { useAuth } from "../Context/AuthContext";
 import { Typography } from "antd";
 
-const Header = ({ onDateChange }) => {
+const Header = ({ isExpanded, setIsExpanded }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -29,7 +28,7 @@ const Header = ({ onDateChange }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [lastUpdated, setLastUpdated] = useState("");
 
-  // Path detection
+  // Detect current page
   const path = location.pathname.toLowerCase();
   const layout = path.startsWith("/security")
     ? "Security"
@@ -41,31 +40,14 @@ const Header = ({ onDateChange }) => {
     ? "Admin"
     : "Cost";
 
-  // Menu handlers
-  const handleMenu = (e) => setAnchorEl(e.currentTarget);
-  const handleClose = () => setAnchorEl(null);
-
-  // Dynamic last updated text
+  // Last updated time
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      const days = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-      ];
       const date = now.toLocaleDateString("en-GB");
-      const day = days[now.getDay()];
-      const time = now.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
-      setLastUpdated(`Last updated: ${date}, ${day}, Time: 2:00 PM`);
+      const day = now.toLocaleDateString("en-US", { weekday: "long" });
+      const time = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      setLastUpdated(`Last updated: ${date}, ${day}, Time: 2:00 AM IST`); // Static time as per requirement
     };
     updateTime();
     const interval = setInterval(updateTime, 60000);
@@ -80,6 +62,7 @@ const Header = ({ onDateChange }) => {
         bgcolor: "white",
         color: "black",
         borderBottom: "1px solid #eaeaea",
+        transition: "all 0.3s ease",
       }}
     >
       <Toolbar
@@ -87,106 +70,111 @@ const Header = ({ onDateChange }) => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          px: { xs: 2, sm: 2, md: 2 },
-          py: 1,
+          px: { xs: 1, md: 2 },
+          py: { xs: 1, md: 1.2 },
           flexWrap: "wrap",
-          gap: 2,
+          rowGap: 1.5,
         }}
       >
-        {/* LEFT SIDE */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        {/* LEFT BLOCK */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1, minWidth: 200 }}>
+          {/* Hamburger for mobile */}
+          {isMobile && (
+            <IconButton
+              onClick={() => setIsExpanded((prev) => !prev)}
+              sx={{ color: "#374151", transition: "transform 0.3s", "&:hover": { transform: "scale(1.1)" } }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
+
+          {/* Logo */}
           <img
             src={logo}
             alt="logo"
             style={{
-              height: 55,
+              height: isMobile ? 40 : 55,
               cursor: "pointer",
+              transition: "transform 0.3s",
             }}
             onClick={() => navigate("/imsproduct")}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
           />
+
+          {/* Title */}
           <Box>
             <Typography.Title
               level={4}
               style={{
                 margin: 0,
                 fontWeight: 700,
-                fontSize: "21px",
-                letterSpacing: "0.2px",
+                fontSize: isMobile ? 17 : 21,
                 color: "#222",
+                whiteSpace: "nowrap",
               }}
             >
               {layout}
             </Typography.Title>
-            <Typography.Text
-              style={{
-                fontSize: 13,
-                color: "#777",
-                fontWeight: 500,
-              }}
-            >
-              Insight Management System
-            </Typography.Text>
+            {!isMobile && (
+              <Typography.Text style={{ fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                Insight Management System
+              </Typography.Text>
+            )}
           </Box>
         </Box>
 
-        {/* RIGHT SIDE */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 2.5,
-            flexWrap: "wrap",
-          }}
-        >
-          {/* Last Updated */}
-          <Tooltip>
+        {/* RIGHT BLOCK */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2.5, flexWrap: "nowrap" }}>
+          <Tooltip title={isMobile ? lastUpdated : ""} arrow>
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
                 bgcolor: "#f2f5fa",
-                px: 2,
-                py: 0.6,
+                px: isMobile ? 1.2 : 2,
+                py: 0.7,
                 borderRadius: 2,
                 border: "1px solid #e2e8f0",
+                cursor: "default",
+                transition: "all 0.2s ease",
+                "&:hover": { boxShadow: isMobile ? "0 2px 6px rgba(0,0,0,0.15)" : "none" },
               }}
             >
-              <AccessTime sx={{ fontSize: 18, mr: 1, color: "#6b7280" }} />
-              <Typography.Text
-                style={{
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: "#374151",
-                }}
-              >
-                {lastUpdated}
-              </Typography.Text>
+              <AccessTime sx={{ fontSize: 18, mr: isMobile ? 0 : 1, color: "#6b7280" }} />
+              {!isMobile && (
+                <Typography.Text style={{ fontSize: 13, fontWeight: 500, color: "#374151" }}>
+                  {lastUpdated}
+                </Typography.Text>
+              )}
             </Box>
           </Tooltip>
 
-          <Divider
-            orientation="vertical"
-            flexItem
-            // sx={{ bgcolor: "#ddd", height: 24 }}
-          />
+          <Divider orientation="vertical" flexItem />
 
-          {/* Profile Menu */}
           <IconButton
-            onClick={handleMenu}
+            onClick={(e) => setAnchorEl(e.currentTarget)}
             sx={{
               color: "#374151",
-              "&:hover": { bgcolor: "#f3f4f6" },
+              "&:hover": { bgcolor: "#f3f4f6", transform: "scale(1.05)" },
+              transition: "all 0.2s",
             }}
           >
             <AccountCircleOutlined fontSize="medium" />
           </IconButton>
         </Box>
 
-        {/* Dropdown Menu */}
-        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+        {/* Profile Dropdown */}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={() => setAnchorEl(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
+        >
           <MenuItem
             onClick={() => {
-              handleClose();
+              setAnchorEl(null);
               alert("Go to Profile");
             }}
           >
@@ -194,10 +182,8 @@ const Header = ({ onDateChange }) => {
           </MenuItem>
           <MenuItem
             onClick={() => {
-              handleClose();
-              try {
-                logout();
-              } catch (e) {}
+              setAnchorEl(null);
+              logout();
               navigate("/login");
             }}
           >

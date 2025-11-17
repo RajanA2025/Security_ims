@@ -27,9 +27,7 @@ const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
 const Dashboard = () => {
-  const { costData, loading, error, filters, setFilters, accounts } =
-
-    useContext(CostContext);
+  const { costData, loading, error, filters, setFilters, accounts } = useContext(CostContext);
 
   const [context, setContext] = useState([]);
   const [dates, setDates] = useState([]);
@@ -37,15 +35,15 @@ const Dashboard = () => {
   const [forecastAmount, setForecastAmount] = useState(0);
   const [change, setChange] = useState(null);
   const [top5Services, setTop5Services] = useState([]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       handleReset();
     }, 500);
-
-
     return () => clearTimeout(timer);
   }, []);
-  /** ================== Derive dashboard values ================== */
+
+  // Calculate dashboard metrics
   useEffect(() => {
     if (!costData) return;
 
@@ -62,21 +60,15 @@ const Dashboard = () => {
     setTop5Services(costData.top_5?.top_services_current_month || []);
   }, [costData]);
 
-
   /** ================== Handlers ================== */
   const handleContextChange = (val) => {
     setContext(val);
     localStorage.setItem("current_acc", val);
-
-    setFilters((prev) => ({
-      ...prev,
-      account_id: val || null,
-    }));
+    setFilters((prev) => ({ ...prev, account_id: val || null }));
   };
 
   const handleDateChange = (val) => {
     setDates(val);
-
     if (val && val.length === 2) {
       setFilters((prev) => ({
         ...prev,
@@ -95,12 +87,8 @@ const Dashboard = () => {
   };
 
   /** ================== TreeSelect Data ================== */
-  // ✅ Filter accounts using localStorage account_ids
   const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
-
-  const filteredAccounts = accounts.filter((acc) =>
-    storedAccountIds.includes(acc)
-  );
+  const filteredAccounts = accounts.filter((acc) => storedAccountIds.includes(acc));
 
   const treeData = [
     {
@@ -115,11 +103,7 @@ const Dashboard = () => {
     },
   ];
 
-
-
-
-  /** ================== Render ================== */
-  /** ================== Render ================== */
+  /** ================== Loading/Error ================== */
   if (loading) {
     return (
       <div
@@ -127,7 +111,7 @@ const Dashboard = () => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          height: "80vh", // full viewport height
+          height: "80vh",
           width: "100%",
         }}
       >
@@ -143,51 +127,62 @@ const Dashboard = () => {
       </p>
     );
   }
-  if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
 
+  /** ================== Render ================== */
   return (
-    <div style={{ width: "100%", padding: "10px 10px", boxSizing: "border-box" }}>
-      {/* ========== Filters ========== */}
-      <Row justify="end">
-        <Card
-          size="small"
-          style={{ borderRadius: 12, background: "none" }}
-          bodyStyle={{ padding: "5px 0px" }}
-        >
-          <Space size="middle" wrap>
-            <TreeSelect
-              treeData={treeData}
-              value={context}
-              onChange={handleContextChange}
-              placeholder="Select filter"
-              style={{ minWidth: 200 }}
-              suffixIcon={<DownOutlined />}
-              allowClear
-              dropdownStyle={{ padding: "12px 0" }}
-              treeLine
-              fieldNames={{ title: "title", value: "value", children: "children" }}
-              treeNodeLabelProp="title"
-              showArrow
-              popupClassName="custom-tree-dropdown"
-            />
+    <div style={{ width: "100%", padding: "10px", boxSizing: "border-box" }}>
+      {/* Filters */}
+<Row gutter={[8, 8]}>
+  <Col xs={24}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "flex-end", // push content to right
+      }}
+    >
+      <Card
+        size="small"
+        style={{ borderRadius: 12, background: "none" }}
+        bodyStyle={{ padding: "8px 0px" }}
+      >
+        <Space size="middle" wrap>
+          <TreeSelect
+            treeData={treeData}
+            value={context}
+            onChange={handleContextChange}
+            placeholder="Select filter"
+            style={{ minWidth: 170, maxWidth: 250, width: "100%" }}
+            suffixIcon={<DownOutlined />}
+            allowClear
+            dropdownStyle={{ padding: "12px 0" }}
+            treeLine
+            fieldNames={{ title: "title", value: "value", children: "children" }}
+            treeNodeLabelProp="title"
+            showArrow
+            popupClassName="custom-tree-dropdown"
+          />
 
-            <RangePicker
-              value={dates}
-              onChange={handleDateChange}
-              size="middle"
-              style={{ width: 240 }}
-            />
+          <RangePicker
+            value={dates}
+            onChange={handleDateChange}
+            size="middle"
+            style={{ width: "100%", maxWidth: 240 }}
+          />
 
-            <Button icon={<ReloadOutlined />} onClick={handleReset}>
-              Reset
-            </Button>
-          </Space>
-        </Card>
-      </Row>
+          <Button icon={<ReloadOutlined />} onClick={handleReset}>
+            Reset
+          </Button>
+        </Space>
+      </Card>
+    </div>
+  </Col>
+</Row>
 
-      {/* ========== Main Grid ========== */}
-      <Row gutter={[16, 16]} style={{ marginTop: 10, padding: "0px 10px" }}>
-        {/* Left Section */}
+
+
+      {/* Main Grid */}
+      <Row gutter={[16, 16]} style={{ marginTop: 10 }}>
+        {/* Left Column */}
         <Col xs={24} md={12} lg={8}>
           <Row gutter={[16, 16]}>
             {/* Current Month Cost */}
@@ -204,14 +199,7 @@ const Dashboard = () => {
                 }}
               >
                 <Text strong>Current Month Cost</Text>
-                <Title
-                  level={4}
-                  style={{
-                    margin: "15px 0",
-                    textAlign: "center",
-                    wordBreak: "break-word",
-                  }}
-                >
+                <Title level={4} style={{ margin: "15px 0", textAlign: "center" }}>
                   ${currentMonthCost?.toLocaleString()}
                 </Title>
 
@@ -219,38 +207,35 @@ const Dashboard = () => {
                   <div
                     style={{
                       display: "flex",
-                      flexWrap: "nowrap",       // ❌ stop wrapping
+                      flexWrap: "nowrap",
                       alignItems: "center",
                       justifyContent: "center",
-                      gap: "6px",
+                      gap: 6,
                       marginTop: 8,
                       textAlign: "center",
-                      minWidth: 140,            // ✅ prevents shrinking
-                      overflow: "hidden",       // prevents content overflow issues
+                      overflow: "hidden",
                     }}
                   >
                     {change < 0 ? (
-                      <LuTrendingDown style={{ fontSize: 20, color: "#16a34a", flexShrink: 0 }} />
+                      <LuTrendingDown style={{ fontSize: 20, color: "#16a34a" }} />
                     ) : (
-                      <LuTrendingUp style={{ fontSize: 20, color: "#dc2626", flexShrink: 0 }} />
+                      <LuTrendingUp style={{ fontSize: 20, color: "#dc2626" }} />
                     )}
 
-                    <Text strong style={{
-                      color: change < 0 ? "#16a34a" : "#dc2626",
-                      whiteSpace: "nowrap",      // ❌ do NOT allow line break
-                      flexShrink: 0
-                    }}>
+                    <Text
+                      strong
+                      style={{
+                        color: change < 0 ? "#16a34a" : "#dc2626",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       {Math.abs(change).toFixed(1)}%
                     </Text>
 
-                    <Text
-                      type="secondary"
-                      style={{ whiteSpace: "nowrap", flexShrink: 1 ,}}
-                    >
+                    <Text type="secondary" style={{ whiteSpace: "nowrap" }}>
                       from last month.
                     </Text>
                   </div>
-
                 )}
               </Card>
             </Col>
@@ -269,14 +254,7 @@ const Dashboard = () => {
                 }}
               >
                 <Text strong>Forecast Cost</Text>
-                <Title
-                  level={4}
-                  style={{
-                    margin: "15px 0 0",
-                    textAlign: "center",
-                    wordBreak: "break-word",
-                  }}
-                >
+                <Title level={4} style={{ margin: "15px 0 0", textAlign: "center" }}>
                   ${forecastAmount?.toLocaleString()}
                 </Title>
 
@@ -302,16 +280,9 @@ const Dashboard = () => {
           </Row>
         </Col>
 
-
         {/* Donut Chart */}
         <Col xs={24} md={12} lg={6} style={{ display: "flex", justifyContent: "center" }}>
-          <div
-            style={{
-              width: "100%",
-              maxWidth: 400,
-              transition: "width 0.3s ease, height 0.3s ease",
-            }}
-          >
+          <div style={{ width: "100%", maxWidth: 400 }}>
             <DonutChart />
           </div>
         </Col>
@@ -324,14 +295,14 @@ const Dashboard = () => {
 
       {/* Savings */}
       <Row style={{ marginTop: 16 }}>
-        <Col span={24}>
+        <Col xs={24}>
           <Savingdashmain />
         </Col>
       </Row>
 
       {/* Compliance */}
       <Row style={{ marginTop: 16 }}>
-        <Col span={24}>
+        <Col xs={24}>
           <Complaincedashmain />
         </Col>
       </Row>
