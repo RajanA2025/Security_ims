@@ -130,17 +130,20 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
         width: isExpanded ? 200 : isMobile ? 0 : 90,
         bgcolor: "#4f46e5",
         height: "100vh",
-        borderRight: `1px solid ${theme.palette.divider}`,
+        // borderRight: `1px solid ${theme.palette.divider}`,
         position: isMobile ? "absolute" : "relative",
         transition: "all 0.3s ease",
+        top: 0,
+        left: 0,
+        zIndex: 1200, // high enough to stay above content
+        transition: "all 0.3s ease",
         pt: 2,
-        zIndex: 1200,
         overflowX: "hidden",
       }}
     >
       {/* Toggle button for desktop */}
       {!isMobile && (
-       <IconButton
+        <IconButton
           onClick={toggleSidebar}
           sx={{
             position: "absolute",

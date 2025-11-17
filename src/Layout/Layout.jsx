@@ -5,7 +5,7 @@ import Sidebar from "../components/Sidebar";
 import "../stylecss/App.css";
 
 const Layout = ({ onDateChange }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <div className="app-container p-0">
