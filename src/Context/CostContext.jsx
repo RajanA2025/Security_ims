@@ -99,7 +99,6 @@ export const CostProvider = ({ children }) => {
   const getAllCompanies = async (forceRefresh = false) => {
     // Prevent infinite loop fetches
     if (hasFetchedCompanies.current && !forceRefresh) {
-      console.log("✅ Using cached company list");
       return companies;
     }
 
@@ -167,7 +166,6 @@ export const CostProvider = ({ children }) => {
           end_date: end_date || "",
         };
 
-        console.log("🔹 Sending POST body:", postBody);
 
         // POST request instead of GET
         const [costRes, resourcesRes, tagRes] = await Promise.all([

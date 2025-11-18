@@ -16,7 +16,6 @@ export const Costdeepdrive = () => {
       storedAccounts = [storedAccounts];
 
 
-      console.log("storedAccounts:", storedAccounts);
     }
 
     fetch("http://47.130.218.97:8002/instances")

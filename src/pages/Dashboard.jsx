@@ -375,7 +375,6 @@ const Insights = () => {
         const normalizeId = (id) => String(id).trim().toLowerCase();
         const normalizedIds = storedIds.map(normalizeId);
 
-        console.log("Normalized Account IDs:", normalizedIds);
 
         // ✅ Fetch all API data
         const [response1, response2] = await Promise.all([
@@ -393,7 +392,6 @@ const Insights = () => {
               item.Account_ID;
             return normalizedIds.includes(normalizeId(itemId));
           });
-          console.log("Filtered Data 1:", filteredData);
           setData(filteredData);
         }
 
@@ -407,7 +405,6 @@ const Insights = () => {
               item.Account_ID;
             return normalizedIds.includes(normalizeId(itemId));
           });
-          console.log("Filtered Data 2:", filtered2);
           setData1(filtered2);
         }
 

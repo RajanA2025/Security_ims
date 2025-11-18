@@ -51,13 +51,12 @@ const SecurityTools = () => {
         try {
           storedAccountIds = JSON.parse(storedAccountIds);
         } catch {
-          storedAccountIds = [storedAccountIds]; // wrap single ID
+          storedAccountIds = [storedAccountIds]; 
         }
 
         // Normalize function
         const normalizeId = (id) => String(id).trim().toLowerCase();
         const storedIds = storedAccountIds.map((id) => normalizeId(id));
-        console.log("Filtered Account IDs:", storedIds);
 
         if (tabKey === "1") {
           const res = await api.get("/kms");

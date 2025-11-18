@@ -81,7 +81,6 @@ const RightSizing = () => {
       setError(null);
 
       const API_ENDPOINT = '/performance';
-      console.log('Fetching data from:', API_ENDPOINT);
 
       const response = await api.get(API_ENDPOINT, {
         headers: {
@@ -91,11 +90,9 @@ const RightSizing = () => {
         timeout: 10000, // 10 seconds timeout
       });
 
-      console.log('API Response:', response);
 
       // The API returns { data: [...] }, so we need to access response.data.data
       const responseData = response.data?.data || response.data || [];
-      console.log('Received data:', responseData);
 
       if (!Array.isArray(responseData) || responseData.length === 0) {
         setError({

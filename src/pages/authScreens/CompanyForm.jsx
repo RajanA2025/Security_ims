@@ -127,7 +127,6 @@ const CompanyForm = () => {
       cid: editCompany?.cid,
     };
 
-    console.log("📦 Payload to send:", payload);
 
     try {
       let res;
@@ -145,7 +144,6 @@ const CompanyForm = () => {
         res = await registerCompany(payload);
       }
 
-      console.log("✅ Response:", res);
 
       if (res?.message?.toLowerCase().includes("success")) {
         showToast(

@@ -210,7 +210,6 @@ const Admin = () => {
 
                 <tr key={acc.cid} className="hover:bg-gray-50">
                   {/* Company ID */}
-                  {console.log('filteredAccounts', filteredAccounts)}
                   <td className="px-4 py-3">{acc.company_id}</td>
 
                   {/* Company Name */}

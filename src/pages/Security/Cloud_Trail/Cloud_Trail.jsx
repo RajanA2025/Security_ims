@@ -22,7 +22,6 @@ const header = { backgroundColor: "#4f46e5", color: "white" };
 
 const Cloud_Trail = () => {
   const [data, setData] = useState([]);
-  console.log('data', data)
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedData, setSelectedData] = useState(null);
@@ -47,18 +46,14 @@ useEffect(() => {
           storedIdValue = parsed;
         }
       } catch {
-        // if it's a normal string, ignore
       }
 
       const normalizeId = (id) => String(id).trim().toLowerCase();
       const storedId = normalizeId(storedIdValue);
 
-      console.log("Normalized storedAccountId:", storedId);
 
-      // ✅ Step 2: Fetch API
   const [response] = await Promise.all([api.get("/cloudtrail")]);
 
-      // ✅ Step 3: Filter Data safely
       if (response?.data && Array.isArray(response.data)) {
         const filteredData = response.data.filter((item) => {
           const itemId =
@@ -69,7 +64,6 @@ useEffect(() => {
           return normalizeId(itemId) === storedId;
         });
 
-        console.log("Filtered Data 2222:", filteredData);
         setData(filteredData);
 
         if (filteredData.length === 0) {
