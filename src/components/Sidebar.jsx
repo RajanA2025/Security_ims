@@ -128,19 +128,17 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
     <Box
       sx={{
         width: isExpanded ? 200 : isMobile ? 0 : 90,
-        bgcolor: "#4f46e5",
+        bgcolor: isMobile ? "rgba(79, 70, 229, 0.8)" : "#4f46e5", // <-- opacity on mobile
         height: "100vh",
-        // borderRight: `1px solid ${theme.palette.divider}`,
         position: isMobile ? "absolute" : "relative",
         transition: "all 0.3s ease",
-        top: 0,
-        left: 0,
-        zIndex: 1200, // high enough to stay above content
-        transition: "all 0.3s ease",
+        top: isMobile ? 56 : 0,   // <-- responsive top        left: 0,
+        zIndex: 1200,
         pt: 2,
         overflowX: "hidden",
       }}
     >
+
       {/* Toggle button for desktop */}
       {!isMobile && (
         <IconButton
