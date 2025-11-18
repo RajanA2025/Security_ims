@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Card,
@@ -379,8 +379,8 @@ const Insights = () => {
 
         // ✅ Fetch all API data
         const [response1, response2] = await Promise.all([
-          axios.get(API_URL),
-          axios.get(API_URL1),
+          api.get(API_URL),
+          api.get(API_URL1),
         ]);
 
         // ✅ Filter response1

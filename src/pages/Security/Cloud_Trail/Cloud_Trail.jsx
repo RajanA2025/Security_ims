@@ -16,7 +16,7 @@ import {
   InfoCircleOutlined,
   SearchOutlined
 } from "@ant-design/icons";
-import axios from "axios";
+import api from "../../../lib/api";
 
 const header = { backgroundColor: "#4f46e5", color: "white" };
 
@@ -56,7 +56,7 @@ useEffect(() => {
       console.log("Normalized storedAccountId:", storedId);
 
       // ✅ Step 2: Fetch API
-      const [response] = await Promise.all([axios.get(API_URL)]);
+  const [response] = await Promise.all([api.get("/cloudtrail")]);
 
       // ✅ Step 3: Filter Data safely
       if (response?.data && Array.isArray(response.data)) {

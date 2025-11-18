@@ -12,7 +12,19 @@ export const AuthProvider = ({ children }) => {
     // keep isAuthenticated in sync if other code mutates localStorage
     const onStorage = () => setIsAuthenticated(Boolean(localStorage.getItem("auth_token")));
     window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    // Listen for global logout events (e.g., API 401)
+    const onAuthLogout = () => {
+      setIsAuthenticated(false);
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("company_cid");
+      localStorage.removeItem("pillars");
+      localStorage.removeItem("account_ids");
+    };
+    window.addEventListener("auth:logout", onAuthLogout);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("auth:logout", onAuthLogout);
+    };
   }, []);
 
   const login = (token) => {

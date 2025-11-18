@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import axios from "axios";
+import api from "../lib/api";
 
 const ObservabilityContext = createContext();
 
@@ -28,7 +28,7 @@ export const ObservabilityProvider = ({ children }) => {
   const fetchKeyPairs = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/keypairs2`);
+  const res = await api.get(`${API_BASE_URL}/keypairs2`);
       setSecurityData(filterByAccounts(res.data));
     } finally {
       setLoading(false);
@@ -38,7 +38,7 @@ export const ObservabilityProvider = ({ children }) => {
   const fetchEIP = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/orphaned-eip`);
+  const res = await api.get(`${API_BASE_URL}/orphaned-eip`);
       setEipData(filterByAccounts(res.data));
     } finally {
       setLoading(false);
@@ -48,7 +48,7 @@ export const ObservabilityProvider = ({ children }) => {
   const fetchVolumes = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/orphaned-volumes`);
+  const res = await api.get(`${API_BASE_URL}/orphaned-volumes`);
       setVolumeData(filterByAccounts(res.data));
     } finally {
       setLoading(false);
@@ -58,7 +58,7 @@ export const ObservabilityProvider = ({ children }) => {
   const fetchS3 = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/s3`);
+  const res = await api.get(`${API_BASE_URL}/s3`);
       setS3Data(filterByAccounts(res.data));
     } finally {
       setLoading(false);
@@ -68,7 +68,7 @@ export const ObservabilityProvider = ({ children }) => {
   const fetchEC2 = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE_URL}/ec2`);
+  const res = await api.get(`${API_BASE_URL}/ec2`);
       setEc2Data(filterByAccounts(res.data));
     } finally {
       setLoading(false);

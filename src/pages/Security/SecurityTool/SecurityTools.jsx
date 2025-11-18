@@ -20,7 +20,7 @@ import {
   FilterOutlined,
   InfoCircleOutlined
 } from "@ant-design/icons";
-import axios from "axios";
+import api from "../../../lib/api";
 
 const header = { backgroundColor: "#4f46e5", color: "white" };
 
@@ -56,24 +56,24 @@ const SecurityTools = () => {
 
         // Normalize function
         const normalizeId = (id) => String(id).trim().toLowerCase();
-        const storedIds = storedAccountIds.map(id => normalizeId(id));
+        const storedIds = storedAccountIds.map((id) => normalizeId(id));
         console.log("Filtered Account IDs:", storedIds);
 
-        if (tabKey === "2") {
-          const res = await axios.get("http://47.130.218.97:8012/tools");
+        if (tabKey === "1") {
+          const res = await api.get("/kms");
           if (Array.isArray(res.data)) {
-            const filtered = res.data.filter(item =>
-              storedIds.includes(normalizeId(item.account_id || item.aws_account))
-            );
-            setSecurityData(filtered);
-          }
-        } else if (tabKey === "1") {
-          const res = await axios.get("http://47.130.218.97:8012/kms");
-          if (Array.isArray(res.data)) {
-            const filtered = res.data.filter(item =>
+            const filtered = res.data.filter((item) =>
               storedIds.includes(normalizeId(item.account_id || item.aws_account))
             );
             setKmData(filtered);
+          }
+        } else if (tabKey === "2") {
+          const res = await api.get("/tools");
+          if (Array.isArray(res.data)) {
+            const filtered = res.data.filter((item) =>
+              storedIds.includes(normalizeId(item.account_id || item.aws_account))
+            );
+            setSecurityData(filtered);
           }
         }
       } catch (err) {

@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import DonutChart from "../../components/dashboard/donutchart";
 import Chart from "../../components/dashboard/chart";
 import HalfPieChart from "../../components/dashboard/halfpiechart";
-import axios from "axios";
+import api from "../../lib/api";
 import { useObservability } from "../../Context/ObservabilityContext";
 
 const { Title } = Typography;
@@ -188,7 +188,7 @@ function Dashboard() {
   const fetchPerformanceData = async () => {
     try {
       setLoading(true);
-      const { data } = await axios.get("http://47.130.218.97:8005/performance");
+      const { data } = await api.get("/performance");
       const result = (data.data || []).map((item) => ({
         id: item.id,
         accountId: String(item.account_id).trim(),

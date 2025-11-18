@@ -27,7 +27,7 @@ import {
   SecurityScanFilled,
   SecurityScanTwoTone
 } from "@ant-design/icons";
-import axios from "axios";
+import api from "../../../lib/api";
 import { PortableWifiOffOutlined, PortraitOutlined, SecuritySharp } from "@mui/icons-material";
 
 // Animation variants
@@ -186,7 +186,7 @@ const Securitygrp = () => {
           ? storedAccountId.map(normalizeId)
           : [normalizeId(storedAccountId)];
     
-        const [response] = await Promise.all([axios.get(API_URL)]);
+  const [response] = await Promise.all([api.get("/security-groups")]);
     
         if (response?.data && Array.isArray(response.data)) {
     

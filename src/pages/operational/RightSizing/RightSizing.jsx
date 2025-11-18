@@ -15,7 +15,7 @@ import {
   SearchOutlined,
   ReloadOutlined
 } from '@ant-design/icons';
-import axios from 'axios';
+import api from '../../../lib/api';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -80,17 +80,15 @@ const RightSizing = () => {
       setLoading(true);
       setError(null);
 
-      const apiUrl = 'http://47.130.218.97:8005/performance';
-      console.log('Fetching data from:', apiUrl);
+      const API_ENDPOINT = '/performance';
+      console.log('Fetching data from:', API_ENDPOINT);
 
-      const response = await axios({
-        method: 'get',
-        url: apiUrl,
+      const response = await api.get(API_ENDPOINT, {
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           'Content-Type': 'application/json',
         },
-        timeout: 10000 // 10 seconds timeout
+        timeout: 10000, // 10 seconds timeout
       });
 
       console.log('API Response:', response);

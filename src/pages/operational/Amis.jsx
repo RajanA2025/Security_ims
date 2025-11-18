@@ -16,7 +16,7 @@ import {
   InfoCircleOutlined,
   SearchOutlined
 } from "@ant-design/icons";
-import axios from "axios";
+import api from "../../lib/api";
 
 const header = { backgroundColor: "#4f46e5", color: "white" };
 
@@ -27,17 +27,17 @@ const Amis = () => {
   const [selectedData, setSelectedData] = useState(null);
   const [searchText, setSearchText] = useState("");
 
-  const API_URL = "http://47.130.218.97:8012/amis";
+  const API_ENDPOINT = "/amis";
 
   // Fetch data on load
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(API_URL);
+        const response = await api.get(API_ENDPOINT);
         setData(response.data);
       } catch (error) {
-        console.error("Error fetching CloudTrail data:", error);
+        console.error("Error fetching AMIs data:", error);
       } finally {
         setLoading(false);
       }

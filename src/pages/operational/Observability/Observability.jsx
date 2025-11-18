@@ -26,6 +26,7 @@ import {
 
 const header = { backgroundColor: "#4f46e5", color: "white" };
 import { useObservability } from "../../../Context/ObservabilityContext";
+import api from "../../../lib/api";
 
 const Observability = () => {
   const { Option } = Select;
@@ -74,31 +75,31 @@ const Observability = () => {
           case "1":
             endpoint = `${API_BASE_URL}/keypairs2`;
             console.log('Fetching keypairs from:', endpoint);
-            response = await axios.get(endpoint);
+            response = await api.get(endpoint);
             setSecurityData(response.data);
             break;
           case "2":
             endpoint = `${API_BASE_URL}/orphaned-eip`;
             console.log('Fetching EIP data from:', endpoint);
-            response = await axios.get(endpoint);
+            response = await api.get(endpoint);
             seteipData(response.data);
             break;
           case "3":
             endpoint = `${API_BASE_URL}/orphaned-volumes`;
             console.log('Fetching volumes from:', endpoint);
-            response = await axios.get(endpoint);
+            response = await api.get(endpoint);
             setVolumeData(response.data);
             break;
           case "4":
             endpoint = `${API_BASE_URL}/s3`;
             console.log('Fetching S3 data from:', endpoint);
-            response = await axios.get(endpoint);
+            response = await api.get(endpoint);
             setS3Data(response.data);
             break;
           case "5":
             endpoint = `${API_BASE_URL}/ec2`;
             console.log('Fetching EC2 data from:', endpoint);
-            response = await axios.get(endpoint);
+            response = await api.get(endpoint);
             setEC2Data(response.data);
             break;
           default:

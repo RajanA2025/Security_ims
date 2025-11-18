@@ -32,7 +32,7 @@ import {
   CalendarOutlined,
   GlobalOutlined,
 } from "@ant-design/icons";
-import axios from "axios";
+import api from "../../../lib/api";
 
 // Animation variants
 const containerVariants = {
@@ -185,7 +185,7 @@ const Insights = () => {
         ? storedAccountId.map(normalizeId)
         : [normalizeId(storedAccountId)];
 
-      const [response1] = await Promise.all([axios.get(API_URL)]);
+  const [response1] = await Promise.all([api.get("/iam")]);
 
       if (response1?.data && Array.isArray(response1.data)) {
         const filteredData = response1.data.filter((item) => {
