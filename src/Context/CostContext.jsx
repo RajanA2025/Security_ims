@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useRef } from "react";
+import api from "../lib/api";
 
 export const CostContext = createContext();
 
@@ -29,7 +30,6 @@ export const CostProvider = ({ children }) => {
 
   // 🔸 To prevent duplicate API calls
   const hasFetchedCompanies = useRef(false);
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL1;
 
   useEffect(() => {
     const account = localStorage.getItem("current_acc");
@@ -41,12 +41,8 @@ export const CostProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${apiBaseUrl}/api/company/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(companyData),
-      });
-      return await response.json();
+      const response = await api.post(`/api/company/register`, companyData);
+      return response.data;
     } catch (err) {
       console.error("Register Error:", err);
       setError(err.message);
@@ -61,20 +57,15 @@ export const CostProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${apiBaseUrl}/api/company/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(loginData),
-      });
+      const response = await api.post(`/api/company/login`, loginData);
+      const result = response.data;
+      if (response.status < 200 || response.status >= 300) throw new Error(result.message || "Login failed");
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Login failed");
-      localStorage.setItem("auth_token", true);
       // Some backends may return 200 without a token. Treat any successful login (200)
       // as authenticated: store the token if provided, otherwise store a boolean flag.
-      const authValue = result.token ? result.token : "true";
+      const authValue = result?.token ? result.token : "true";
       localStorage.setItem("auth_token", authValue);
-      if (result.cid) localStorage.setItem("company_cid", result.cid);
+      if (result?.cid) localStorage.setItem("company_cid", result.cid);
 
       return result;
     } catch (err) {
@@ -91,18 +82,9 @@ export const CostProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch(`http://47.130.218.97:8016/api/account/add`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-        body: JSON.stringify(accountData),
-      });
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Account creation failed");
+      const response = await api.post(`/api/account/add`, accountData);
+      const result = response.data;
+      if (response.status < 200 || response.status >= 300) throw new Error(result.message || "Account creation failed");
       return result;
     } catch (err) {
       console.error("Add Account Error:", err);
@@ -125,17 +107,9 @@ export const CostProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch(`${apiBaseUrl}/api/company/all`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-      });
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Failed to fetch companies");
+      const response = await api.get(`/api/company/all`);
+      const result = response.data;
+      if (response.status < 200 || response.status >= 300) throw new Error(result.message || "Failed to fetch companies");
 
       setCompanies(result);
       hasFetchedCompanies.current = true; // ✅ mark as fetched
@@ -160,16 +134,9 @@ export const CostProvider = ({ children }) => {
       if (!cid) throw new Error("Company ID not found. Please log in again.");
 
       // 🔸 Dynamic endpoint using template literal
-      const response = await fetch(`${apiBaseUrl}/api/accounts/all/${cid}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`, // optional if backend needs token
-        },
-      });
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Failed to fetch accounts");
+      const response = await api.get(`/api/accounts/all/${cid}`);
+      const result = response.data;
+      if (response.status < 200 || response.status >= 300) throw new Error(result.message || "Failed to fetch accounts");
 
       return result;
     } catch (err) {
@@ -203,28 +170,21 @@ export const CostProvider = ({ children }) => {
         console.log("🔹 Sending POST body:", postBody);
 
         // POST request instead of GET
-        const costUrl = `http://47.130.218.97:8021/cost-summary`;
-
         const [costRes, resourcesRes, tagRes] = await Promise.all([
-          fetch(costUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(postBody),
-          }),
-          fetch("http://47.130.218.97:8003/resources"),
-          fetch("http://47.130.218.97:8007/tags"),
+          api.post(`/cost-summary`, postBody),
+          api.get(`/resources`),
+          api.get(`/tags`),
         ]);
 
-        if (!costRes.ok || !resourcesRes.ok || !tagRes.ok)
+        if (costRes.status < 200 || costRes.status >= 300 || resourcesRes.status < 200 || resourcesRes.status >= 300 || tagRes.status < 200 || tagRes.status >= 300)
           throw new Error("Failed to fetch data");
 
-        const costJson = await costRes.json();
-        const resourcesJson = await resourcesRes.json();
-        const tagsJson = await tagRes.json();
+        const costJson = costRes.data;
+        const resourcesJson = resourcesRes.data;
+        const tagsJson = tagRes.data;
 
         // Build account list
         const accountList = costJson?.all_account_ids || [];
-        console.log("🔹 Fetched account IDs:", accountList);
         const orderedAccounts = accountList.includes("ALL")
           ? accountList
           : ["ALL", ...accountList];
