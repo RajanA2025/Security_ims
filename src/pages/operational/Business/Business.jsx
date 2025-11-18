@@ -27,27 +27,43 @@ const Business = () => {
   const [selectedData, setSelectedData] = useState(null);
   const [searchText, setSearchText] = useState("");
 
-  const API_URL = "http://47.130.218.97:8012/snapshots";
+  // const API_URL = "http://47.130.218.97:8012/snapshots";
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(API_URL);
+        // Get stored IDs (string OR array)
+        let storedIds = localStorage.getItem("account_ids");
 
-        // Get stored Account IDs from localStorage
-        const storedIds = JSON.parse(localStorage.getItem("account_ids")) || [];
+        try {
+          storedIds = JSON.parse(storedIds);
+        } catch {
+          storedIds = [storedIds]; // wrap single ID inside array
+        }
 
-        // If "ALL" → show everything
-        const filtered = storedIds.includes("ALL")
-          ? response.data
-          : response.data.filter(item => storedIds.includes(item.account_id));
+        // Ensure array + string format
+        storedIds = Array.isArray(storedIds) ? storedIds : [storedIds];
 
-        // Store full dataset
-        setOriginalData(filtered);
+        // --- POST BODY ---
+        const postBody = { account_ids: storedIds };
+
+        console.log("➡️ Sending POST:", postBody);
+
+        // --- API CALL ---
+        const response = await axios.post(
+          "http://47.130.218.97:8012/snapshots/filter",
+          postBody,
+          { headers: { "Content-Type": "application/json" } }
+        );
+
+        console.log("📌 API Response:", response.data);
+
+        // Save API result
+        setOriginalData(response.data);
 
       } catch (error) {
-        console.error("Error fetching CloudTrail data:", error);
+        console.error("❌ Error fetching Snapshots:", error);
       } finally {
         setLoading(false);
       }
@@ -55,6 +71,7 @@ const Business = () => {
 
     fetchData();
   }, []);
+
 
   // Handle search input
   const handleSearch = (e) => {
@@ -87,10 +104,10 @@ const Business = () => {
   // Search filters entire dataset
   const filteredData = searchText
     ? originalData.filter(item =>
-        getRecordUsername(item)
-          .toLowerCase()
-          .includes(searchText.toLowerCase())
-      )
+      getRecordUsername(item)
+        .toLowerCase()
+        .includes(searchText.toLowerCase())
+    )
     : originalData;
 
   // Table columns
@@ -229,8 +246,8 @@ const Business = () => {
             style={{
               fontFamily: "Roboto, Segoe UI, sans-serif",
               fontSize: "20px",
-               fontWeight: 600,
-                          color: "#1f2937",
+              fontWeight: 600,
+              color: "#1f2937",
               margin: 0
             }}
           >

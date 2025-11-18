@@ -63,7 +63,7 @@ const Dashboard = () => {
   /** ================== Handlers ================== */
   const handleContextChange = (val) => {
     setContext(val);
-    localStorage.setItem("current_acc", val);
+    // localStorage.setItem("current_acc", val);
     setFilters((prev) => ({ ...prev, account_id: val || null }));
   };
 
@@ -86,22 +86,42 @@ const Dashboard = () => {
     setFilters({ account_id: null, app: null, start_date: null, end_date: null });
   };
 
-  /** ================== TreeSelect Data ================== */
-  const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
-  const filteredAccounts = accounts.filter((acc) => storedAccountIds.includes(acc));
 
-  const treeData = [
-    {
-      title: "Accounts",
-      value: "accounts",
-      selectable: false,
-      children: filteredAccounts.map((acc) => ({
+
+
+
+  /** ================== TreeSelect Data ================== */
+
+/** ================== TreeSelect Data ================== */
+
+const treeData = [
+  {
+    title: "Accounts",
+    value: "accounts",
+    selectable: false,
+    children: accounts
+      .filter(acc => acc !== "ALL")
+      .map(acc => ({
         title: acc,
         value: acc,
         selectable: true,
       })),
-    },
-  ];
+  },
+];
+
+const storedIds = JSON.parse(localStorage.getItem("account_ids")) || [];
+
+// ✅ Filter ONLY CHILD accounts, not the parent
+const filteredTreeData = [
+  {
+    ...treeData[0],
+    children: treeData[0].children.filter(child =>
+      storedIds.includes(String(child.value))
+    ),
+  },
+];
+
+
 
   /** ================== Loading/Error ================== */
   if (loading) {
@@ -132,51 +152,45 @@ const Dashboard = () => {
   return (
     <div style={{ width: "100%", padding: "10px", boxSizing: "border-box" }}>
       {/* Filters */}
-<Row gutter={[8, 8]}>
-  <Col xs={24}>
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "flex-end", // push content to right
-      }}
-    >
-      <Card
-        size="small"
-        style={{ borderRadius: 12, background: "none" }}
-        bodyStyle={{ padding: "8px 0px" }}
-      >
-        <Space size="middle" wrap>
-          <TreeSelect
-            treeData={treeData}
-            value={context}
-            onChange={handleContextChange}
-            placeholder="Select filter"
-            style={{ minWidth: 170, maxWidth: 250, width: "100%" }}
-            suffixIcon={<DownOutlined />}
-            allowClear
-            dropdownStyle={{ padding: "12px 0" }}
-            treeLine
-            fieldNames={{ title: "title", value: "value", children: "children" }}
-            treeNodeLabelProp="title"
-            showArrow
-            popupClassName="custom-tree-dropdown"
-          />
+      <Row gutter={[8, 8]}>
+        <Col xs={24}>
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <Card
+              size="small"
+              style={{ borderRadius: 12, background: "none" }}
+              bodyStyle={{ padding: "8px 0px" }}
+            >
+              <Space size="middle" wrap>
+                <TreeSelect
+                  treeData={filteredTreeData}   // <--- Filter applied
+                  value={context}
+                  onChange={handleContextChange}
+                  placeholder="Select filter"
+                  style={{ minWidth: 170, maxWidth: 250, width: "100%" }}
+                  suffixIcon={<DownOutlined />}
+                  allowClear
+                  dropdownStyle={{ padding: "12px 0" }}
+                  treeLine
+                  fieldNames={{ title: "title", value: "value", children: "children" }}
+                  treeNodeLabelProp="title"
+                  showArrow
+                />
 
-          <RangePicker
-            value={dates}
-            onChange={handleDateChange}
-            size="middle"
-            style={{ width: "100%", maxWidth: 240 }}
-          />
+                <RangePicker
+                  value={dates}
+                  onChange={handleDateChange}
+                  size="middle"
+                  style={{ width: "100%", maxWidth: 240 }}
+                />
 
-          <Button icon={<ReloadOutlined />} onClick={handleReset}>
-            Reset
-          </Button>
-        </Space>
-      </Card>
-    </div>
-  </Col>
-</Row>
+                <Button icon={<ReloadOutlined />} onClick={handleReset}>
+                  Reset
+                </Button>
+              </Space>
+            </Card>
+          </div>
+        </Col>
+      </Row>
 
 
 

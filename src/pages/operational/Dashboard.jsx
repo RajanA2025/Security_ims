@@ -82,7 +82,7 @@ const SectionTitle = ({ children, delay = 0 }) => (
 
 const AnimatedStatCard = ({ icon, title, value, color, index = 0 }) => (
   <motion.div variants={cardVariants} initial="hidden" animate="visible" whileHover="hover">
-    <Card 
+    <Card
       hoverable={false}
       style={{
         borderRadius: "10px",
@@ -188,7 +188,39 @@ function Dashboard() {
   const fetchPerformanceData = async () => {
     try {
       setLoading(true);
-      const { data } = await axios.get("http://47.130.218.97:8005/performance");
+
+      // Read stored account IDs
+      let stored = localStorage.getItem("account_ids");
+
+      try {
+        stored = JSON.parse(stored);
+      } catch {
+        stored = [stored];
+      }
+
+      const storedAccountIds = Array.isArray(stored)
+        ? stored.map(String)
+        : [String(stored)];
+
+      // --- POST BODY ---
+      const postBody = {
+        account_ids: storedAccountIds,
+      };
+
+      console.log("➡️ POST Body:", postBody);
+
+      // --- NEW API POST CALL ---
+      const { data } = await axios.post(
+        "http://47.130.218.97:8005/performance/filter",
+        postBody,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      console.log("📌 Filtered Performance Response:", data);
+
+      // Backend already filters → no frontend filter required
       const result = (data.data || []).map((item) => ({
         id: item.id,
         accountId: String(item.account_id).trim(),
@@ -196,16 +228,15 @@ function Dashboard() {
         memoryUsage: Number(item.memory_utilization).toFixed(2),
         diskUsage: Number(item.disk_utilization).toFixed(2),
       }));
-      const filtered = storedAccountIds.length
-        ? result.filter((r) => storedAccountIds.includes(r.accountId))
-        : result;
-      setPerformanceData(filtered);
+
+      setPerformanceData(result);
     } catch (err) {
-      console.error("Error fetching performance data:", err);
+      console.error("❌ Error fetching performance data:", err);
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     fetchPerformanceData();
@@ -305,7 +336,7 @@ function Dashboard() {
                     borderRadius: "10px",
                     boxShadow: "0px 2px 6px rgba(0,0,0,0.1)",
                     background: "#fff",
-                    
+
                   }}
                 >
                   <Chart labels={labels} data={data} title="Overall Observability" />

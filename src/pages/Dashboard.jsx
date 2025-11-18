@@ -293,127 +293,48 @@ const Insights = () => {
   const [data1, setData1] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const API_URL = "http://47.130.218.97:8012/iam";
-  const API_URL1 = "http://47.130.218.97:8012/security-groups";
   const storedAccountId = localStorage.getItem("account_ids");
-
-  // useEffect(() => {
-  //   const fetchAllData = async () => {
-  //     setLoading(true);
-  //     try {
-  //       let storedAccountId = localStorage.getItem("account_ids");
-
-  //       try {
-  //         storedAccountId = JSON.parse(storedAccountId);
-  //         if (Array.isArray(storedAccountId)) {
-  //           storedAccountId = storedAccountId[0]; // take first ID
-  //         }
-  //       } catch {
-  //         // keep as string
-  //       }
-
-
-  //       const [response1, response2] = await Promise.all([
-  //         axios.get(API_URL),
-  //         axios.get(API_URL1),
-  //       ]);
-
-  //       const normalizeId = (id) => String(id).trim().toLowerCase();
-  //       const storedId = normalizeId(storedAccountId);
-
-  //       if (response1?.data && Array.isArray(response1.data)) {
-  //         const filteredData = response1.data.filter((item) => {
-  //           const itemId =
-  //             item.account_id || item.accountId || item.ACCOUNT_ID || item.Account_ID;
-  //           return normalizeId(itemId) === storedId;
-  //         });
-  //         setData(filteredData);
-  //       }
-
-  //       if (response2?.data && Array.isArray(response2.data)) {
-  //         const filtered2 = response2.data.filter((item) => {
-  //           const itemId =
-  //             item.account_id || item.accountId || item.ACCOUNT_ID || item.Account_ID;
-  //           return normalizeId(itemId) === storedId;
-  //         });
-  //         setData1(filtered2);
-  //       }
-
-  //       setError(null);
-  //     } catch (error) {
-  //       console.error("Error fetching data:", error);
-  //       setError("Failed to load data. Please try again later.");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchAllData();
-  // }, [storedAccountId]);
-
-
-
-  // Calculate statistics
-
+  
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
       try {
         let storedAccountId = localStorage.getItem("account_ids");
 
+        // Parse account_ids safely
         try {
           storedAccountId = JSON.parse(storedAccountId);
         } catch {
-          // keep as string
+          storedAccountId = [storedAccountId];
         }
 
-        // ✅ Convert to array safely
-        const storedIds = Array.isArray(storedAccountId)
-          ? storedAccountId
-          : [storedAccountId];
+        // Always ensure it's an array
+        const accountIds = Array.isArray(storedAccountId)
+          ? storedAccountId.map(String)
+          : [String(storedAccountId)];
 
-        const normalizeId = (id) => String(id).trim().toLowerCase();
-        const normalizedIds = storedIds.map(normalizeId);
+        console.log("POST BODY:", { account_ids: accountIds });
 
-        console.log("Normalized Account IDs:", normalizedIds);
-
-        // ✅ Fetch all API data
-        const [response1, response2] = await Promise.all([
-          axios.get(API_URL),
-          axios.get(API_URL1),
+        // --- POST CALLS ---
+        const [iamRes, sgRes] = await Promise.all([
+          axios.post("http://47.130.218.97:8012/iam/filter", {
+            account_ids: accountIds,
+          }),
+          axios.post("http://47.130.218.97:8012/security-groups/filter", {
+            account_ids: accountIds,
+          }),
         ]);
 
-        // ✅ Filter response1
-        if (response1?.data && Array.isArray(response1.data)) {
-          const filteredData = response1.data.filter((item) => {
-            const itemId =
-              item.account_id ||
-              item.accountId ||
-              item.ACCOUNT_ID ||
-              item.Account_ID;
-            return normalizedIds.includes(normalizeId(itemId));
-          });
-          console.log("Filtered Data 1:", filteredData);
-          setData(filteredData);
-        }
+        console.log("IAM Response:", iamRes.data);
+        console.log("SG Response:", sgRes.data);
 
-        // ✅ Filter response2
-        if (response2?.data && Array.isArray(response2.data)) {
-          const filtered2 = response2.data.filter((item) => {
-            const itemId =
-              item.account_id ||
-              item.accountId ||
-              item.ACCOUNT_ID ||
-              item.Account_ID;
-            return normalizedIds.includes(normalizeId(itemId));
-          });
-          console.log("Filtered Data 2:", filtered2);
-          setData1(filtered2);
-        }
+        // Backend returns already filtered data
+        setData(Array.isArray(iamRes.data) ? iamRes.data : []);
+        setData1(Array.isArray(sgRes.data) ? sgRes.data : []);
 
         setError(null);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("❌ Error fetching data:", error);
         setError("Failed to load data. Please try again later.");
       } finally {
         setLoading(false);
@@ -422,6 +343,7 @@ const Insights = () => {
 
     fetchAllData();
   }, [storedAccountId]);
+
 
   const calculateStats = () => {
     const total = data.length;

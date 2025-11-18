@@ -28,63 +28,56 @@ const Cloud_Trail = () => {
   const [selectedData, setSelectedData] = useState(null);
   const [searchText, setSearchText] = useState("");
 
-  const API_URL = "http://47.130.218.97:8012/cloudtrail";
-   let storedAccountId = localStorage.getItem("account_ids");
+
 
   // Fetch data on load
-useEffect(() => {
-  const fetchData = async () => {
-    setLoading(true);
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
 
-    try {
-      // ✅ Step 1: Normalize storedAccountId
-      let storedIdValue = storedAccountId;
       try {
-        const parsed = JSON.parse(storedAccountId);
-        if (Array.isArray(parsed)) {
-          storedIdValue = parsed[0]; // take first if it's an array
+        // 1️⃣ Load & normalize localStorage account_ids
+        let storedIds = localStorage.getItem("account_ids");
+
+        try {
+          storedIds = JSON.parse(storedIds); // array or string
+        } catch {
+          storedIds = [storedIds]; // wrap single string
+        }
+
+        // Force array + clean IDs
+        const accountIds = (Array.isArray(storedIds) ? storedIds : [storedIds])
+          .map(id => String(id).trim())
+          .filter(Boolean);
+
+        console.log("➡️ Sending POST account_ids:", accountIds);
+
+        // 2️⃣ POST to backend (backend handles filtering)
+        const response = await axios.post(
+          "http://47.130.218.97:8012/cloudtrail/filter",
+          { account_ids: accountIds },
+          { headers: { "Content-Type": "application/json" } }
+        );
+
+        console.log("📌 API Response:", response.data);
+
+        // 3️⃣ Set data directly (already filtered)
+        if (Array.isArray(response.data)) {
+          setData(response.data);
         } else {
-          storedIdValue = parsed;
+          setData([]);
         }
-      } catch {
-        // if it's a normal string, ignore
+      } catch (error) {
+        console.error("❌ Error fetching CloudTrail data:", error);
+        setData([]);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      const normalizeId = (id) => String(id).trim().toLowerCase();
-      const storedId = normalizeId(storedIdValue);
+    fetchData();
+  }, []);
 
-      console.log("Normalized storedAccountId:", storedId);
-
-      // ✅ Step 2: Fetch API
-      const [response] = await Promise.all([axios.get(API_URL)]);
-
-      // ✅ Step 3: Filter Data safely
-      if (response?.data && Array.isArray(response.data)) {
-        const filteredData = response.data.filter((item) => {
-          const itemId =
-            item.account_id ||
-            item.accountId ||
-            item.ACCOUNT_ID ||
-            item.Account_ID;
-          return normalizeId(itemId) === storedId;
-        });
-
-        console.log("Filtered Data 2222:", filteredData);
-        setData(filteredData);
-
-        if (filteredData.length === 0) {
-          console.warn(`⚠️ No matching account found for ID: ${storedId}`);
-        }
-      }
-    } catch (error) {
-      console.error("❌ Error fetching CloudTrail data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchData();
-}, [storedAccountId]);
 
 
   // Extract username safely
@@ -218,32 +211,32 @@ useEffect(() => {
 
   return (
     <div className="p-3">
-     
+
 
       {/* Search input */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 5}}>
-      <Col md={19}>
-      <Typography.Title 
-  level={4}
-  style={{
-    fontFamily: "'Roboto', 'Segoe UI', sans-serif",
-    fontSize: "20px",
-    fontWeight: 500,
-    color: "black",
-    margin: 0
-  }}
->
-Cloud Trail
-</Typography.Title>
-  </Col>
-  <Col md={5}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 5 }}>
+        <Col md={19}>
+          <Typography.Title
+            level={4}
+            style={{
+              fontFamily: "'Roboto', 'Segoe UI', sans-serif",
+              fontSize: "20px",
+              fontWeight: 500,
+              color: "black",
+              margin: 0
+            }}
+          >
+            Cloud Trail
+          </Typography.Title>
+        </Col>
+        <Col md={5}>
           <Input
             placeholder="Search by Username"
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={handleSearch}
             allowClear
-          
+
           />
         </Col>
       </Row>
@@ -256,7 +249,7 @@ Cloud Trail
         rowKey={(record) =>
           record.event_id || `${getRecordUsername(record)}-${record.event_time}`
         }
-        pagination={{ pageSize: 8 }}
+        pagination={{ pageSize: 10 }}
       />
 
       {/* Modal */}

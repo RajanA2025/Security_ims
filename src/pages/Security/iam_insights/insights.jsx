@@ -166,44 +166,52 @@ const Insights = () => {
   //   fetchData();
   // }, []);
 
-  useEffect(() => {
+useEffect(() => {
   const fetchData = async () => {
     setLoading(true);
+
     try {
+      // Get stored account IDs
       let storedAccountId = localStorage.getItem("account_ids");
 
+      // Safely parse as array
       try {
         storedAccountId = JSON.parse(storedAccountId);
       } catch {
-        // If it's not a JSON array, wrap it as an array
         storedAccountId = [storedAccountId];
       }
 
-      // Normalize all IDs
-      const normalizeId = (id) => String(id).trim().toLowerCase();
+      // Normalize IDs
+      const normalizeId = (id) => String(id).trim();
       const storedIds = Array.isArray(storedAccountId)
         ? storedAccountId.map(normalizeId)
         : [normalizeId(storedAccountId)];
 
-      const [response1] = await Promise.all([axios.get(API_URL)]);
+      // --- POST BODY ---
+      const postBody = {
+        account_ids: storedIds,
+      };
 
-      if (response1?.data && Array.isArray(response1.data)) {
-        const filteredData = response1.data.filter((item) => {
-          const itemId =
-            item.account_id ||
-            item.accountId ||
-            item.ACCOUNT_ID ||
-            item.Account_ID;
+      console.log("➡️ POST Body Sent:", postBody);
 
-          return storedIds.includes(normalizeId(itemId));
-        });
+      // --- POST REQUEST ---
+      const response = await axios.post(
+        "http://47.130.218.97:8012/iam/filter",
+        postBody,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
-        console.log("Filtered Data:", filteredData);
-        setData(filteredData);
-        setFilteredData(filteredData);
+      console.log("📌 API Response:", response.data);
+
+      // No filtering needed here
+      if (Array.isArray(response.data)) {
+        setData(response.data);
+        setFilteredData(response.data);
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("❌ Error fetching IAM data:", error);
     } finally {
       setLoading(false);
     }
@@ -211,6 +219,7 @@ const Insights = () => {
 
   fetchData();
 }, []);
+
 
   // Helper function to format dates
   const formatDate = (dateString) => {
@@ -851,7 +860,7 @@ IAM Insights
         dataSource={filteredData}
         loading={loading}
         rowKey="user_name"
-        pagination={{ pageSize: 8 }}
+        pagination={{ pageSize: 10 }}
       />
 
       {/* Enhanced More Details Modal */}

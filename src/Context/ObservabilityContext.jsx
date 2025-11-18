@@ -13,69 +13,65 @@ export const ObservabilityProvider = ({ children }) => {
   const [s3Data, setS3Data] = useState([]);
   const [ec2Data, setEc2Data] = useState([]);
 
-  // ✅ Get stored account IDs from localStorage
-  const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
+  // ---------------------------------------------------
+  // ✅ Load account IDs safely from localStorage
+  // ---------------------------------------------------
+  let storedAccountIds = localStorage.getItem("account_ids");
+  try {
+    storedAccountIds = JSON.parse(storedAccountIds);
+  } catch {
+    storedAccountIds = storedAccountIds ? [storedAccountIds] : [];
+  }
 
-  // ✅ Filter helper
-  const filterByAccounts = (data) => {
-    if (!storedAccountIds.length) return data;
-    return data.filter((item) =>
-      storedAccountIds.includes(item.account_id) // Adjust key if needed
-    );
-  };
+  if (!Array.isArray(storedAccountIds)) {
+    storedAccountIds = [storedAccountIds];
+  }
 
-  // fetch functions
-  const fetchKeyPairs = async () => {
+  const POST_BODY = { account_ids: storedAccountIds };
+
+  // ---------------------------------------------------
+  // 🔥 Unified POST request helper (Clean & DRY)
+  // ---------------------------------------------------
+  const postRequest = async (url, setter) => {
     setLoading(true);
+
     try {
-      const res = await axios.get(`${API_BASE_URL}/keypairs2`);
-      setSecurityData(filterByAccounts(res.data));
+      const res = await axios.post(url, POST_BODY, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      console.log(`📌 ${url} →`, res.data);
+
+      setter(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error(`❌ Error fetching ${url}`, err);
+      setter([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchEIP = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${API_BASE_URL}/orphaned-eip`);
-      setEipData(filterByAccounts(res.data));
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ---------------------------------------------------
+  // 🔥 API functions (POST only, NO FILTERING)
+  // ---------------------------------------------------
+  const fetchKeyPairs = () =>
+    postRequest(`${API_BASE_URL}/keypairs2/filter`, setSecurityData);
 
-  const fetchVolumes = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${API_BASE_URL}/orphaned-volumes`);
-      setVolumeData(filterByAccounts(res.data));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchEIP = () =>
+    postRequest(`${API_BASE_URL}/orphaned-eip/filter`, setEipData);
 
-  const fetchS3 = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${API_BASE_URL}/s3`);
-      setS3Data(filterByAccounts(res.data));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchVolumes = () =>
+    postRequest(`${API_BASE_URL}/orphaned-volumes/filter`, setVolumeData);
 
-  const fetchEC2 = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${API_BASE_URL}/ec2`);
-      setEc2Data(filterByAccounts(res.data));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchS3 = () =>
+    postRequest(`${API_BASE_URL}/s3/filter`, setS3Data);
 
-  // fetch everything once on mount
+  const fetchEC2 = () =>
+    postRequest(`${API_BASE_URL}/ec2/filter`, setEc2Data);
+
+  // ---------------------------------------------------
+  // 🔥 Auto-fetch on mount
+  // ---------------------------------------------------
   useEffect(() => {
     fetchKeyPairs();
     fetchEIP();
@@ -105,5 +101,4 @@ export const ObservabilityProvider = ({ children }) => {
   );
 };
 
-// custom hook
 export const useObservability = () => useContext(ObservabilityContext);

@@ -74,180 +74,110 @@ const RightSizing = () => {
     }
   };
 
-  // Fetch performance data from API
-  const fetchPerformanceData = async () => {
+// Fetch performance data from API (POST with account_ids)
+const fetchPerformanceData = async () => {
+  try {
+    setLoading(true);
+    setError(null);
+
+    // --- NEW API URL ---
+    const apiUrl = "http://47.130.218.97:8005/performance/filter";
+
+    // --- Load IDs from localStorage ---
+    let storedAccountId = localStorage.getItem("account_ids");
+
+    // Safely parse to array
     try {
-      setLoading(true);
-      setError(null);
-
-      const apiUrl = 'http://47.130.218.97:8005/performance';
-      console.log('Fetching data from:', apiUrl);
-
-      const response = await axios({
-        method: 'get',
-        url: apiUrl,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        timeout: 10000 // 10 seconds timeout
-      });
-
-      console.log('API Response:', response);
-
-      // The API returns { data: [...] }, so we need to access response.data.data
-      const responseData = response.data?.data || response.data || [];
-      console.log('Received data:', responseData);
-
-      if (!Array.isArray(responseData) || responseData.length === 0) {
-        setError({
-          title: 'No Data Available',
-          message: 'No performance data was returned from the server.',
-          type: 'info'
-        });
-        setPerformanceData([]);
-        setFilteredData([]);
-        return;
-      }
-
-      // Transform the API response to match our expected format
-      const formattedData = responseData.map((item, index) => ({
-        key: item.id || `item-${index}`, // Ant Design requires 'key' for table rows
-        id: item.id || `item-${index}`,
-        accountId: String(item.account_id || item.accountId || '').trim(),
-        accountName: String(item.account_name || item.accountName || 'N/A').trim(),
-        region: String(item.region || 'N/A').trim(),
-        instanceId: String(item.instance_id || item.instanceId || 'N/A').trim(),
-        // Round values to 2 decimal places before formatting
-        cpuUsage: formatUsageValue(Number(item.cpu_utilization || item.cpuUtilization || 0).toFixed(2)),
-        // New columns from API data
-        cpuWeekly: item.weekly_trend || item.weeklyTrend || 'N/A',
-        cpuMonthly: item.monthly_trend || item.monthlyTrend || 'N/A',
-        recommended: item.weekly_sizing_recommendation ||
-          item.monthly_sizing_recommendation ||
-          item.weeklySizingRecommendation ||
-          item.monthlySizingRecommendation ||
-          'No recommendation',
-        // Include additional fields from the API if needed
-        timestamp: item.timestamp,
-        weeklyTrend: item.weekly_trend || item.weeklyTrend,
-        monthlyTrend: item.monthly_trend || item.monthlyTrend,
-        weeklySizingRecommendation: item.weekly_sizing_recommendation || item.weeklySizingRecommendation,
-        monthlySizingRecommendation: item.monthly_sizing_recommendation || item.monthlySizingRecommendation
-      }));
-
-      // Extract unique values for filters
-      // After formattedData is created
-
-      // Get stored account IDs from localStorage
-      const storedIds = JSON.parse(localStorage.getItem("account_ids") || "[]");
-
-      // Filter by stored account IDs if available
-      let filteredByStorage = formattedData;
-      if (Array.isArray(storedIds) && storedIds.length > 0) {
-        filteredByStorage = formattedData.filter(item => storedIds.includes(item.accountId));
-      }
-
-      // Extract unique values based on filtered list
-      const regions = [...new Set(filteredByStorage.map(item => item.region).filter(r => r && r !== 'N/A'))].sort();
-      const accountIds = [...new Set(filteredByStorage.map(item => item.accountId).filter(a => a && a !== ''))].sort();
-      const accountNames = [...new Set(filteredByStorage.map(item => item.accountName).filter(a => a && a !== 'N/A'))].sort();
-
-      setUniqueRegions(regions);
-      setUniqueAccountIds(accountIds);
-      setUniqueAccountNames(accountNames);
-
-      // Set table data from filtered list
-      setPerformanceData(filteredByStorage);
-      setFilteredData(filteredByStorage);
-
-
-    } catch (err) {
-      console.error('Error fetching performance data:', err);
-
-      let errorMessage = err.message;
-      let errorType = 'error';
-
-      if (err.code === 'ECONNABORTED') {
-        errorMessage = 'Request timeout: The server took too long to respond.';
-      } else if (err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
-        errorMessage = 'Network Error: Please check your internet connection and try again.';
-      } else if (err.message.includes('Failed to fetch') || err.name === 'TypeError') {
-        errorMessage = 'CORS Error: Cannot connect to the API server. This is likely due to Cross-Origin Resource Sharing (CORS) restrictions.';
-      } else if (err.response) {
-        // Server responded with an error status
-        errorMessage = `Server Error (${err.response.status}): ${err.response.data?.message || err.response.statusText}`;
-      }
-
-      setError({
-        title: 'Failed to Load Data',
-        message: errorMessage,
-        type: errorType,
-        showRetry: true
-      });
-
-      // Mock data for testing when API fails
-      const mockData = [
-        {
-          key: 'mock-1',
-          id: 'mock-1',
-          accountId: 'ACC-001',
-          accountName: 'Production Account',
-          region: 'us-east-1',
-          instanceId: 'i-1234567890abcdef0',
-          cpuUsage: '45.00%',
-          cpuWeekly: 'Stable',
-          cpuMonthly: 'Increasing',
-          recommended: 't3.medium'
-        },
-        {
-          key: 'mock-2',
-          id: 'mock-2',
-          accountId: 'ACC-002',
-          accountName: 'Development Account',
-          region: 'us-west-2',
-          instanceId: 'i-0987654321fedcba0',
-          cpuUsage: '78.00%',
-          cpuWeekly: 'High',
-          cpuMonthly: 'Stable',
-          recommended: 't3.large'
-        },
-        {
-          key: 'mock-3',
-          id: 'mock-3',
-          accountId: 'ACC-001',
-          accountName: 'Production Account',
-          region: 'eu-west-1',
-          instanceId: 'i-abcdef1234567890',
-          cpuUsage: '23.00%',
-          cpuWeekly: 'Low',
-          cpuMonthly: 'Decreasing',
-          recommended: 't3.small'
-        },
-        {
-          key: 'mock-4',
-          id: 'mock-4',
-          accountId: 'ACC-003',
-          accountName: 'Staging Account',
-          region: 'ap-south-1',
-          instanceId: 'i-fedcba0987654321',
-          cpuUsage: '85.00%',
-          cpuWeekly: 'Critical',
-          cpuMonthly: 'High',
-          recommended: 't3.xlarge'
-        }
-      ];
-
-      setPerformanceData(mockData);
-      setFilteredData(mockData);
-      setUniqueRegions(['us-east-1', 'us-west-2', 'eu-west-1', 'ap-south-1']);
-      setUniqueAccountIds(['ACC-001', 'ACC-002', 'ACC-003']);
-      setUniqueAccountNames(['Production Account', 'Development Account', 'Staging Account']);
-
-    } finally {
-      setLoading(false);
+      storedAccountId = JSON.parse(storedAccountId);
+    } catch {
+      storedAccountId = [storedAccountId];
     }
-  };
+
+    const normalizeId = (id) => String(id).trim();
+    const accountIds = Array.isArray(storedAccountId)
+      ? storedAccountId.map(normalizeId)
+      : [normalizeId(storedAccountId)];
+
+    const requestBody = { account_ids: accountIds };
+    console.log("➡️ POST Body:", requestBody);
+
+    // --- POST REQUEST ---
+    const response = await axios.post(apiUrl, requestBody, {
+      headers: { "Content-Type": "application/json" },
+      timeout: 15000,
+    });
+
+    const responseData = response.data?.data || response.data || [];
+
+    if (!Array.isArray(responseData) || responseData.length === 0) {
+      setError({
+        title: "No Data",
+        message: "No performance data returned.",
+        type: "info",
+      });
+      setPerformanceData([]);
+      setFilteredData([]);
+      return;
+    }
+
+    // --- Format data ---
+    const formattedData = responseData.map((item, index) => ({
+      key: item.id || `item-${index}`,
+      id: item.id || `item-${index}`,
+      accountId: String(item.account_id || "").trim(),
+      accountName: String(item.account_name || "N/A").trim(),
+      region: String(item.region || "N/A").trim(),
+      instanceId: String(item.instance_id || "N/A").trim(),
+
+      cpuUsage: formatUsageValue(
+        Number(item.cpu_utilization || 0).toFixed(2)
+      ),
+
+      cpuWeekly: item.weekly_trend || "N/A",
+      cpuMonthly: item.monthly_trend || "N/A",
+      recommended:
+        item.weekly_sizing_recommendation ||
+        item.monthly_sizing_recommendation ||
+        "No recommendation",
+
+      timestamp: item.timestamp,
+      weeklyTrend: item.weekly_trend,
+      monthlyTrend: item.monthly_trend,
+    }));
+
+    // --- Build filter lists from backend-filtered results ---
+    setUniqueRegions(
+      [...new Set(formattedData.map((i) => i.region))].filter((v) => v)
+    );
+    setUniqueAccountIds(
+      [...new Set(formattedData.map((i) => i.accountId))].filter((v) => v)
+    );
+    setUniqueAccountNames(
+      [...new Set(formattedData.map((i) => i.accountName))].filter((v) => v)
+    );
+
+    setPerformanceData(formattedData);
+    setFilteredData(formattedData);
+
+  } catch (err) {
+    console.error("Error fetching performance data:", err);
+
+    setError({
+      title: "API Error",
+      message: err.message,
+      type: "error",
+      showRetry: true,
+    });
+
+    // fallback mock data
+    setPerformanceData(mockData);
+    setFilteredData(mockData);
+
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Initial data fetch
   useEffect(() => {

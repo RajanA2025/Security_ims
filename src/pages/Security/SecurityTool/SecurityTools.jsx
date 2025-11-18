@@ -45,39 +45,59 @@ const SecurityTools = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Get stored account IDs
+        // --- Load from localStorage ---
         let storedAccountIds = localStorage.getItem("account_ids");
 
+        // Parse JSON safely
         try {
           storedAccountIds = JSON.parse(storedAccountIds);
         } catch {
-          storedAccountIds = [storedAccountIds]; // wrap single ID
+          storedAccountIds = [storedAccountIds]; // single → array
         }
 
-        // Normalize function
-        const normalizeId = (id) => String(id).trim().toLowerCase();
-        const storedIds = storedAccountIds.map(id => normalizeId(id));
-        console.log("Filtered Account IDs:", storedIds);
+        // Normalize IDs
+        const normalizeId = (id) => String(id).trim();
+        const storedIds = storedAccountIds.map(normalizeId);
 
+        console.log("➡️ Sending account_ids:", storedIds);
+
+        // Build POST body
+        const postBody = {
+          account_ids: storedIds,
+        };
+
+        let response;
+
+        // --- TAB 2 (TOOLS) API ---
         if (tabKey === "2") {
-          const res = await axios.get("http://47.130.218.97:8012/tools");
-          if (Array.isArray(res.data)) {
-            const filtered = res.data.filter(item =>
-              storedIds.includes(normalizeId(item.account_id || item.aws_account))
-            );
-            setSecurityData(filtered);
-          }
-        } else if (tabKey === "1") {
-          const res = await axios.get("http://47.130.218.97:8012/kms");
-          if (Array.isArray(res.data)) {
-            const filtered = res.data.filter(item =>
-              storedIds.includes(normalizeId(item.account_id || item.aws_account))
-            );
-            setKmData(filtered);
+          response = await axios.post(
+            "http://47.130.218.97:8012/tools/filter",
+            postBody,
+            { headers: { "Content-Type": "application/json" } }
+          );
+
+          if (Array.isArray(response.data)) {
+            setSecurityData(response.data); // No local filtering
           }
         }
+
+        // --- TAB 1 (KMS) API ---
+        else if (tabKey === "1") {
+          response = await axios.post(
+            "http://47.130.218.97:8012/kms/filter",
+            postBody,
+            { headers: { "Content-Type": "application/json" } }
+          );
+
+          if (Array.isArray(response.data)) {
+            setKmData(response.data); // No local filtering
+          }
+        }
+
+        console.log("📌 Filtered API Response:", response.data);
+
       } catch (err) {
-        console.error("Error fetching filtered data:", err);
+        console.error("❌ Error fetching filtered data:", err);
       } finally {
         setLoading(false);
       }
@@ -85,6 +105,7 @@ const SecurityTools = () => {
 
     fetchData();
   }, [tabKey]);
+
 
 
   const handleSearch = e => setSearchText(e.target.value);
