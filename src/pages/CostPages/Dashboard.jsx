@@ -35,6 +35,7 @@ const Dashboard = () => {
   const [forecastAmount, setForecastAmount] = useState(0);
   const [change, setChange] = useState(null);
   const [top5Services, setTop5Services] = useState([]);
+  const isMobile = window.innerWidth < 480;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -86,40 +87,34 @@ const Dashboard = () => {
     setFilters({ account_id: null, app: null, start_date: null, end_date: null });
   };
 
-
-
-
-
   /** ================== TreeSelect Data ================== */
 
-/** ================== TreeSelect Data ================== */
+  const treeData = [
+    {
+      title: "Accounts",
+      value: "accounts",
+      selectable: false,
+      children: accounts
+        .filter(acc => acc !== "ALL")
+        .map(acc => ({
+          title: acc,
+          value: acc,
+          selectable: true,
+        })),
+    },
+  ];
 
-const treeData = [
-  {
-    title: "Accounts",
-    value: "accounts",
-    selectable: false,
-    children: accounts
-      .filter(acc => acc !== "ALL")
-      .map(acc => ({
-        title: acc,
-        value: acc,
-        selectable: true,
-      })),
-  },
-];
+  const storedIds = JSON.parse(localStorage.getItem("account_ids")) || [];
 
-const storedIds = JSON.parse(localStorage.getItem("account_ids")) || [];
-
-// ✅ Filter ONLY CHILD accounts, not the parent
-const filteredTreeData = [
-  {
-    ...treeData[0],
-    children: treeData[0].children.filter(child =>
-      storedIds.includes(String(child.value))
-    ),
-  },
-];
+  // ✅ Filter ONLY CHILD accounts, not the parent
+  const filteredTreeData = [
+    {
+      ...treeData[0],
+      children: treeData[0].children.filter(child =>
+        storedIds.includes(String(child.value))
+      ),
+    },
+  ];
 
 
 
@@ -157,16 +152,16 @@ const filteredTreeData = [
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <Card
               size="small"
-              style={{ borderRadius: 12, background: "none" }}
+              style={{ borderRadius: 12, border:"none", background: "none" }}
               bodyStyle={{ padding: "8px 0px" }}
             >
-              <Space size="middle" wrap>
+              <Space>
                 <TreeSelect
                   treeData={filteredTreeData}   // <--- Filter applied
                   value={context}
                   onChange={handleContextChange}
                   placeholder="Select filter"
-                  style={{ minWidth: 170, maxWidth: 250, width: "100%" }}
+                  style={{ minWidth: 170, maxWidth: 170, width: "100%" }}
                   suffixIcon={<DownOutlined />}
                   allowClear
                   dropdownStyle={{ padding: "12px 0" }}
@@ -176,15 +171,22 @@ const filteredTreeData = [
                   showArrow
                 />
 
+
                 <RangePicker
                   value={dates}
                   onChange={handleDateChange}
                   size="middle"
-                  style={{ width: "100%", maxWidth: 240 }}
+                  style={{
+                    width: "100%",
+                    maxWidth: 190,
+                    fontSize: isMobile ? 12 : 14,
+                  }}
+                  dropdownClassName="mobile-range-picker"
+                  allowClear={false}
                 />
 
+
                 <Button icon={<ReloadOutlined />} onClick={handleReset}>
-                  Reset
                 </Button>
               </Space>
             </Card>
@@ -308,7 +310,7 @@ const filteredTreeData = [
       </Row>
 
       {/* Savings */}
-      <Row style={{ marginTop: 16 }}>
+      <Row style={{ marginTop: 16 ,}}>
         <Col xs={24}>
           <Savingdashmain />
         </Col>

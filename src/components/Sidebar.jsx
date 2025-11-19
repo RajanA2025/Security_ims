@@ -89,7 +89,7 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
 
   const navItemsCost = [
     { icon: <MdMoney size={30} />, label: "Cost Overview", path: "/cost" },
-    { icon: <MdMoneyOff size={30} />, label: "Cost Deepdrive", path: "/cost/cost-deepdrive" },
+    { icon: <MdMoneyOff size={30} />, label: "Cost Deep dive", path: "/cost/cost-deepdive" },
     { icon: <MdSavings size={30} />, label: "Saving Opportunity", path: "/cost/savings" },
     { icon: <MdPublic size={30} />, label: "Compliance", path: "/cost/compliance" },
   ];

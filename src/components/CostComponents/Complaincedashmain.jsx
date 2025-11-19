@@ -1,6 +1,6 @@
 // src/components/Complaincedashmain.js
 import React, { useContext, useMemo, useState, useEffect } from "react";
-import { Row, Col, Card, Typography, Progress, Tooltip, Spin } from "antd";
+import { Row, Col, Card, Typography, Progress, Tooltip, Spin, Modal } from "antd";
 import { TagOutlined, UnorderedListOutlined, DollarCircleOutlined } from "@ant-design/icons";
 import ReactECharts from "echarts-for-react";
 import { CostContext } from "../../Context/CostContext";
@@ -9,6 +9,8 @@ const { Text } = Typography;
 
 export const Complaincedashmain = () => {
   const { costData, resourcesData, tagSummary, loading, error } = useContext(CostContext);
+    const [showAccountModal, setShowAccountModal] = useState(false);
+
 
   // ✅ Get localStorage account IDs
   const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
@@ -63,6 +65,7 @@ export const Complaincedashmain = () => {
 
   useEffect(() => {
     const fetchInstances = async () => {
+     
       try {
         // Read account_ids from localStorage
         let stored = localStorage.getItem("account_ids");
@@ -115,9 +118,20 @@ export const Complaincedashmain = () => {
         // Update React state
         setAutoStartStopData({ total, enabled });
 
-        console.log("✅ Final Total:", total);
-        console.log("✅ Enabled Count:", enabled);
+        const apiAccounts = filteredData.map(item => item.account_id);
 
+        // Check if ALL local accounts exist in API response
+        const finalOutput = stored.every(acc => apiAccounts.includes(acc));
+
+        console.log("finalOutput", finalOutput);
+        if (localStorage.getItem("timeModal") === null || undefined) {
+          if (finalOutput === false) {
+            setShowAccountModal(true);
+
+          }
+
+        }
+        
       } catch (err) {
         console.error("❌ Instance API Error:", err);
       }
@@ -146,10 +160,7 @@ export const Complaincedashmain = () => {
   };
 
 
-  // ✅ Debug logs (optional)
-  console.log("🧩 Stored IDs:", normalizedIds);
-  console.log("🧩 Filtered resources:", filteredResources.length);
-  console.log("🧩 Filtered tag summary:", safeTagData);
+
 
   if (loading)
     return (
@@ -322,13 +333,78 @@ export const Complaincedashmain = () => {
     );
   };
 
+  const handlecloseModal = () => {
+    setShowAccountModal(false);
+    localStorage.setItem("timeModal", true);
+  }
+
   return (
-    <div style={{ fontFamily: "'Roboto', sans-serif", padding: "0px 10px" }}>
+    <div style={{ fontFamily: "'Roboto', sans-serif",}}>
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={24} md={12} lg={8}><AutoStartStopCard /></Col>
         <Col xs={24} sm={24} md={12} lg={8}><CostBreakdownCard /></Col>
         <Col xs={24} sm={24} md={12} lg={8}><ServiceProgressPieCard /></Col>
       </Row>
+
+      <Modal
+        open={showAccountModal}
+        footer={null}
+        closable={false}
+        centered
+        onCancel={handlecloseModal}
+        bodyStyle={{
+          padding: "24px 28px",
+          borderRadius: "16px",
+          background: "#f9fafb",
+        }}
+      >
+        <div style={{ textAlign: "center", paddingBottom: 10 }}>
+          <div
+            style={{
+              width: 70,
+              height: 70,
+              background: "#eef2ff",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 16px auto",
+            }}
+          >
+            <svg width="40" height="40" fill="#4f46e5" viewBox="0 0 24 24">
+              <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 14h-2v-2h2v2zm0-4h-2V6h2v6z"></path>
+            </svg>
+          </div>
+
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: "#111827", marginBottom: 8 }}>
+            Account Sync Pending
+          </h2>
+
+          <p style={{ fontSize: 15, color: "#4b5563", marginBottom: 20 }}>
+            Latest account was added recently.<br />
+            It may take <b>24 to 48 hours</b> to reflect in dashboard.
+          </p>
+
+          <button
+            onClick={handlecloseModal}
+            style={{
+              background: "#4f46e5",
+              color: "white",
+              border: "none",
+              padding: "10px 22px",
+              borderRadius: "8px",
+              fontSize: "15px",
+              width: "100%",
+              fontWeight: "600",
+              cursor: "pointer",
+              boxShadow: "0 4px 14px rgba(79,70,229,0.3)",
+            }}
+          >
+            Okay, Got It
+          </button>
+        </div>
+      </Modal>
+
     </div>
   );
 };
