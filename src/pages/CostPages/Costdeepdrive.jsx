@@ -10,38 +10,65 @@ export const Costdeepdrive = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // ✅ Read stored value and normalize it into an array
-    let storedAccounts = JSON.parse(localStorage.getItem("account_ids")) || [];
-    if (typeof storedAccounts === "string") {
-      storedAccounts = [storedAccounts];
+    const fetchData = async () => {
+      setLoading(true);
 
+      try {
+        // ✅ Read accounts from localStorage
+        let storedAccounts = localStorage.getItem("account_ids");
 
-      console.log("storedAccounts:", storedAccounts);
-    }
+        try {
+          storedAccounts = JSON.parse(storedAccounts);
+        } catch {
+          storedAccounts = [storedAccounts]; // wrap if single string
+        }
 
-    fetch("http://47.130.218.97:8002/instances")
-      .then((res) => res.json())
-      .then((res) => {
-        const results = res.results || [];
+        // Ensure array format
+        if (!Array.isArray(storedAccounts)) {
+          storedAccounts = [storedAccounts];
+        }
 
-        // ✅ Filter only matching accounts
-        const matched = results.filter((item) =>
-          storedAccounts.includes(item.account_id)
+        console.log("📌 POST account_ids:", storedAccounts);
+
+        // --- POST BODY ---
+        const body = {
+          account_ids: storedAccounts,
+        };
+
+        // --- API CALL (POST) ---
+        const response = await fetch(
+          "http://47.130.218.97:8002/instances/filter",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          }
         );
 
+        const json = await response.json();
+        console.log("📌 API Response:", json);
+
+        const results = json.results || [];
+
+        // Backend already filters → NO frontend filter needed
+        setFilteredAccounts(results);
+
+        // Extract unique account list for dropdown
         const uniqueAccounts = [
-          ...new Set(matched.map((inst) => inst.account_id)),
+          ...new Set(results.map((inst) => inst.account_id)),
         ];
 
         setAccounts(uniqueAccounts);
-        setFilteredAccounts(matched);
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching instances:", err);
+      } catch (err) {
+        console.error("❌ Error fetching instances:", err);
         setLoading(false);
-      });
+      }
+    };
+
+    fetchData();
   }, []);
+
 
   const handleReset = () => setSelectedAccount(null);
 

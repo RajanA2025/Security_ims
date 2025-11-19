@@ -64,49 +64,68 @@ export const Complaincedashmain = () => {
   useEffect(() => {
     const fetchInstances = async () => {
       try {
-        const response = await fetch("http://47.130.218.97:8004/instances");
-        const data = await response.json();
-
+        // Read account_ids from localStorage
         let stored = localStorage.getItem("account_ids");
 
-        // Normalize localStorage value to array
+        // Convert to array safely
         try {
           stored = JSON.parse(stored);
         } catch {
           stored = stored ? [stored] : [];
         }
 
-        let accounts = Array.isArray(stored) ? stored.map(String) : [String(stored)];
+        // Ensure array of strings
+        const accountIds = Array.isArray(stored)
+          ? stored.map(String)
+          : [String(stored)];
 
-        // Remove "ALL" - if ALL was selected → show everything
-        accounts = accounts.filter((id) => id !== "ALL");
+        // Remove "ALL" (ALL means show everything)
+        const finalIds = accountIds.filter((id) => id !== "ALL");
 
-        // ✅ If ALL → don't filter
-        const filtered = accounts.length > 0
-          ? data.filter((item) => accounts.includes(String(item.account_id)))
-          : data;
+        // Build POST body
+        const postBody = {
+          account_ids: finalIds.length > 0 ? finalIds : accountIds,
+        };
 
-        const total = filtered.length;
+        console.log("➡️ POST Body:", postBody);
 
-        // ✅ Correct enabled detection using auto_enabled field
-        const enabled = filtered.filter(
+        // Call new POST API
+        const response = await fetch(
+          "http://47.130.218.97:8009/instances/filter",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(postBody),
+          }
+        );
+
+        const filteredData = await response.json();
+
+        console.log("📌 API Response:", filteredData);
+
+        // Total instance count
+        const total = filteredData.length;
+
+        // Count enabled auto-start-stop
+        const enabled = filteredData.filter(
           (item) =>
-            String(item.auto_enabled).toUpperCase() === "YES"
+            String(item.auto_enabled).trim().toUpperCase() === "YES"
         ).length;
 
+        // Update React state
         setAutoStartStopData({ total, enabled });
 
-        console.log("✅ Accounts Used:", accounts);
-        console.log("✅ Filtered Instance Count:", total);
+        console.log("✅ Final Total:", total);
         console.log("✅ Enabled Count:", enabled);
 
       } catch (err) {
-        console.error("Instance API Error:", err);
+        console.error("❌ Instance API Error:", err);
       }
     };
 
     fetchInstances();
   }, []);
+
 
   // ✅ Calculate compliance values
   const compliance = {
