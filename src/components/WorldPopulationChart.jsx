@@ -103,7 +103,6 @@ const CpuUsageChart = ({ data = [], filters = {} }) => {
   };
 
   // Debug: Log the data being used for the chart
-  console.log('Chart data:', chartData);
   
   return (
     <div style={{ width: '100%', height: '300px', padding: '0', boxSizing: 'border-box' }}>

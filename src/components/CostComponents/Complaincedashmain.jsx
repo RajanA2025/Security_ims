@@ -96,9 +96,6 @@ export const Complaincedashmain = () => {
 
         setAutoStartStopData({ total, enabled });
 
-        console.log("✅ Accounts Used:", accounts);
-        console.log("✅ Filtered Instance Count:", total);
-        console.log("✅ Enabled Count:", enabled);
 
       } catch (err) {
         console.error("Instance API Error:", err);
@@ -126,11 +123,6 @@ export const Complaincedashmain = () => {
     auto_start_stop: autoStartStopData, // ✅ UPDATED
   };
 
-
-  // ✅ Debug logs (optional)
-  console.log("🧩 Stored IDs:", normalizedIds);
-  console.log("🧩 Filtered resources:", filteredResources.length);
-  console.log("🧩 Filtered tag summary:", safeTagData);
 
   if (loading)
     return (

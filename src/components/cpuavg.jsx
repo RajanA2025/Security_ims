@@ -22,14 +22,13 @@ function CpuAvg() {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const instances = await response.json();
-                console.log('API Response:', instances);
+             
                 
                 // Process data - group by date and calculate average CPU
                 const today = new Date();
                 const last7Days = [];
                 const dateLabels = [];
                 
-                console.log('Processing data for instances count:', instances.length);
                 
                 // Initialize data for last 7 days
                 for (let i = 6; i >= 0; i--) {
@@ -64,18 +63,11 @@ function CpuAvg() {
                     day.count > 0 ? parseFloat((day.totalCpu / day.count).toFixed(2)) : 0
                 );
                 
-                console.log('Processed CPU Averages:', cpuAverages);
-                console.log('Date Labels:', dateLabels);
                 
                 setCpuData(cpuAverages);
                 setDates(dateLabels);
                 setError(null);
-                
-                // Log the chart data that will be used
-                console.log('Chart data:', {
-                    dates: dateLabels,
-                    cpuAverages: cpuAverages
-                });
+
             } catch (err) {
                 console.error('Error fetching CPU data:', err);
                 setError('Failed to load CPU data. Please try again later.');
@@ -100,7 +92,6 @@ function CpuAvg() {
     
     // Initialize and update chart when data changes
     useEffect(() => {
-        console.log('Chart effect running with data:', { cpuData, dates });
         if (chartRef.current && cpuData.length > 0) {
             // Destroy previous chart instance if exists
             if (chartInstance.current) {

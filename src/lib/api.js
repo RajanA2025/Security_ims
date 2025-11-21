@@ -3,7 +3,7 @@ import axios from "axios";
 // Use only a single base URL variable here. If you need multiple backends,
 // create separate clients (e.g., apiAuth, apiMetrics) rather than referencing
 // multiple VITE_API_BASE_URL* env variables from this file.
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL6;
 
 const api = axios.create({
   baseURL: BASE_URL,

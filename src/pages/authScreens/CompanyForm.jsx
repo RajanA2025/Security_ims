@@ -121,7 +121,7 @@ const CompanyForm = () => {
       password: formData.password || undefined,
       cost: features.Cost,
       security: features.Security,
-      performance: isPerfOperational, // 👈 both true if selected
+      performance: isPerfOperational, 
       operational_excellence: isPerfOperational,
       role: storedRole,
       cid: editCompany?.cid,

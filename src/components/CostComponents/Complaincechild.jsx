@@ -6,11 +6,9 @@ const Compliancechild = () => {
   const { tagData, loading, error } = useContext(CostContext);
 
 
-  console.log("first", tagData);
 
   const requiredTags = ["Name", "Owner", "Project", "Environment"];
 
-  // ✅ Get account IDs from localStorage
   const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
 
   // ✅ Filter data by localStorage account_ids
@@ -22,10 +20,6 @@ const Compliancechild = () => {
     const filtered = tagData.filter((item) =>
       normalizedIds.includes(String(item.account_id))
     );
-
-    console.log("🧩 Stored IDs:", normalizedIds);
-    console.log("🧩 Filtered count:", filtered.length);
-    console.log("🧩 Example IDs in tagData:", tagData.slice(0, 3).map((d) => d.account_id));
 
     return filtered;
   }, [tagData, storedAccountIds]);
