@@ -228,6 +228,7 @@ export default function AccountsScreen() {
   // ---------------- Add / Remove account ----------------
   const handleAddAccount = useCallback(() => {
     const storedCid = localStorage.getItem("company_cid") || "";
+
     const storedPillars = JSON.parse(localStorage.getItem("pillars")) || {};
     setFormData((prev) => ({
       ...prev,
@@ -246,6 +247,7 @@ export default function AccountsScreen() {
         },
       ],
     }));
+
   }, []);
 
   const removeAccount = useCallback((index) => {
@@ -323,54 +325,55 @@ export default function AccountsScreen() {
   //   }
   // }, [formData, validateForm, navigate]);
   const handleSubmit = useCallback(async () => {
-  if (!validateForm()) {
-    setToast({ type: "error", message: "Please fill all required fields." });
-    setTimeout(() => setToast(null), 3000);
-    return;
-  }
-
-  const editData = JSON.parse(localStorage.getItem("edit_account"));
-  const isEdit = !!editData;
-
-  try {
-    for (const acc of formData.accounts) {
-      const payload = {
-        cid: Number(acc.cid),
-        account_id: acc.accountId,
-        account_name: acc.accountName,
-        access_key: acc.accessKey,
-        secret_key: acc.secretKey,
-        bucket_name: acc.bucketName,
-        prefix: acc.prefix,
-        cost: acc.selectedPillars.includes("cost"),
-        security: acc.selectedPillars.includes("security"),
-        perfops: acc.selectedPillars.includes("operational_performance"),
-      };
-
-      await fetch(
-        isEdit
-          ? "http://47.130.218.97:8016/api/account/update"
-          : "http://47.130.218.97:8016/api/account/add",
-        {
-          method: isEdit ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
+    localStorage.removeItem("timeModal");
+    if (!validateForm()) {
+      setToast({ type: "error", message: "Please fill all required fields." });
+      setTimeout(() => setToast(null), 3000);
+      return;
     }
 
-    localStorage.removeItem("edit_account");
-    setToast({ type: "success", message: isEdit ? "Accounts Updated" : "Accounts Created" });
-    setTimeout(() => setToast(null), 3000);
-    navigate("/imsproduct/accountsmanage");
-  } catch (err) {
-    console.error("Submit Error:", err);
-    setToast({ type: "error", message: err.message || "Something went wrong" });
-    setTimeout(() => setToast(null), 3000);
-  }
-}, [formData, validateForm]);
+    const editData = JSON.parse(localStorage.getItem("edit_account"));
+    const isEdit = !!editData;
 
-  
+    try {
+      for (const acc of formData.accounts) {
+        const payload = {
+          cid: Number(acc.cid),
+          account_id: acc.accountId,
+          account_name: acc.accountName,
+          access_key: acc.accessKey,
+          secret_key: acc.secretKey,
+          bucket_name: acc.bucketName,
+          prefix: acc.prefix,
+          cost: acc.selectedPillars.includes("cost"),
+          security: acc.selectedPillars.includes("security"),
+          perfops: acc.selectedPillars.includes("operational_performance"),
+        };
+
+        await fetch(
+          isEdit
+            ? "http://47.130.218.97:8016/api/account/update"
+            : "http://47.130.218.97:8016/api/account/add",
+          {
+            method: isEdit ? "PUT" : "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }
+        );
+      }
+
+      localStorage.removeItem("edit_account");
+      setToast({ type: "success", message: isEdit ? "Accounts Updated" : "Accounts Created" });
+      setTimeout(() => setToast(null), 3000);
+      navigate("/imsproduct/accountsmanage");
+    } catch (err) {
+      console.error("Submit Error:", err);
+      setToast({ type: "error", message: err.message || "Something went wrong" });
+      setTimeout(() => setToast(null), 3000);
+    }
+  }, [formData, validateForm]);
+
+
 
   // ---------------- Render ----------------
   return (

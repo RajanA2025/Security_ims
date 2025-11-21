@@ -47,13 +47,13 @@ const containerVariants = {
 };
 
 const cardVariants = {
-  hidden: { 
-    opacity: 0, 
+  hidden: {
+    opacity: 0,
     y: 20,
     scale: 0.95
   },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     y: 0,
     scale: 1,
     transition: {
@@ -79,16 +79,16 @@ const AnimatedProgress = ({ percent, strokeColor, delay = 0 }) => (
   <motion.div
     initial={{ scale: 0, rotate: -180 }}
     animate={{ scale: 1, rotate: 0 }}
-    transition={{ 
+    transition={{
       delay,
       type: "spring",
       stiffness: 200,
       damping: 15
     }}
   >
-    <Progress 
-      type="circle" 
-      percent={percent} 
+    <Progress
+      type="circle"
+      percent={percent}
       strokeColor={strokeColor}
       width={80}
     />
@@ -110,7 +110,6 @@ const Insights = () => {
   const [selectedData1, setSelectedData1] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [selectedAccountId, setSelectedAccountId] = useState(null);
-
   const { Option } = Select;
   const accountIds = [...new Set(data.map(item => item.account_id))];
 
@@ -120,50 +119,62 @@ const Insights = () => {
   const [selectedPolicyDetail, setSelectedPolicyDetail] = useState(null);
 
 
+
+
   useEffect(() => {
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      let storedAccountId = localStorage.getItem("account_ids");
+    const fetchData = async () => {
+      setLoading(true);
 
       try {
-        storedAccountId = JSON.parse(storedAccountId);
-      } catch {
-        // If it's not a JSON array, wrap it as an array
-        storedAccountId = [storedAccountId];
+        // Get stored account IDs
+        let storedAccountId = localStorage.getItem("account_ids");
+
+        // Safely parse as array
+        try {
+          storedAccountId = JSON.parse(storedAccountId);
+        } catch {
+          storedAccountId = [storedAccountId];
+        }
+
+        // Normalize IDs
+        const normalizeId = (id) => String(id).trim();
+        const storedIds = Array.isArray(storedAccountId)
+          ? storedAccountId.map(normalizeId)
+          : [normalizeId(storedAccountId)];
+
+        // --- POST BODY ---
+        const postBody = {
+          account_ids: storedIds,
+        };
+
+        console.log("➡️ POST Body Sent:", postBody);
+
+        // --- POST REQUEST ---
+        const response = await axios.post(
+          "http://47.130.218.97:8012/iam/filter",
+          postBody,
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+
+        console.log("📌 API Response:", response.data);
+
+        // No filtering needed here
+        if (Array.isArray(response.data)) {
+          setData(response.data);
+          setFilteredData(response.data);
+        }
+      } catch (error) {
+        console.error("❌ Error fetching IAM data:", error);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      // Normalize all IDs
-      const normalizeId = (id) => String(id).trim().toLowerCase();
-      const storedIds = Array.isArray(storedAccountId)
-        ? storedAccountId.map(normalizeId)
-        : [normalizeId(storedAccountId)];
+    fetchData();
+  }, []);
 
-  const [response1] = await Promise.all([api.get("/iam")]);
-
-      if (response1?.data && Array.isArray(response1.data)) {
-        const filteredData = response1.data.filter((item) => {
-          const itemId =
-            item.account_id ||
-            item.accountId ||
-            item.ACCOUNT_ID ||
-            item.Account_ID;
-
-          return storedIds.includes(normalizeId(itemId));
-        });
-
-        setData(filteredData);
-        setFilteredData(filteredData);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchData();
-}, []);
 
   // Helper function to format dates
   const formatDate = (dateString) => {
@@ -403,6 +414,45 @@ const Insights = () => {
       )
     },
     {
+      title: "Security Score",
+      dataIndex: "security_score",
+      key: "security_score",
+      width: 120,
+      render: (_, record) => {
+        const score = record.security_score;
+        const risk = record.risk_level;
+
+        // Color + Blink Logic
+        let color = "#52c41a"; // LOW = green
+        let blink = false;
+
+        if (risk === "HIGH") {
+          color = "#ff4d4f";   // red
+          blink = true;
+        } else if (risk === "MEDIUM") {
+          color = "#faad14";   // amber
+        }
+
+        return (
+          <Tooltip title={`Risk Level: ${risk}`}>
+            <span
+              style={{
+                color,
+                fontWeight: "bold",
+                animation: blink ? "blink 1s infinite" : "none",
+                cursor: "pointer",
+                fontSize: 14
+              }}
+            >
+              {score}
+            </span>
+          </Tooltip>
+        );
+      }
+    },
+
+
+    {
       title: "Policy",
       key: "policy",
       width: 100,
@@ -432,47 +482,52 @@ const Insights = () => {
 
   return (
     <div className="p-6">
-  <Row gutter={[16, 16]} style={{ marginBottom: 5 }}>
-  <Col md={16}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 15 }}>
+        {/* Title */}
+        <Col xs={24} sm={24} md={16}>
+          <Typography.Title
+            level={4}
+            style={{
+              fontFamily: "'Roboto', 'Segoe UI', sans-serif",
+              fontSize: "20px",
+              fontWeight: 500,
+              color: "black",
+              margin: 0
+            }}
+          >
+            IAM Insights
+          </Typography.Title>
+        </Col>
 
-<Typography.Title 
-  level={4}
-  style={{
-    fontFamily: "'Roboto', 'Segoe UI', sans-serif",
-    fontSize: "20px",
-    fontWeight: 500,
-    color: "black",
-    margin: 0
-  }}
->
-IAM Insights
-</Typography.Title>
-  </Col>
-  <Col md={4} >
-    <Select
-      placeholder="Filter by Account ID"
-      style={{ width: "100%" }}
-      allowClear
-      value={selectedAccountId}
-      onChange={handleAccountChange}
-    >
-      {accountIds.map((id) => (
-        <Option key={id} value={id}>
-          {id}
-        </Option>
-      ))}
-    </Select>
-  </Col>
-  <Col md={4}>
-    <Input
-      placeholder="Search by Name"
-      prefix={<SearchOutlined />}
-      value={searchText}
-      onChange={handleSearch}
-      allowClear
-    />
-  </Col>
-</Row>
+        {/* Account ID Select */}
+        <Col xs={24} sm={12} md={4}>
+          <Select
+            placeholder="Filter by Account ID"
+            style={{ width: "100%" }}
+            allowClear
+            value={selectedAccountId}
+            onChange={handleAccountChange}
+          >
+            {accountIds.map((id) => (
+              <Option key={id} value={id}>
+                {id}
+              </Option>
+            ))}
+          </Select>
+        </Col>
+
+        {/* Search Input */}
+        <Col xs={24} sm={12} md={4}>
+          <Input
+            placeholder="Search by Name"
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={handleSearch}
+            allowClear
+          />
+        </Col>
+      </Row>
+
 
       {/* Stats Cards */}
       <motion.div
@@ -490,14 +545,16 @@ IAM Insights
               whileHover="hover"
               className="stat-card"
             >
-              <Card 
+              <Card
                 hoverable={false}
-                style={{ 
+                style={{
                   height: '100%',
                   borderRadius: '12px',
                   border: 'none',
                   background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                  borderTop: `5px solid ${mfaPercent >= 75 ? "#ff4d4f" : mfaPercent > 50 ? "#fa8c16" : "#52c41a"
+                    }`
                 }}
                 bodyStyle={{ padding: '24px' }}
               >
@@ -505,40 +562,41 @@ IAM Insights
                   <motion.div
                     initial={{ scale: 0, rotate: -90 }}
                     animate={{ scale: 1, rotate: 0 }}
-                    transition={{ 
+                    transition={{
                       delay: 0.1,
                       type: "spring",
                       stiffness: 200
                     }}
                     style={{ marginBottom: '16px' }}
                   >
-                    {React.cloneElement(<SafetyCertificateOutlined />, { 
-                      style: { 
-                        fontSize: 32, 
-                        color: mfaPercent >= 75 ? "#ff4d4f" : mfaPercent > 50 ? "#fa8c16" : "#52c41a" 
-                      } 
+                    {React.cloneElement(<SafetyCertificateOutlined />, {
+                      style: {
+                        fontSize: 32,
+                        color: mfaPercent >= 75 ? "#ff4d4f" : mfaPercent > 50 ? "#fa8c16" : "#52c41a"
+                      }
                     })}
                   </motion.div>
-                  
-                  <AnimatedProgress 
-                    percent={mfaPercent} 
+
+                  <AnimatedProgress
+                    percent={mfaPercent}
                     strokeColor={mfaPercent >= 75 ? "#ff4d4f" : mfaPercent > 50 ? "#fa8c16" : "#52c41a"}
                     delay={0.2}
                   />
-                  
+
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
                     style={{ marginTop: '16px' }}
                   >
-                    <div style={{ 
-                      fontWeight: 600, 
+                    <div style={{
+                      fontWeight: 600,
                       fontSize: '16px',
                       marginBottom: '8px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+
                       gap: '8px'
                     }}>
                       MFA Enabled
@@ -546,7 +604,7 @@ IAM Insights
                         <InfoCircleOutlined style={{ color: '#1890ff' }} />
                       </Tooltip>
                     </div>
-                    <motion.span 
+                    <motion.span
                       style={{ color: "#666", fontSize: '14px' }}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -568,14 +626,16 @@ IAM Insights
               whileHover="hover"
               className="stat-card"
             >
-              <Card 
+              <Card
                 hoverable={false}
-                style={{ 
+                style={{
                   height: '100%',
                   borderRadius: '12px',
                   border: 'none',
                   background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                  borderTop: `5px solid ${passwordPercent >= 75 ? "#ff4d4f" : passwordPercent > 50 ? "#fa8c16" : "#52c41a"
+                    }`
                 }}
                 bodyStyle={{ padding: '24px' }}
               >
@@ -583,35 +643,35 @@ IAM Insights
                   <motion.div
                     initial={{ scale: 0, rotate: -90 }}
                     animate={{ scale: 1, rotate: 0 }}
-                    transition={{ 
+                    transition={{
                       delay: 0.2,
                       type: "spring",
                       stiffness: 200
                     }}
                     style={{ marginBottom: '16px' }}
                   >
-                    {React.cloneElement(<LockOutlined />, { 
-                      style: { 
-                        fontSize: 32, 
-                        color: passwordPercent > 50 ? "#52c41a" : "#ff4d4f" 
-                      } 
+                    {React.cloneElement(<LockOutlined />, {
+                      style: {
+                        fontSize: 32,
+                        color: passwordPercent > 75 ? "#52c41a" : passwordPercent > 50 ? "#fa8c16" : "#ff4d4f"
+                      }
                     })}
                   </motion.div>
-                  
-                  <AnimatedProgress 
-                    percent={passwordPercent} 
-                    strokeColor={passwordPercent > 50 ? "#52c41a" : "#ff4d4f"}
+
+                  <AnimatedProgress
+                    percent={passwordPercent}
+                    strokeColor={passwordPercent > 75 ? "#ff4d4f" : passwordPercent > 50 ? "#fa8c16" : "#52c41a"}
                     delay={0.3}
                   />
-                  
+
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
                     style={{ marginTop: '16px' }}
                   >
-                    <div style={{ 
-                      fontWeight: 600, 
+                    <div style={{
+                      fontWeight: 600,
                       fontSize: '16px',
                       marginBottom: '8px',
                       display: 'flex',
@@ -624,7 +684,7 @@ IAM Insights
                         <InfoCircleOutlined style={{ color: '#1890ff' }} />
                       </Tooltip>
                     </div>
-                    <motion.span 
+                    <motion.span
                       style={{ color: "#666", fontSize: '14px' }}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -646,14 +706,16 @@ IAM Insights
               whileHover="hover"
               className="stat-card"
             >
-              <Card 
+              <Card
                 hoverable={false}
-                style={{ 
+                style={{
                   height: '100%',
                   borderRadius: '12px',
                   border: 'none',
                   background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                  borderTop: `5px solid ${adminPercent >= 75 ? "#ff4d4f" : adminPercent > 50 ? "#fa8c16" : "#52c41a"
+                    }`
                 }}
                 bodyStyle={{ padding: '24px' }}
               >
@@ -661,35 +723,35 @@ IAM Insights
                   <motion.div
                     initial={{ scale: 0, rotate: -90 }}
                     animate={{ scale: 1, rotate: 0 }}
-                    transition={{ 
+                    transition={{
                       delay: 0.3,
                       type: "spring",
                       stiffness: 200
                     }}
                     style={{ marginBottom: '16px' }}
                   >
-                    {React.cloneElement(<UserSwitchOutlined />, { 
-                      style: { 
-                        fontSize: 32, 
-                        color: adminPercent > 75 ? "#52c41a" : adminPercent > 50 ? "#fa8c16" : "#ff4d4f" 
-                      } 
+                    {React.cloneElement(<UserSwitchOutlined />, {
+                      style: {
+                        fontSize: 32,
+                        color: adminPercent > 75 ? "#52c41a" : adminPercent > 50 ? "#fa8c16" : "#ff4d4f"
+                      }
                     })}
                   </motion.div>
-                  
-                  <AnimatedProgress 
-                    percent={adminPercent} 
+
+                  <AnimatedProgress
+                    percent={adminPercent}
                     strokeColor={adminPercent > 75 ? "#ff4d4f" : adminPercent > 50 ? "#fa8c16" : "#52c41a"}
                     delay={0.4}
                   />
-                  
+
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 }}
                     style={{ marginTop: '16px' }}
                   >
-                    <div style={{ 
-                      fontWeight: 600, 
+                    <div style={{
+                      fontWeight: 600,
                       fontSize: '16px',
                       marginBottom: '8px',
                       display: 'flex',
@@ -702,7 +764,7 @@ IAM Insights
                         <InfoCircleOutlined style={{ color: '#1890ff' }} />
                       </Tooltip>
                     </div>
-                    <motion.span 
+                    <motion.span
                       style={{ color: "#666", fontSize: '14px' }}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -724,14 +786,16 @@ IAM Insights
               whileHover="hover"
               className="stat-card"
             >
-              <Card 
+              <Card
                 hoverable={false}
-                style={{ 
+                style={{
                   height: '100%',
                   borderRadius: '12px',
                   border: 'none',
                   background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
                   boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                  borderTop: `5px solid ${consolePercent >= 75 ? "#52c41a" : consolePercent > 50 ? "#fa8c16" : "#ff4d4f"
+                    }`
                 }}
                 bodyStyle={{ padding: '24px' }}
               >
@@ -739,35 +803,35 @@ IAM Insights
                   <motion.div
                     initial={{ scale: 0, rotate: -90 }}
                     animate={{ scale: 1, rotate: 0 }}
-                    transition={{ 
+                    transition={{
                       delay: 0.4,
                       type: "spring",
                       stiffness: 200
                     }}
                     style={{ marginBottom: '16px' }}
                   >
-                    {React.cloneElement(<DesktopOutlined />, { 
-                      style: { 
-                        fontSize: 32, 
-                        color: consolePercent > 75 ? "#52c41a" : consolePercent > 50 ? "#fa8c16" : "#ff4d4f" 
-                      } 
+                    {React.cloneElement(<DesktopOutlined />, {
+                      style: {
+                        fontSize: 32,
+                        color: consolePercent > 75 ? "#52c41a" : consolePercent > 50 ? "#fa8c16" : "#ff4d4f"
+                      }
                     })}
                   </motion.div>
-                  
-                  <AnimatedProgress 
-                    percent={consolePercent} 
+
+                  <AnimatedProgress
+                    percent={consolePercent}
                     strokeColor={consolePercent > 75 ? "#52c41a" : consolePercent > 50 ? "#fa8c16" : "#ff4d4f"}
                     delay={0.5}
                   />
-                  
+
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.7 }}
                     style={{ marginTop: '16px' }}
                   >
-                    <div style={{ 
-                      fontWeight: 600, 
+                    <div style={{
+                      fontWeight: 600,
                       fontSize: '16px',
                       marginBottom: '8px',
                       display: 'flex',
@@ -780,7 +844,7 @@ IAM Insights
                         <InfoCircleOutlined style={{ color: '#1890ff' }} />
                       </Tooltip>
                     </div>
-                    <motion.span 
+                    <motion.span
                       style={{ color: "#666", fontSize: '14px' }}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -799,13 +863,17 @@ IAM Insights
       <br />
 
       {/* Table */}
-      <Table
-        columns={columns}
-        dataSource={filteredData}
-        loading={loading}
-        rowKey="user_name"
-        pagination={{ pageSize: 8 }}
-      />
+      <div style={{ width: "100%", overflowX: "auto" }}>
+        <Table
+          columns={columns}
+          dataSource={filteredData}
+          loading={loading}
+          rowKey="user_name"
+          pagination={{ pageSize: 10 }}
+          scroll={{ x: "max-content" }}
+        />
+      </div>
+
 
       {/* Enhanced More Details Modal */}
       <Modal
@@ -824,15 +892,15 @@ IAM Insights
         {selectedData && (
           <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
             {/* Basic Information Card */}
-            <Card 
-              size="small" 
+            <Card
+              size="small"
               title={
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <InfoCircleOutlined />
                   Basic Information
                 </div>
-              } 
-              style={{ marginBottom: 16 }} 
+              }
+              style={{ marginBottom: 16 }}
               headStyle={header}
             >
               <Row gutter={[16, 16]}>
@@ -875,22 +943,22 @@ IAM Insights
             </Card>
 
             {/* Security Information Card */}
-            <Card 
-              size="small" 
+            <Card
+              size="small"
               title={
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <SafetyCertificateOutlined />
                   Security & Authentication
                 </div>
               }
-              style={{ marginBottom: 16 }} 
+              style={{ marginBottom: 16 }}
               headStyle={header}
             >
               <Row gutter={[16, 16]}>
                 <Col span={8}>
                   <Descriptions bordered column={1} size="small">
                     <Descriptions.Item label="MFA Status">
-                      <Tag 
+                      <Tag
                         color={selectedData.mfa_enabled ? "green" : "red"}
                         icon={<SafetyCertificateOutlined />}
                       >
@@ -898,7 +966,7 @@ IAM Insights
                       </Tag>
                     </Descriptions.Item>
                     <Descriptions.Item label="Password Enabled">
-                      <Tag 
+                      <Tag
                         color={getPasswordEnabledStatus(selectedData) ? "green" : "red"}
                         icon={<LockOutlined />}
                       >
@@ -911,12 +979,12 @@ IAM Insights
                   <Descriptions bordered column={1} size="small">
                     <Descriptions.Item label="Password Age">
                       {selectedData.password_age != null ? (
-                        <Badge 
+                        <Badge
                           count={`${selectedData.password_age} days`}
-                          style={{ 
+                          style={{
                             backgroundColor: getPasswordAgeColor(selectedData.password_age) === 'red' ? '#ff4d4f' :
-                                           getPasswordAgeColor(selectedData.password_age) === 'orange' ? '#fa8c16' :
-                                           getPasswordAgeColor(selectedData.password_age) === 'gold' ? '#faad14' : '#52c41a'
+                              getPasswordAgeColor(selectedData.password_age) === 'orange' ? '#fa8c16' :
+                                getPasswordAgeColor(selectedData.password_age) === 'gold' ? '#faad14' : '#52c41a'
                           }}
                         />
                       ) : (
@@ -942,23 +1010,23 @@ IAM Insights
             </Card>
 
             {/* Access Keys Information Card */}
-            <Card 
-              size="small" 
+            <Card
+              size="small"
               title={
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <KeyOutlined />
                   Access Keys Information
                 </div>
               }
-              style={{ marginBottom: 16 }} 
+              style={{ marginBottom: 16 }}
               headStyle={header}
             >
               <Row gutter={[16, 16]}>
                 <Col span={12}>
-                  <Card 
-                    size="small" 
-                    title="Access Key 1" 
-                    type="inner" 
+                  <Card
+                    size="small"
+                    title="Access Key 1"
+                    type="inner"
                     style={{ height: '100%' }}
                   >
                     <Descriptions bordered column={1} size="small">
@@ -985,7 +1053,7 @@ IAM Insights
                       </Descriptions.Item>
                       <Descriptions.Item label="Age">
                         {selectedData.access_key_1_age ? (
-                          <Badge 
+                          <Badge
                             count={`${selectedData.access_key_1_age} days`}
                             style={{ backgroundColor: selectedData.access_key_1_age > 90 ? '#ff4d4f' : '#52c41a' }}
                           />
@@ -1018,10 +1086,10 @@ IAM Insights
                   </Card>
                 </Col>
                 <Col span={12}>
-                  <Card 
-                    size="small" 
-                    title="Access Key 2" 
-                    type="inner" 
+                  <Card
+                    size="small"
+                    title="Access Key 2"
+                    type="inner"
                     style={{ height: '100%' }}
                   >
                     <Descriptions bordered column={1} size="small">
@@ -1048,7 +1116,7 @@ IAM Insights
                       </Descriptions.Item>
                       <Descriptions.Item label="Age">
                         {selectedData.access_key_2_age ? (
-                          <Badge 
+                          <Badge
                             count={`${selectedData.access_key_2_age} days`}
                             style={{ backgroundColor: selectedData.access_key_2_age > 90 ? '#ff4d4f' : '#52c41a' }}
                           />
@@ -1084,71 +1152,86 @@ IAM Insights
             </Card>
 
             {/* Policies Summary Card */}
-            <Card 
-              size="small" 
-              title={
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <SecurityScanOutlined />
-                  Policies Summary
-                </div>
-              }
-              style={{ marginBottom: 16 }} 
-              headStyle={header}
-            >
-              <Row gutter={[16, 16]}>
-                <Col span={8}>
-                  <Card size="small" title="Inline Policies" type="inner">
-                    <div style={{ textAlign: 'center' }}>
-                      <Badge 
-                        count={selectedData.inline_policies?.length || 0}
-                        style={{ backgroundColor: '#722ed1' }}
-                      />
-                      <div style={{ marginTop: '8px', color: '#666' }}>
-                        {selectedData.inline_policies?.length === 0 ? 'No inline policies' : 'Click Policy tab to view'}
-                      </div>
-                    </div>
-                  </Card>
-                </Col>
-                <Col span={8}>
-                  <Card size="small" title="Group Policies" type="inner">
-                    <div style={{ textAlign: 'center' }}>
-                      <Badge 
-                        count={selectedData.group_policies?.length || 0}
-                        style={{ backgroundColor: '#fa8c16' }}
-                      />
-                      <div style={{ marginTop: '8px', color: '#666' }}>
-                        {selectedData.group_policies?.length === 0 ? 'No group policies' : 'Click Policy tab to view'}
-                      </div>
-                    </div>
-                  </Card>
-                </Col>
-                <Col span={8}>
-                  <Card size="small" title="Managed Policies" type="inner">
-                    <div style={{ textAlign: 'center' }}>
-                      <Badge 
-                        count={selectedData.managed_policies?.length || 0}
-                        style={{ backgroundColor: '#52c41a' }}
-                      />
-                      <div style={{ marginTop: '8px', color: '#666' }}>
-                        {selectedData.managed_policies?.length === 0 ? 'No managed policies' : 'Click Policy tab to view'}
-                      </div>
-                    </div>
-                  </Card>
-                </Col>
-              </Row>
-            </Card>
+            <Card
+  size="small"
+  title={
+    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <SecurityScanOutlined />
+      Security Summary
+    </div>
+  }
+  style={{ marginBottom: 16 }}
+  headStyle={header}
+>
+  <Row gutter={[16, 16]}>
+    {/* SECURITY SCORE */}
+    <Col span={12}>
+      <Card size="small" title="Security Score" type="inner">
+        <div style={{ textAlign: "center" }}>
+          <span
+            style={{
+              fontSize: 28,
+              fontWeight: "bold",
+              color:
+                selectedData.risk_level === "HIGH"
+                  ? "#ff4d4f"
+                  : selectedData.risk_level === "MEDIUM"
+                  ? "#faad14"
+                  : "#52c41a",
+              animation:
+                selectedData.risk_level === "HIGH"
+                  ? "blink 1s infinite"
+                  : "none",
+            }}
+          >
+            {selectedData.security_score ?? "-"}
+          </span>
+
+          <div style={{ marginTop: 8, color: "#666" }}>
+            Overall security score
+          </div>
+        </div>
+      </Card>
+    </Col>
+
+    {/* RISK LEVEL */}
+    <Col span={12}>
+      <Card size="small" title="Risk Level" type="inner">
+        <div style={{ textAlign: "center" }}>
+          <Tag
+            color={
+              selectedData.risk_level === "HIGH"
+                ? "red"
+                : selectedData.risk_level === "MEDIUM"
+                ? "orange"
+                : "green"
+            }
+            style={{ fontSize: 16, padding: "6px 14px" }}
+          >
+            {selectedData.risk_level || "N/A"}
+          </Tag>
+
+          <div style={{ marginTop: 8, color: "#666" }}>
+            Based on IAM security evaluation
+          </div>
+        </div>
+      </Card>
+    </Col>
+  </Row>
+</Card>
+
 
             {/* Groups Information Card */}
             {selectedData.groups && selectedData.groups.length > 0 && (
-              <Card 
-                size="small" 
+              <Card
+                size="small"
                 title={
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <UserSwitchOutlined />
                     User Groups
                   </div>
                 }
-                style={{ marginBottom: 16 }} 
+                style={{ marginBottom: 16 }}
                 headStyle={header}
               >
                 <List
@@ -1354,8 +1437,8 @@ IAM Insights
           <Row gutter={24}>
             <Col span={12}>
               <div>
-                <h4 style={{ 
-                  color: "#52c41a", 
+                <h4 style={{
+                  color: "#52c41a",
                   paddingBottom: "8px",
                   marginBottom: "16px"
                 }}>
@@ -1376,11 +1459,11 @@ IAM Insights
                 )}
               </div>
             </Col>
-            
+
             <Col span={12}>
               <div>
-                <h4 style={{ 
-                  color: "#ff4d4f", 
+                <h4 style={{
+                  color: "#ff4d4f",
                   paddingBottom: "8px",
                   marginBottom: "16px"
                 }}>

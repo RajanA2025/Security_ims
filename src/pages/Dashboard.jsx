@@ -7,7 +7,8 @@ import {
   Tooltip,
   Typography,
   Spin,
-  Alert
+  Alert,
+  Modal
 } from "antd";
 import {
   LockOutlined,
@@ -293,124 +294,73 @@ const Insights = () => {
   const [data1, setData1] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const API_URL = "http://47.130.218.97:8012/iam";
-  const API_URL1 = "http://47.130.218.97:8012/security-groups";
   const storedAccountId = localStorage.getItem("account_ids");
-
-  // useEffect(() => {
-  //   const fetchAllData = async () => {
-  //     setLoading(true);
-  //     try {
-  //       let storedAccountId = localStorage.getItem("account_ids");
-
-  //       try {
-  //         storedAccountId = JSON.parse(storedAccountId);
-  //         if (Array.isArray(storedAccountId)) {
-  //           storedAccountId = storedAccountId[0]; // take first ID
-  //         }
-  //       } catch {
-  //         // keep as string
-  //       }
-
-
-  //       const [response1, response2] = await Promise.all([
-  //         axios.get(API_URL),
-  //         axios.get(API_URL1),
-  //       ]);
-
-  //       const normalizeId = (id) => String(id).trim().toLowerCase();
-  //       const storedId = normalizeId(storedAccountId);
-
-  //       if (response1?.data && Array.isArray(response1.data)) {
-  //         const filteredData = response1.data.filter((item) => {
-  //           const itemId =
-  //             item.account_id || item.accountId || item.ACCOUNT_ID || item.Account_ID;
-  //           return normalizeId(itemId) === storedId;
-  //         });
-  //         setData(filteredData);
-  //       }
-
-  //       if (response2?.data && Array.isArray(response2.data)) {
-  //         const filtered2 = response2.data.filter((item) => {
-  //           const itemId =
-  //             item.account_id || item.accountId || item.ACCOUNT_ID || item.Account_ID;
-  //           return normalizeId(itemId) === storedId;
-  //         });
-  //         setData1(filtered2);
-  //       }
-
-  //       setError(null);
-  //     } catch (error) {
-  //       console.error("Error fetching data:", error);
-  //       setError("Failed to load data. Please try again later.");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchAllData();
-  // }, [storedAccountId]);
+  const [showAccountModal, setShowAccountModal] = useState(false);
 
 
 
-  // Calculate statistics
+  const checkAccountSync = (storedAccountIds, apiAccountIds) => {
+    // Remove ALL if present
+    const filteredStored = storedAccountIds.filter(id => id !== "ALL");
+
+    // Check if every stored id exists in API response
+    const allMatch = filteredStored.every(id => apiAccountIds.includes(id));
+
+    console.log("Account Sync Match:", allMatch);
+
+    if (!allMatch) {
+      if (!localStorage.getItem("timeModal")) {
+        setShowAccountModal(true);
+      }
+    }
+  };
+
 
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
-      try {
-        let storedAccountId = localStorage.getItem("account_ids");
 
+      try {
+        let stored = localStorage.getItem("account_ids");
+
+        // Safe parse
         try {
-          storedAccountId = JSON.parse(storedAccountId);
+          stored = JSON.parse(stored);
         } catch {
-          // keep as string
+          stored = stored ? [stored] : [];
         }
 
-        // ✅ Convert to array safely
-        const storedIds = Array.isArray(storedAccountId)
-          ? storedAccountId
-          : [storedAccountId];
+        const storedAccountIds = Array.isArray(stored)
+          ? stored.map(String)
+          : [String(stored)];
 
-        const normalizeId = (id) => String(id).trim().toLowerCase();
-        const normalizedIds = storedIds.map(normalizeId);
+        console.log("POST BODY:", { account_ids: storedAccountIds });
 
-
-        // ✅ Fetch all API data
-        const [response1, response2] = await Promise.all([
-          api.get(API_URL),
-          api.get(API_URL1),
+        // API calls
+        const [iamRes, sgRes] = await Promise.all([
+          axios.post("http://47.130.218.97:8012/iam/filter", {
+            account_ids: storedAccountIds,
+          }),
+          axios.post("http://47.130.218.97:8012/security-groups/filter", {
+            account_ids: storedAccountIds,
+          }),
         ]);
 
-        // ✅ Filter response1
-        if (response1?.data && Array.isArray(response1.data)) {
-          const filteredData = response1.data.filter((item) => {
-            const itemId =
-              item.account_id ||
-              item.accountId ||
-              item.ACCOUNT_ID ||
-              item.Account_ID;
-            return normalizedIds.includes(normalizeId(itemId));
-          });
-          setData(filteredData);
-        }
+        console.log("IAM Response:", iamRes.data);
+        console.log("SG Response:", sgRes.data);
 
-        // ✅ Filter response2
-        if (response2?.data && Array.isArray(response2.data)) {
-          const filtered2 = response2.data.filter((item) => {
-            const itemId =
-              item.account_id ||
-              item.accountId ||
-              item.ACCOUNT_ID ||
-              item.Account_ID;
-            return normalizedIds.includes(normalizeId(itemId));
-          });
-          setData1(filtered2);
-        }
+        setData(Array.isArray(iamRes.data) ? iamRes.data : []);
+        setData1(Array.isArray(sgRes.data) ? sgRes.data : []);
+
+        // 🔥 Extract account_ids returned by API
+        const apiAccounts = iamRes.data.map(item => String(item.account_id));
+
+        // 🔥 Call Sync Check
+        checkAccountSync(storedAccountIds, apiAccounts);
 
         setError(null);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("❌ Error fetching data:", error);
         setError("Failed to load data. Please try again later.");
       } finally {
         setLoading(false);
@@ -418,7 +368,13 @@ const Insights = () => {
     };
 
     fetchAllData();
-  }, [storedAccountId]);
+  }, []);
+
+  const handlecloseModal = () => {
+    setShowAccountModal(false);
+    localStorage.setItem("timeModal", true);
+  };
+
 
   const calculateStats = () => {
     const total = data.length;
@@ -614,6 +570,64 @@ const Insights = () => {
         }
       `}</style>
       </motion.div>
+      <Modal
+        open={showAccountModal}
+        footer={null}
+        closable={false}
+        centered
+        onCancel={handlecloseModal}
+        bodyStyle={{
+          padding: "24px 28px",
+          borderRadius: "16px",
+          background: "#f9fafb",
+        }}
+      >
+        <div style={{ textAlign: "center", paddingBottom: 10 }}>
+          <div
+            style={{
+              width: 70,
+              height: 70,
+              background: "#eef2ff",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 16px auto",
+            }}
+          >
+            <svg width="40" height="40" fill="#4f46e5" viewBox="0 0 24 24">
+              <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 14h-2v-2h2v2zm0-4h-2V6h2v6z"></path>
+            </svg>
+          </div>
+
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: "#111827", marginBottom: 8 }}>
+            Account Sync Pending
+          </h2>
+
+          <p style={{ fontSize: 15, color: "#4b5563", marginBottom: 20 }}>
+            Latest account was added recently.<br />
+            It may take <b>24 to 48 hours</b> to reflect in dashboard.
+          </p>
+
+          <button
+            onClick={handlecloseModal}
+            style={{
+              background: "#4f46e5",
+              color: "white",
+              border: "none",
+              padding: "10px 22px",
+              borderRadius: "8px",
+              fontSize: "15px",
+              width: "100%",
+              fontWeight: "600",
+              cursor: "pointer",
+              boxShadow: "0 4px 14px rgba(79,70,229,0.3)",
+            }}
+          >
+            Okay, Got It
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 };

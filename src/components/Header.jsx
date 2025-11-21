@@ -111,7 +111,7 @@ const Header = ({ isExpanded, setIsExpanded }) => {
                 fontWeight: 700,
                 fontSize: isMobile ? 17 : 21,
                 color: "#222",
-                whiteSpace: "nowrap",
+                whiteSpace: "wrap",
               }}
             >
               {layout}

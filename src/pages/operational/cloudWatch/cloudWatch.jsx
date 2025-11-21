@@ -47,7 +47,6 @@ const operatorMap = {
 
 const headerStyle = { backgroundColor: "#4f46e5", color: "white" };
 
-const API_URL = "http://47.130.218.97:8012/cloudwatch";
 
 const Business = () => {
     const [data, setData] = useState([]);
@@ -57,28 +56,56 @@ const Business = () => {
     const [searchText, setSearchText] = useState("");
 
     // 🔹 Fetch data
+    // 🔹 Fetch CloudWatch data using POST filter API
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                const { data } = await axios.get(API_URL);
+                // Step 1: Load account_ids from localStorage
+                let storedIds = localStorage.getItem("account_ids");
 
-                const storedIds = JSON.parse(localStorage.getItem("account_ids") || "[]");
+                // Step 2: Convert to safe array
+                try {
+                    storedIds = JSON.parse(storedIds);
+                } catch {
+                    storedIds = [storedIds];
+                }
 
-                const filtered = storedIds.length > 0
-                    ? data.filter(item => storedIds.includes(item.account_id))
-                    : data;
+                const finalIds = Array.isArray(storedIds)
+                    ? storedIds.map(id => String(id).trim())
+                    : [String(storedIds).trim()];
 
-                setData(filtered);
+                // POST body
+                const postBody = {
+                    account_ids: finalIds
+                };
+
+                console.log("➡️ Sending POST body:", postBody);
+
+                // Step 3: Call your new POST API
+                const { data } = await axios.post(
+                    "http://47.130.218.97:8012/cloudwatch/filter",
+                    postBody,
+                    {
+                        headers: { "Content-Type": "application/json" }
+                    }
+                );
+
+                console.log("📌 API Response:", data);
+
+                // Step 4: No frontend filtering needed
+                setData(data);
 
             } catch (error) {
-                console.error("Error fetching CloudWatch data:", error);
+                console.error("❌ Error fetching CloudWatch data:", error);
             } finally {
                 setLoading(false);
             }
         };
+
         fetchData();
     }, []);
+
 
 
     // 🔹 Extract username safely
@@ -210,7 +237,7 @@ const Business = () => {
     return (
         < div className="p-3">
             {/* Header & Search */}
-            <Row gutter={[16, 16]} style={{ marginBottom: 10 , marginTop:15 }}>
+            <Row gutter={[16, 16]} style={{ marginBottom: 10, marginTop: 15 }}>
                 <Col md={20}>
                     <Typography.Title
                         level={4}
@@ -218,10 +245,10 @@ const Business = () => {
                             fontFamily: "'Roboto', 'Segoe UI', sans-serif",
                             fontSize: "20px",
                             fontWeight: 600,
-                          color: "#1f2937",
+                            color: "#1f2937",
                             margin: 0,
                         }}
-                          
+
                     >
                         Cloud-Watch
                     </Typography.Title>

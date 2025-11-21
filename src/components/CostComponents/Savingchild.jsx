@@ -92,127 +92,158 @@ const fetchKeyPairs = async () => {
     setLoading(false);
   }
 };
-  useEffect(() => {
-    const fetchData = async () => {
+
+
+
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      // -----------------------------------------
+      // 1️⃣ Load account IDs from localStorage
+      // -----------------------------------------
+      let stored = localStorage.getItem("account_ids");
+
       try {
-        const res = await axios.get("http://47.130.218.97:8003/resources");
-        const data = res.data;
-
-        // ✅ Get stored account IDs from localStorage
-        const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
-
-        // ✅ Helper to filter data by account ID
-        const filterByAccount = (arr) =>
-          Array.isArray(arr)
-            ? arr.filter((item) => storedAccountIds.includes(item.account_id))
-            : [];
-
-        // ✅ Apply account filter to all datasets
-        const filteredVolumes = filterByAccount(data.orphaned_volumes);
-        const filteredEips = filterByAccount(data.orphaned_eips);
-        const filteredSnaps = filterByAccount(data.orphaned_snapshots);
-        const filteredEc2 = filterByAccount(data.underutilized_ec2);
-        const filteredEbs = filterByAccount(data.underutilized_ebs);
-
-        // ---- Mapping logic (unchanged, just replace data.* with filtered* ) ----
-        setOrphanedDisks(
-          filteredVolumes.map((item, i) => ({
-            key: `disk-${i}`,
-            accountId: item.account_id,
-            region: item.region,
-            volumeId: item.volume_id,
-            volumeName: item.volume_name || "-",
-            volumeType: item.volume_type,
-            volumeSize: `${item.volume_size} GB`,
-            costing: `$${item.cost_savings}`,
-            recommendation: item.recommendations?.suggestion || "-",
-            Action: item.status,
-          }))
-        );
-
-        setOrphanedElasticIP(
-          filteredEips.map((item, i) => ({
-            key: `eip-${i}`,
-            accountId: item.account_id,
-            region: item.region,
-            volumeId: item.public_ip,
-            volumeName: item.allocation_id,
-            volumeType: "Elastic IP",
-            volumeSize: "-",
-            costing: `$${item.cost ?? 0}`,
-            recommendation: "-",
-            Action: item.status,
-          }))
-        );
-
-        setOrphanedSnapshots(
-          filteredSnaps.map((item, i) => ({
-            key: `snapshot-${i}`,
-            accountId: item.account_id,
-            region: item.region,
-            volumeId: item.snapshot_id,
-            volumeName: item.snapshot_name || "-",
-            volumeType: "Snapshot",
-            volumeSize: `${item.size || 0} GB`,
-            costing: `$${item.cost_savings || 0}`,
-            recommendation: "-",
-            Action: item.status,
-          }))
-        );
-
-        setRiSavings(
-          filteredEc2.map((item, i) => ({
-            key: `ri-${i}`,
-            accountId: item.account_id,
-            region: item.region,
-            volumeId: item.instance_id,
-            volumeName: item.instance_name || "-",
-            volumeType: item.instance_type,
-            volumeSize: "-",
-            costing: `$${item.cost_savings}`,
-            recommendation: item.recommendations?.suggestion || "-",
-            Action: item.status,
-          }))
-        );
-
-        // ✅ Rightsizing (EC2 + EBS)
-        const ec2Data =
-          filteredEc2.map((item, i) => ({
-            key: `rs-ec2-${i}`,
-            accountId: item.account_id,
-            region: item.region,
-            instanceId: item.instance_id,
-            instanceName: item.instance_name || "-",
-            instancetype: item.instance_type,
-            recommendedType: item.recommendations?.suggestion || "-",
-            Reason: item.recommendations?.reason || "-",
-            costSaving: `$${item.cost_savings}`,
-            Action: item.status,
-          })) || [];
-
-        const ebsData =
-          filteredEbs.map((item, i) => ({
-            key: `rs-ebs-${i}`,
-            accountId: item.account_id,
-            region: item.region,
-            volumeId: item.volume_id,
-            volumeName: item.volume_name || "-",
-            volumeType: item.volume_type,
-            volumeSize: item.volume_size,
-            recommendedType: item.recommendations?.suggestion || "-",
-            Reason: item.recommendations?.reason || "-",
-            costSaving: `$${item.cost_savings}`,
-            Action: item.status,
-          })) || [];
-
-        setRightsizing({ underutilized_ec2: ec2Data, underutilized_ebs: ebsData });
-      } catch (err) {
-        console.error("Error fetching savings data:", err);
+        stored = JSON.parse(stored);
+      } catch {
+        stored = [stored];
       }
-    };
 
-    fetchData();
-  }, []);
+      const storedIds = Array.isArray(stored) ? stored : [stored];
+
+      // -----------------------------------------
+      // 2️⃣ Prepare POST body
+      // -----------------------------------------
+      const postBody = {
+        account_ids: storedIds,
+      };
+
+      console.log("➡️ POST Body:", postBody);
+
+      // -----------------------------------------
+      // 3️⃣ Call NEW API (POST)
+      // -----------------------------------------
+      const res = await axios.post(
+        "http://47.130.218.97:8003/resources/filter",
+        postBody,
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      const data = res.data;
+      console.log("📌 Filtered API Response:", data);
+
+      // -----------------------------------------
+      // 4️⃣ No frontend filtering needed
+      // Use data directly
+      // -----------------------------------------
+
+      // -------- Orphaned Volumes --------
+      setOrphanedDisks(
+        (data.orphaned_volumes || []).map((item, i) => ({
+          key: `disk-${i}`,
+          accountId: item.account_id,
+          region: item.region,
+          volumeId: item.volume_id,
+          volumeName: item.volume_name || "-",
+          volumeType: item.volume_type,
+          volumeSize: `${item.volume_size} GB`,
+          costing: `$${item.cost_savings}`,
+          recommendation: item.recommendations?.suggestion || "-",
+          Action: item.status,
+        }))
+      );
+
+      // -------- Orphaned Elastic IP --------
+      setOrphanedElasticIP(
+        (data.orphaned_eips || []).map((item, i) => ({
+          key: `eip-${i}`,
+          accountId: item.account_id,
+          region: item.region,
+          volumeId: item.public_ip,
+          volumeName: item.allocation_id,
+          volumeType: "Elastic IP",
+          volumeSize: "-",
+          costing: `$${item.cost ?? 0}`,
+          recommendation: "-",
+          Action: item.status,
+        }))
+      );
+
+      // -------- Snapshots --------
+      setOrphanedSnapshots(
+        (data.orphaned_snapshots || []).map((item, i) => ({
+          key: `snapshot-${i}`,
+          accountId: item.account_id,
+          region: item.region,
+          volumeId: item.snapshot_id,
+          volumeName: item.snapshot_name || "-",
+          volumeType: "Snapshot",
+          volumeSize: `${item.size || 0} GB`,
+          costing: `$${item.cost_savings || 0}`,
+          recommendation: "-",
+          Action: item.status,
+        }))
+      );
+
+      // -------- EC2 Savings --------
+      setRiSavings(
+        (data.underutilized_ec2 || []).map((item, i) => ({
+          key: `ri-${i}`,
+          accountId: item.account_id,
+          region: item.region,
+          volumeId: item.instance_id,
+          volumeName: item.instance_name || "-",
+          volumeType: item.instance_type,
+          volumeSize: "-",
+          costing: `$${item.cost_savings}`,
+          recommendation: item.recommendations?.suggestion || "-",
+          Action: item.status,
+        }))
+      );
+
+      // -------- Rightsizing EC2 --------
+      const ec2Data =
+        (data.underutilized_ec2 || []).map((item, i) => ({
+          key: `rs-ec2-${i}`,
+          accountId: item.account_id,
+          region: item.region,
+          instanceId: item.instance_id,
+          instanceName: item.instance_name || "-",
+          instancetype: item.instance_type,
+          recommendedType: item.recommendations?.suggestion || "-",
+          Reason: item.recommendations?.reason || "-",
+          costSaving: `$${item.cost_savings}`,
+          Action: item.status,
+        })) || [];
+
+      // -------- Rightsizing EBS --------
+      const ebsData =
+        (data.underutilized_ebs || []).map((item, i) => ({
+          key: `rs-ebs-${i}`,
+          accountId: item.account_id,
+          region: item.region,
+          volumeId: item.volume_id,
+          volumeName: item.volume_name || "-",
+          volumeType: item.volume_type,
+          volumeSize: item.volume_size,
+          recommendedType: item.recommendations?.suggestion || "-",
+          Reason: item.recommendations?.reason || "-",
+          costSaving: `$${item.cost_savings}`,
+          Action: item.status,
+        })) || [];
+
+      setRightsizing({
+        underutilized_ec2: ec2Data,
+        underutilized_ebs: ebsData,
+      });
+    } catch (err) {
+      console.error("❌ Error fetching savings data:", err);
+    }
+  };
+
+  fetchData();
+}, []);
+
 
 
   const combinedData = useMemo(() => {

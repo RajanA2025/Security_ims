@@ -68,7 +68,7 @@ export default function LoginScreen() {
 
         setTimeout(() => {
           setToast(null);
-          navigate("/Imsproduct");
+          navigate("/imsproduct");
         }, 2500);
         return;
       }

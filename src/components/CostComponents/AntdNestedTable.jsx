@@ -127,20 +127,48 @@ export default function AntdNestedTable({ selectedAccount }) {
   const [dataContainer, setDataContainer] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedKeys, setExpandedKeys] = useState([]);
+  const tableContainerRef = useRef(null);
+
+
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const { data } = await axios.get("http://47.130.218.97:8002/instances");
+        // 1️⃣ Load account IDs from localStorage
+        let storedAccounts = localStorage.getItem("account_ids");
+        try {
+          storedAccounts = JSON.parse(storedAccounts);
+        } catch {
+          storedAccounts = [storedAccounts];
+        }
+
+        if (!Array.isArray(storedAccounts)) {
+          storedAccounts = [storedAccounts];
+        }
+
+        // 2️⃣ POST Body
+        const postBody = {
+          account_ids: storedAccounts,
+        };
+
+        console.log("➡️ POST Body sent:", postBody);
+
+        // 3️⃣ API CALL - POST (No GET)
+        const { data } = await axios.post(
+          "http://47.130.218.97:8002/instances/filter",
+          postBody,
+          {
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+
         const results = data.results || [];
 
-        const storedAccounts = JSON.parse(localStorage.getItem("account_ids")) || [];
-        const filteredResults = results.filter((r) => storedAccounts.includes(r.account_id));
-
+        // 4️⃣ If user selects one account → filter here
         const finalResults = selectedAccount
-          ? filteredResults.filter((r) => r.account_id === selectedAccount)
-          : filteredResults;
+          ? results.filter(r => String(r.account_id) === String(selectedAccount))
+          : results;
 
         if (!finalResults.length) {
           setDataEnv([]);
@@ -150,6 +178,7 @@ export default function AntdNestedTable({ selectedAccount }) {
           return;
         }
 
+        // 5️⃣ Process results as before
         const allRows = finalResults.map((inst) => {
           const envRaw = inst.environment?.toLowerCase().trim();
           const environment =
@@ -172,11 +201,14 @@ export default function AntdNestedTable({ selectedAccount }) {
             environment,
             runtimegraph:
               inst.cpu_history?.slice(-5) ||
-              Array.from({ length: 5 }, () => (inst.cpu_utilization ? inst.cpu_utilization * 100 : 0)),
+              Array.from({ length: 5 }, () =>
+                inst.cpu_utilization ? inst.cpu_utilization * 100 : 0
+              ),
           };
         });
 
         const mergedRows = mergeByInstance(allRows);
+
         const production = [];
         const nonProduction = [];
         const servicesMap = {};
@@ -237,8 +269,10 @@ export default function AntdNestedTable({ selectedAccount }) {
         setLoading(false);
       }
     };
+
     fetchData();
   }, [selectedAccount]);
+
 
   const { labels, costs } = useMemo(
     () =>
@@ -266,59 +300,84 @@ export default function AntdNestedTable({ selectedAccount }) {
   // handle auto-scroll on row expand
   const handleExpand = (expanded, record) => {
     if (expanded) {
-      setExpandedKeys((prev) => [...prev, record.key]);
+      setExpandedKeys(prev => [...prev, record.key]);
+
       setTimeout(() => {
-        const rowEl = document.querySelector(`[data-row-key="${record.key}"]`);
-        if (rowEl) rowEl.scrollIntoView({ behavior: "smooth", block: "start" });
+        const rowEl = document.querySelector(`tr[data-row-key="${record.key}"]`);
+
+        if (rowEl && tableContainerRef.current) {
+          const container = tableContainerRef.current;
+
+          const rowTop = rowEl.getBoundingClientRect().top;
+          const containerTop = container.getBoundingClientRect().top;
+
+          const offset = rowTop - containerTop + container.scrollTop - 20;
+
+          container.scrollTo({
+            top: offset,
+            behavior: "smooth"
+          });
+        }
       }, 100);
     } else {
-      setExpandedKeys((prev) => prev.filter((k) => k !== record.key));
+      setExpandedKeys(prev => prev.filter(k => k !== record.key));
     }
   };
 
-  return (
-    <div style={{ overflowX: 'auto', width: '100%' }}>      
-    {noData ? (
-      <Empty description="No Data Found" style={{ marginTop: 80 }} />
-    ) : (
-      <>
-        <ResizableChart option={graphOptions} height={250} />
-        <Card style={{ borderRadius: 8, marginTop: 20, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
-          <Tabs activeKey={activeTab} onChange={setActiveTab}>
-            <Tabs.TabPane tab="By Environment" key="environment" />
-            <Tabs.TabPane tab="By Service" key="service" />
-            <Tabs.TabPane tab="By Container" key="container" />
-          </Tabs>
 
-          {loading ? (
-            <div style={{ textAlign: "center", padding: 50 }}>
-              <Spin size="large" />
-            </div>
-          ) : (
-            <Table
-              columns={columns}
-              dataSource={
-                activeTab === "environment"
-                  ? dataEnv
-                  : activeTab === "service"
-                    ? dataService
-                    : dataContainer
-              }
-              pagination={false}
-              rowKey={(record) => record.key}
-              expandable={{
-                expandIconColumnIndex: 0,
-                childrenColumnName: "children",
-                expandedRowKeys: expandedKeys,
-                onExpand: handleExpand,
-              }}
-              size="small"
-              scroll={{ x: 'max-content' }} // horizontal scroll on small screens
-            />
-          )}
-        </Card>
-      </>
-    )}
+
+
+  return (
+    <div
+      ref={tableContainerRef}
+      style={{
+        overflowX: "auto",
+        overflowY: "auto",
+        maxHeight: 500,       // adjust height if needed (table scroll area)
+        width: "100%"
+      }}
+    >
+      {noData ? (
+        <Empty description="No Data Found" style={{ marginTop: 80 }} />
+      ) : (
+        <>
+          <ResizableChart option={graphOptions} height={250} />
+          <Card style={{ borderRadius: 8, marginTop: 20, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+            <Tabs activeKey={activeTab} onChange={setActiveTab}>
+              <Tabs.TabPane tab="By Environment" key="environment" />
+              <Tabs.TabPane tab="By Service" key="service" />
+              {/* <Tabs.TabPane tab="By Container" key="container" /> */}
+            </Tabs>
+
+            {loading ? (
+              <div style={{ textAlign: "center", padding: 50 }}>
+                <Spin size="large" />
+              </div>
+            ) : (
+              <Table
+                columns={columns}
+                dataSource={
+                  activeTab === "environment"
+                    ? dataEnv
+                    : activeTab === "service"
+                      ? dataService
+                      : dataContainer
+                }
+                pagination={false}
+                rowKey={(record) => record.key}
+                expandable={{
+                  expandIconColumnIndex: 0,
+                  childrenColumnName: "children",
+                  expandedRowKeys: expandedKeys,
+                  onExpand: handleExpand,
+                }}
+                size="small"
+                scroll={{ x: 'max-content' }} // horizontal scroll on small screens
+              />
+            )}
+          </Card>
+        </>
+      )}
     </div>
   );
 }
