@@ -12,7 +12,7 @@ const Admin = () => {
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState(null);
   const [visiblePasswords, setVisiblePasswords] = useState({});
-
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL1;
   // ✅ Fetch data from API
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -33,7 +33,7 @@ const Admin = () => {
             cost: !!item.cost,
             security: !!item.security,
             operational_excellence: !!item.operational_excellence,
-            performance: !!item.performance,
+            // performance: !!item.performance,
           },
           status: "active",
         }));
@@ -44,9 +44,9 @@ const Admin = () => {
     };
 
     fetchCompanies();
-    setTimeout((
+    // setTimeout((
 
-    ) => { fetchCompanies() }, 2000);
+    // ) => { fetchCompanies() }, 2000);
 
   }, [getAllCompanies]);
 
@@ -80,7 +80,7 @@ const Admin = () => {
     if (!window.confirm("Are you sure you want to delete this company?")) return;
 
     try {
-      const response = await fetch(`http://13.212.15.14:8006/api/company/delete/${cid}`, {
+      const response = await fetch(`${apiBaseUrl}/api/company/delete/${cid}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -130,7 +130,7 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-0">
       {/* Header */}
-      <div className="px-0 py-4 mb-6">
+      <div className="px-0 py-4 mb-2">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 ">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
@@ -139,8 +139,8 @@ const Admin = () => {
           </div>
 
           {/* Search Bar */}
-          <div className="flex items-center justify-end gap-4 w-full">
-            <div className="relative w-64">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="relative w-full md:w-[250px]">
               <Search
                 size={16}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -210,7 +210,6 @@ const Admin = () => {
 
                 <tr key={acc.cid} className="hover:bg-gray-50">
                   {/* Company ID */}
-                  {console.log('filteredAccounts', filteredAccounts)}
                   <td className="px-4 py-3">{acc.company_id}</td>
 
                   {/* Company Name */}

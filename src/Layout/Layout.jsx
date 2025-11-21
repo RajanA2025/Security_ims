@@ -1,17 +1,19 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom';
-import Header from '../components/Header';
-import Sidebar from '../components/Sidebar';
-import '../stylecss/App.css';
+import React, { useState } from "react";
+import { Outlet } from "react-router-dom";
+import Header from "../components/Header";
+import Sidebar from "../components/Sidebar";
+import "../stylecss/App.css";
 
-const Layout = ({ onDateChange, isExpanded, setIsExpanded }) => {
+const Layout = ({ onDateChange }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
     <div className="app-container p-0">
-      <Header onDateChange={onDateChange} />
+      <Header isExpanded={isExpanded} setIsExpanded={setIsExpanded} onDateChange={onDateChange} />
       <div className="dashboard">
         <Sidebar isExpanded={isExpanded} setIsExpanded={setIsExpanded} />
         <main className="main-content py-0 px-5">
-          <Outlet /> {/* ✅ Nested routes render here */}
+          <Outlet /> {/* Nested routes */}
         </main>
       </div>
     </div>

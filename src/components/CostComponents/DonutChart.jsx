@@ -70,6 +70,12 @@ const DonutChart = () => {
   const centerTitleSize = isSmall ? 12 : isMedium ? 14 : 16;
   const centerValueSize = isSmall ? 20 : isMedium ? 26 : 30;
   const labelFontSize = isSmall ? 12 : 14;
+  const legendTextStyle = {
+  fontSize: 9,
+  fontWeight: 600,
+  color: "#333",
+  fontFamily: "Roboto, sans-serif",
+};
 
   const option = {
     tooltip: {
@@ -86,8 +92,8 @@ const DonutChart = () => {
       bottom: "0%",
       left: "center",
       orient: "vertical",
-      textStyle: { fontSize: 8, fontWeight: 600, color: "#333", fontFamily: " Roboto, sans-serif", },
-      icon: "circle",
+      textStyle: legendTextStyle,
+       icon: "circle",
       padding: [5, 100, 0, 100],
       itemGap: 8,
     },
@@ -105,7 +111,7 @@ const DonutChart = () => {
     ],
     color: ["#0284c7", "#22c55e", "#facc15", "#f97316", "#afef40ff", "#8b5cf6", "#7cdafaff", "#0ea5e9", "#14b8a6"],
     graphic: [
-      { type: "text", left: "center", top: "38%", style: { text: "Total Spend", textAlign: "center", fill: "#64748b", fontSize: centerTitleSize, fontWeight: 500 } },
+      { type: "text", left: "center", top: "38%", style: { text: "Total Spend", textAlign: "center", fill: "#64748b", fontSize: centerTitleSize, fontWeight: 700 } },
       { type: "text", left: "center", top: "30%", style: { text: `$${total.toFixed(2)}`, textAlign: "center", fill: "#0f172a", fontSize: centerValueSize, fontWeight: 700 } },
     ],
   };

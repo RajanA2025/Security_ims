@@ -69,10 +69,13 @@ export const Savingdashmain = () => {
       unassigned = 0;
     allResources.forEach((item) => {
       const cost = item.cost_savings ?? item.cost ?? 0;
-      if (item.status && item.status.toLowerCase() === "unassigned")
-        unassigned += cost;
-      else assigned += cost;
+      const status = (item.status || "unassigned").toLowerCase();
+
+      if (status === "assigned") assigned += cost;
+      else unassigned += cost;
     });
+
+
 
     return {
       totalPotentialSavings,
@@ -119,6 +122,7 @@ export const Savingdashmain = () => {
 
   const headerStyle = {
     display: "flex",
+    
     justifyContent: "space-between",
     alignItems: "center",
   };

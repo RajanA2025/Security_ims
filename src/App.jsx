@@ -17,7 +17,7 @@ import SecurityGroup from './pages/Security/security_group/Securitygrp';
 import CloudTrail from './pages/Security/Cloud_Trail/Cloud_Trail';
 import SecurityTools from './pages/Security/SecurityTool/SecurityTools';
 
-// Operational
+// Operational    
 import Business from './pages/operational/Business/Business';
 import Dashboard1 from './pages/operational/Dashboard';
 import Ami from './pages/operational/Amis';
@@ -91,13 +91,13 @@ function App() {
           <Route path="/security/tools" element={<SecurityTools filters={filters} />} />
 
           {/* Operational */}
-          <Route path="/operational" element={<Dashboard1 filters={filters} />} />
-          <Route path="/operational/snapshot" element={<Business filters={filters} />} />
-          <Route path="/operational/ami" element={<Ami filters={filters} />} />
-          <Route path="/operational/observability" element={<Observability filters={filters} />} />
-          <Route path="/operational/monitoring" element={<Monitoring filters={filters} />} />
-          <Route path="/operational/rightsizing" element={<RightSizing filters={filters} />} />
-          <Route path="/operational/cloudWatch" element={<CloudWatch filters={filters} />} />
+          <Route path="/perfops" element={<Dashboard1 filters={filters} />} />
+          <Route path="/perfops/snapshot" element={<Business filters={filters} />} />
+          <Route path="/perfops/ami" element={<Ami filters={filters} />} />
+          <Route path="/perfops/observability" element={<Observability filters={filters} />} />
+          <Route path="/perfops/monitoring" element={<Monitoring filters={filters} />} />
+          <Route path="/perfops/rightsizing" element={<RightSizing filters={filters} />} />
+          <Route path="/perfops/cloudWatch" element={<CloudWatch filters={filters} />} />
 
           {/* Cost */}
           <Route path="/cost" element={<Dashboard2 />} />

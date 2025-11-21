@@ -1,5 +1,5 @@
 // src/components/Complaincedashmain.js
-import React, { useContext, useMemo } from "react";
+import React, { useContext, useMemo, useState, useEffect } from "react";
 import { Row, Col, Card, Typography, Progress, Tooltip, Spin } from "antd";
 import { TagOutlined, UnorderedListOutlined, DollarCircleOutlined } from "@ant-design/icons";
 import ReactECharts from "echarts-for-react";
@@ -58,6 +58,53 @@ export const Complaincedashmain = () => {
     return costData;
   }, [costData, normalizedIds]);
 
+
+  const [autoStartStopData, setAutoStartStopData] = useState({ total: 0, enabled: 0 });
+
+  useEffect(() => {
+    const fetchInstances = async () => {
+      try {
+        const response = await fetch("http://47.130.218.97:8004/instances");
+        const data = await response.json();
+
+        let stored = localStorage.getItem("account_ids");
+
+        // Normalize localStorage value to array
+        try {
+          stored = JSON.parse(stored);
+        } catch {
+          stored = stored ? [stored] : [];
+        }
+
+        let accounts = Array.isArray(stored) ? stored.map(String) : [String(stored)];
+
+        // Remove "ALL" - if ALL was selected → show everything
+        accounts = accounts.filter((id) => id !== "ALL");
+
+        // ✅ If ALL → don't filter
+        const filtered = accounts.length > 0
+          ? data.filter((item) => accounts.includes(String(item.account_id)))
+          : data;
+
+        const total = filtered.length;
+
+        // ✅ Correct enabled detection using auto_enabled field
+        const enabled = filtered.filter(
+          (item) =>
+            String(item.auto_enabled).toUpperCase() === "YES"
+        ).length;
+
+        setAutoStartStopData({ total, enabled });
+
+
+      } catch (err) {
+        console.error("Instance API Error:", err);
+      }
+    };
+
+    fetchInstances();
+  }, []);
+
   // ✅ Calculate compliance values
   const compliance = {
     total_cost: filteredCostData?.total_cost || 25000,
@@ -73,16 +120,9 @@ export const Complaincedashmain = () => {
       RDS: 2000,
       CloudFront: 1000,
     },
-    auto_start_stop: filteredCostData?.auto_start_stop || {
-      total: 50,
-      enabled: 30,
-    },
+    auto_start_stop: autoStartStopData, // ✅ UPDATED
   };
 
-  // ✅ Debug logs (optional)
-  console.log("🧩 Stored IDs:", normalizedIds);
-  console.log("🧩 Filtered resources:", filteredResources.length);
-  console.log("🧩 Filtered tag summary:", safeTagData);
 
   if (loading)
     return (
@@ -100,7 +140,7 @@ export const Complaincedashmain = () => {
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      borderRadius: 12,
+      borderRadius: 5,
       borderTop: border,
       padding: 10,
       width: "100%",
@@ -135,21 +175,46 @@ export const Complaincedashmain = () => {
     );
   };
 
+
+
+
   const AutoStartStopCard = () => {
-    const { total, enabled } = compliance.auto_start_stop;
-    const disabled = total - enabled;
-    const enabledPercent = Math.round((enabled / (total || 1)) * 100);
+    const total = Number(compliance.auto_start_stop?.total || 0);
+    const enabled = Number(compliance.auto_start_stop?.enabled || 0);
+    const disabled = Math.max(0, total - enabled);
+
+    const enabledPercent = total === 0
+      ? 0
+      : enabled === 0
+        ? 100 // 100% disabled
+        : Math.round((enabled / total) * 100);
 
     return (
       <Card styles={cardStyles("4px solid #eb2f96")} hoverable style={{ flex: 1, position: "relative" }}>
         <div style={{ position: "absolute", top: 12, left: 16 }}>
           <Text strong>Auto Start/Stop</Text>
         </div>
+
         <div style={{ display: "flex", marginTop: 50, justifyContent: "center", alignItems: "center", height: "100%" }}>
           <Tooltip title={`Enabled: ${enabled} | Disabled: ${disabled}`}>
-            <Progress type="circle" percent={enabledPercent} strokeColor="#52c41a" strokeWidth={10} size={150} format={() => `${enabledPercent}%`} />
+            <Progress
+              type="circle"
+              percent={enabledPercent}
+              strokeColor={enabled === 0 ? "#bfbfbf" : "#52c41a"}   // grey when disabled
+              trailColor={enabled === 0 ? "#e6e6e6" : "#d9f7be"}     // background ring
+              strokeWidth={10}
+              size={150}
+              format={() => (
+                <span style={{ color: enabled === 0 ? "#000" : "#52c41a", fontWeight: 600 }}>
+                  {enabledPercent}%
+                </span>
+              )}
+            />
+
+
           </Tooltip>
         </div>
+
         <div style={{ position: "absolute", bottom: 12, width: "100%", display: "flex", justifyContent: "space-between", padding: "0 16px", fontSize: 12 }}>
           <span style={{ color: "#52c41a", fontWeight: 500 }}>Enabled: {enabled}</span>
           <span style={{ color: "#999", fontWeight: 500 }}>Disabled: {disabled}</span>
@@ -157,6 +222,8 @@ export const Complaincedashmain = () => {
       </Card>
     );
   };
+
+
 
   const CostBreakdownCard = () => (
     <Card styles={cardStyles("4px solid #722ed1")} hoverable style={{ flex: 1 }}>
@@ -229,7 +296,7 @@ export const Complaincedashmain = () => {
   };
 
   return (
-    <div style={{ fontFamily: "'Roboto', sans-serif", padding: "25px 10px" }}>
+    <div style={{ fontFamily: "'Roboto', sans-serif", padding: "0px 10px" }}>
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={24} md={12} lg={8}><AutoStartStopCard /></Col>
         <Col xs={24} sm={24} md={12} lg={8}><CostBreakdownCard /></Col>

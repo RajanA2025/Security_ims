@@ -16,19 +16,18 @@ import {
   InfoCircleOutlined,
   SearchOutlined
 } from "@ant-design/icons";
-import axios from "axios";
+import api from "../../../lib/api";
 
 const header = { backgroundColor: "#4f46e5", color: "white" };
 
 const Cloud_Trail = () => {
   const [data, setData] = useState([]);
-  console.log('data', data)
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedData, setSelectedData] = useState(null);
   const [searchText, setSearchText] = useState("");
 
-  const API_URL = "http://13.212.15.14:8012/cloudtrail";
+  const API_URL = "http://47.130.218.97:8012/cloudtrail";
    let storedAccountId = localStorage.getItem("account_ids");
 
   // Fetch data on load
@@ -47,18 +46,14 @@ useEffect(() => {
           storedIdValue = parsed;
         }
       } catch {
-        // if it's a normal string, ignore
       }
 
       const normalizeId = (id) => String(id).trim().toLowerCase();
       const storedId = normalizeId(storedIdValue);
 
-      console.log("Normalized storedAccountId:", storedId);
 
-      // ✅ Step 2: Fetch API
-      const [response] = await Promise.all([axios.get(API_URL)]);
+  const [response] = await Promise.all([api.get("/cloudtrail")]);
 
-      // ✅ Step 3: Filter Data safely
       if (response?.data && Array.isArray(response.data)) {
         const filteredData = response.data.filter((item) => {
           const itemId =
@@ -69,7 +64,6 @@ useEffect(() => {
           return normalizeId(itemId) === storedId;
         });
 
-        console.log("Filtered Data 2222:", filteredData);
         setData(filteredData);
 
         if (filteredData.length === 0) {
@@ -217,7 +211,7 @@ useEffect(() => {
   );
 
   return (
-    <div className="p-6">
+    <div className="p-3">
      
 
       {/* Search input */}

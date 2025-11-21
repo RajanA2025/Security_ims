@@ -26,6 +26,7 @@ import {
 
 const header = { backgroundColor: "#4f46e5", color: "white" };
 import { useObservability } from "../../../Context/ObservabilityContext";
+import api from "../../../lib/api";
 
 const Observability = () => {
   const { Option } = Select;
@@ -60,79 +61,72 @@ const Observability = () => {
     ec2Data,
   } = useObservability();
   // API base URL
-  const API_BASE_URL = "http://13.212.15.14:8016";
+  const API_BASE_URL = "http://47.130.218.97:8012";
   
   // Fetch data
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     setLoading(true);
-  //     try {
-  //       let endpoint = '';
-  //       let response = null;
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        let endpoint = '';
+        let response = null;
         
-  //       switch(tabKey) {
-  //         case "1":
-  //           endpoint = `${API_BASE_URL}/keypairs2`;
-  //           console.log('Fetching keypairs from:', endpoint);
-  //           response = await axios.get(endpoint);
-  //           setSecurityData(response.data);
-  //           break;
-  //         case "2":
-  //           endpoint = `${API_BASE_URL}/orphaned-eip`;
-  //           console.log('Fetching EIP data from:', endpoint);
-  //           response = await axios.get(endpoint);
-  //           seteipData(response.data);
-  //           break;
-  //         case "3":
-  //           endpoint = `${API_BASE_URL}/orphaned-volumes`;
-  //           console.log('Fetching volumes from:', endpoint);
-  //           response = await axios.get(endpoint);
-  //           setVolumeData(response.data);
-  //           break;
-  //         case "4":
-  //           endpoint = `${API_BASE_URL}/s3`;
-  //           console.log('Fetching S3 data from:', endpoint);
-  //           response = await axios.get(endpoint);
-  //           setS3Data(response.data);
-  //           break;
-  //         case "5":
-  //           endpoint = `${API_BASE_URL}/ec2`;
-  //           console.log('Fetching EC2 data from:', endpoint);
-  //           response = await axios.get(endpoint);
-  //           setEC2Data(response.data);
-  //           break;
-  //         default:
-  //           console.warn('Unknown tab key:', tabKey);
-  //       }
+        switch(tabKey) {
+          case "1":
+            endpoint = `${API_BASE_URL}/keypairs2`;
+            response = await api.get(endpoint);
+            setSecurityData(response.data);
+            break;
+          case "2":
+            endpoint = `${API_BASE_URL}/orphaned-eip`;
+            response = await api.get(endpoint);
+            seteipData(response.data);
+            break;
+          case "3":
+            endpoint = `${API_BASE_URL}/orphaned-volumes`;
+            response = await api.get(endpoint);
+            setVolumeData(response.data);
+            break;
+          case "4":
+            endpoint = `${API_BASE_URL}/s3`;
+            response = await api.get(endpoint);
+            setS3Data(response.data);
+            break;
+          case "5":
+            endpoint = `${API_BASE_URL}/ec2`;
+            response = await api.get(endpoint);
+            setEC2Data(response.data);
+            break;
+          default:
+            console.warn('Unknown tab key:', tabKey);
+        }
         
-  //       console.log(`Successfully fetched data for tab ${tabKey} from ${endpoint}`);
-  //     } catch (err) {
-  //       console.error("Error fetching data:", {
-  //         message: err.message,
-  //         response: err.response ? {
-  //           status: err.response.status,
-  //           statusText: err.response.statusText,
-  //           data: err.response.data
-  //         } : 'No response',
-  //         config: {
-  //           url: err.config?.url,
-  //           method: err.config?.method,
-  //           headers: err.config?.headers
-  //         }
-  //       });
+      } catch (err) {
+        console.error("Error fetching data:", {
+          message: err.message,
+          response: err.response ? {
+            status: err.response.status,
+            statusText: err.response.statusText,
+            data: err.response.data
+          } : 'No response',
+          config: {
+            url: err.config?.url,
+            method: err.config?.method,
+            headers: err.config?.headers
+          }
+        });
         
-  //       // Set empty data to prevent UI from breaking
-  //       if (tabKey === "1") setSecurityData([]);
-  //       else if (tabKey === "2") seteipData([]);
-  //       else if (tabKey === "3") setVolumeData([]);
-  //       else if (tabKey === "4") setS3Data([]);
-  //       else if (tabKey === "5") setEC2Data([]);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchData();
-  // }, [tabKey]);
+        if (tabKey === "1") setSecurityData([]);
+        else if (tabKey === "2") seteipData([]);
+        else if (tabKey === "3") setVolumeData([]);
+        else if (tabKey === "4") setS3Data([]);
+        else if (tabKey === "5") setEC2Data([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [tabKey]);
 
   // Handler functions for each modal type
   const handleOpenKeyPair = record => {
@@ -512,8 +506,8 @@ const Observability = () => {
   
 
   return (
-    <>
-      <Row gutter={[16, 8]} style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 16}} >
+    < div className="p-3">
+      <Row gutter={[16, 8]} style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 16,marginTop:10 }} >
       <Col xs={24} md={12} >
             <Typography.Title 
               level={4}
@@ -832,7 +826,7 @@ const Observability = () => {
           </Card>
         )}
       </Modal>
-    </>
+    </div>
   );
 };
 

@@ -8,116 +8,173 @@ import {
   IconButton,
   MenuItem,
   Menu,
+  Divider,
   useTheme,
+  useMediaQuery,
+  Tooltip,
 } from "@mui/material";
-import { AccountCircleOutlined, Login } from "@mui/icons-material";
+import { AccountCircleOutlined, Login, AccessTime } from "@mui/icons-material";
+import { Menu as MenuIcon } from "@mui/icons-material";
 import { useAuth } from "../Context/AuthContext";
 import { Typography } from "antd";
 
-const Header = ({ onDateChange }) => {
+const Header = ({ isExpanded, setIsExpanded }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const location = useLocation();
   const navigate = useNavigate();
-
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [context, setContext] = useState("Account");
-  const [loaded, setLoaded] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
-
-  // Detect section
-  const path = location.pathname.toLowerCase();
-
-  const isSecurity = path.startsWith("/security");
-  const isOperational = path.startsWith("/operational");
-  const isAdmin = path.startsWith("/admin");
-  const isImsProduct = path.startsWith("/imsproduct");
-
-  const layout = isSecurity
-    ? "1"
-    : isOperational
-    ? "2"
-    : isAdmin
-    ? "4"
-    : isImsProduct
-    ? "3"
-    : "";
-
-  // Menu controls
-  const handleMenu = (event) => setAnchorEl(event.currentTarget);
-  const handleClose = () => setAnchorEl(null);
   const { logout } = useAuth();
 
-  useEffect(() => setLoaded(true), []);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState("");
 
+  // Detect current page
+  const path = location.pathname.toLowerCase();
+  const layout = path.startsWith("/security")
+    ? "Security"
+    : path.startsWith("/perfops")
+    ? "Performance & Operational Excellence"
+    : path.startsWith("/imsproduct")
+    ? "IMS Product"
+    : path.startsWith("/admin")
+    ? "Admin"
+    : "Cost";
+
+  // Last updated time
   useEffect(() => {
-    if (startDate && endDate && context) {
-      onDateChange({ startDate, endDate, context });
-    }
-  }, [startDate, endDate, context, onDateChange]);
-
-  const handleReset = () => {
-    setStartDate("");
-    setEndDate("");
-  };
-
-  // ✅ Title logic (IMS Product included)
-  const getHeaderTitle = () => {
-    switch (layout) {
-      case "1":
-        return "Security";
-      case "2":
-        return "Operational Excellence";
-      case "3":
-        return "IMS Product";
-      case "4":
-        return "Admin";
-      default:
-        return "Cost Management";
-    }
-  };
+    const updateTime = () => {
+      const now = new Date();
+      const date = now.toLocaleDateString("en-GB");
+      const day = now.toLocaleDateString("en-US", { weekday: "long" });
+      const time = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      setLastUpdated(`Last updated: ${date}, ${day}, Time: 2:00 AM IST`); // Static time as per requirement
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <AppBar
       position="static"
-      elevation={2}
+      elevation={3}
       sx={{
         bgcolor: "white",
-        color: theme.palette.text.primary,
+        color: "black",
+        borderBottom: "1px solid #eaeaea",
+        transition: "all 0.3s ease",
       }}
     >
-      <Toolbar sx={{ justifyContent: "space-between", flexWrap: "wrap" }}>
-        <Box sx={{ display: "flex", alignItems: "center" }}>
+      <Toolbar
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          px: { xs: 1, md: 2 },
+          py: { xs: 1, md: 1.2 },
+          flexWrap: "wrap",
+          rowGap: 1.5,
+        }}
+      >
+        {/* LEFT BLOCK */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1, minWidth: 200 }}>
+          {/* Hamburger for mobile */}
+          {isMobile && (
+            <IconButton
+              onClick={() => setIsExpanded((prev) => !prev)}
+              sx={{ color: "#374151", transition: "transform 0.3s", "&:hover": { transform: "scale(1.1)" } }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
+
+          {/* Logo */}
           <img
             src={logo}
             alt="logo"
-            style={{ height: 70, marginRight: 25, cursor: "pointer" }}
-            onClick={() => navigate("/Imsproduct")}
-          />
-          <Typography.Title
-            level={3}
             style={{
-              fontFamily:
-                "Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif",
-              fontSize: "23px",
-              fontWeight: 700,
-              color: "black",
-              margin: 0,
+              height: isMobile ? 40 : 55,
+              cursor: "pointer",
+              transition: "transform 0.3s",
             }}
-          >
-            {getHeaderTitle()}
-          </Typography.Title>
+            onClick={() => navigate("/imsproduct")}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+          />
+
+          {/* Title */}
+          <Box>
+            <Typography.Title
+              level={4}
+              style={{
+                margin: 0,
+                fontWeight: 700,
+                fontSize: isMobile ? 17 : 21,
+                color: "#222",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {layout}
+            </Typography.Title>
+            {!isMobile && (
+              <Typography.Text style={{ fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                Insight Management System
+              </Typography.Text>
+            )}
+          </Box>
         </Box>
 
-        {/* User Menu */}
-        <IconButton onClick={handleMenu}>
-          <AccountCircleOutlined fontSize="medium" />
-        </IconButton>
+        {/* RIGHT BLOCK */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2.5, flexWrap: "nowrap" }}>
+          <Tooltip title={isMobile ? lastUpdated : ""} arrow>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                bgcolor: "#f2f5fa",
+                px: isMobile ? 1.2 : 2,
+                py: 0.7,
+                borderRadius: 2,
+                border: "1px solid #e2e8f0",
+                cursor: "default",
+                transition: "all 0.2s ease",
+                "&:hover": { boxShadow: isMobile ? "0 2px 6px rgba(0,0,0,0.15)" : "none" },
+              }}
+            >
+              <AccessTime sx={{ fontSize: 18, mr: isMobile ? 0 : 1, color: "#6b7280" }} />
+              {!isMobile && (
+                <Typography.Text style={{ fontSize: 13, fontWeight: 500, color: "#374151" }}>
+                  {lastUpdated}
+                </Typography.Text>
+              )}
+            </Box>
+          </Tooltip>
 
-        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+          <Divider orientation="vertical" flexItem />
+
+          <IconButton
+            onClick={(e) => setAnchorEl(e.currentTarget)}
+            sx={{
+              color: "#374151",
+              "&:hover": { bgcolor: "#f3f4f6", transform: "scale(1.05)" },
+              transition: "all 0.2s",
+            }}
+          >
+            <AccountCircleOutlined fontSize="medium" />
+          </IconButton>
+        </Box>
+
+        {/* Profile Dropdown */}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={() => setAnchorEl(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
+        >
           <MenuItem
             onClick={() => {
-              handleClose();
+              setAnchorEl(null);
               alert("Go to Profile");
             }}
           >
@@ -125,14 +182,8 @@ const Header = ({ onDateChange }) => {
           </MenuItem>
           <MenuItem
             onClick={() => {
-              handleClose();
-              // call context logout which clears localStorage
-              try {
-                logout();
-              } catch (e) {
-                // ignore
-              }
-              // ensure redirect to login
+              setAnchorEl(null);
+              logout();
               navigate("/login");
             }}
           >

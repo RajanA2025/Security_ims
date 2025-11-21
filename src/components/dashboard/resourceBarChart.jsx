@@ -17,9 +17,9 @@ const ResourceBarChart = () => {
         setError(null);
         
         const [keyPairRes, eipRes, volumeRes] = await Promise.all([
-          fetch("http://13.212.15.14:8016/keypairs2"),
-          fetch("http://13.212.15.14:8016/orphaned-eip"),
-          fetch("http://13.212.15.14:8016/orphaned-volumes")
+          fetch("http://47.130.218.97:8012/keypairs2"),
+          fetch("http://47.130.218.97:8012/orphaned-eip"),
+          fetch("http://47.130.218.97:8012/orphaned-volumes")
         ]);
 
         if (!keyPairRes.ok) throw new Error("Failed to fetch key pairs");

@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useRef } from "react";
+import api from "../lib/api";
 
 export const CostContext = createContext();
 
@@ -40,12 +41,8 @@ export const CostProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch("http://13.212.15.14:8006/api/company/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(companyData),
-      });
-      return await response.json();
+      const response = await api.post(`/api/company/register`, companyData);
+      return response.data;
     } catch (err) {
       console.error("Register Error:", err);
       setError(err.message);
@@ -60,20 +57,15 @@ export const CostProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch("http://13.212.15.14:8006/api/company/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(loginData),
-      });
+      const response = await api.post(`/api/company/login`, loginData);
+      const result = response.data;
+      if (response.status < 200 || response.status >= 300) throw new Error(result.message || "Login failed");
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Login failed");
-localStorage.setItem("auth_token", true);
-  // Some backends may return 200 without a token. Treat any successful login (200)
-  // as authenticated: store the token if provided, otherwise store a boolean flag.
-  const authValue = result.token ? result.token : "true";
-  localStorage.setItem("auth_token", authValue);
-      if (result.cid) localStorage.setItem("company_cid", result.cid);
+      // Some backends may return 200 without a token. Treat any successful login (200)
+      // as authenticated: store the token if provided, otherwise store a boolean flag.
+      const authValue = result?.token ? result.token : "true";
+      localStorage.setItem("auth_token", authValue);
+      if (result?.cid) localStorage.setItem("company_cid", result.cid);
 
       return result;
     } catch (err) {
@@ -90,18 +82,9 @@ localStorage.setItem("auth_token", true);
     try {
       setLoading(true);
       setError(null);
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch("http://13.212.15.14:8006/api/accounts/add", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-        body: JSON.stringify(accountData),
-      });
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Account creation failed");
+      const response = await api.post(`/api/account/add`, accountData);
+      const result = response.data;
+      if (response.status < 200 || response.status >= 300) throw new Error(result.message || "Account creation failed");
       return result;
     } catch (err) {
       console.error("Add Account Error:", err);
@@ -116,7 +99,6 @@ localStorage.setItem("auth_token", true);
   const getAllCompanies = async (forceRefresh = false) => {
     // Prevent infinite loop fetches
     if (hasFetchedCompanies.current && !forceRefresh) {
-      console.log("✅ Using cached company list");
       return companies;
     }
 
@@ -124,17 +106,9 @@ localStorage.setItem("auth_token", true);
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch("http://13.212.15.14:8006/api/company/all", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-      });
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Failed to fetch companies");
+      const response = await api.get(`/api/company/all`);
+      const result = response.data;
+      if (response.status < 200 || response.status >= 300) throw new Error(result.message || "Failed to fetch companies");
 
       setCompanies(result);
       hasFetchedCompanies.current = true; // ✅ mark as fetched
@@ -159,16 +133,9 @@ localStorage.setItem("auth_token", true);
       if (!cid) throw new Error("Company ID not found. Please log in again.");
 
       // 🔸 Dynamic endpoint using template literal
-      const response = await fetch(`http://13.212.15.14:8006/api/accounts/all/${cid}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`, // optional if backend needs token
-        },
-      });
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Failed to fetch accounts");
+      const response = await api.get(`/api/accounts/all/${cid}`);
+      const result = response.data;
+      if (response.status < 200 || response.status >= 300) throw new Error(result.message || "Failed to fetch accounts");
 
       return result;
     } catch (err) {
@@ -199,31 +166,23 @@ localStorage.setItem("auth_token", true);
           end_date: end_date || "",
         };
 
-        console.log("🔹 Sending POST body:", postBody);
 
         // POST request instead of GET
-        const costUrl = `http://13.212.15.14:8021/cost-summary`;
-
         const [costRes, resourcesRes, tagRes] = await Promise.all([
-          fetch(costUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(postBody),
-          }),
-          fetch("http://13.212.15.14:8003/resources"),
-          fetch("http://13.212.15.14:8007/tags"),
+          api.post(`/cost-summary`, postBody),
+          api.get(`/resources`),
+          api.get(`/tags`),
         ]);
 
-        if (!costRes.ok || !resourcesRes.ok || !tagRes.ok)
+        if (costRes.status < 200 || costRes.status >= 300 || resourcesRes.status < 200 || resourcesRes.status >= 300 || tagRes.status < 200 || tagRes.status >= 300)
           throw new Error("Failed to fetch data");
 
-        const costJson = await costRes.json();
-        const resourcesJson = await resourcesRes.json();
-        const tagsJson = await tagRes.json();
+        const costJson = costRes.data;
+        const resourcesJson = resourcesRes.data;
+        const tagsJson = tagRes.data;
 
         // Build account list
         const accountList = costJson?.all_account_ids || [];
-        console.log("🔹 Fetched account IDs:", accountList);
         const orderedAccounts = accountList.includes("ALL")
           ? accountList
           : ["ALL", ...accountList];
@@ -235,7 +194,11 @@ localStorage.setItem("auth_token", true);
         setApps(appList);
 
         // Process tags
-        const processedTagData = Array.isArray(tagsJson)
+        // Get selected account from filters or localStorage
+        // const selectedAcc = filters.account_id || localStorage.getItem("account_ids");
+
+        // Process + Filter tags by selected account
+        let processedTagData = Array.isArray(tagsJson)
           ? tagsJson.map((res, i) => ({
             id: res.id || i + 1,
             account_name: res.account_name || "",
@@ -246,6 +209,24 @@ localStorage.setItem("auth_token", true);
             tags: res.tags || {},
           }))
           : [];
+
+        // Apply multi-account filtering
+        const storedIds = JSON.parse(localStorage.getItem("account_ids")) || [];
+
+        if (filters.account_id && filters.account_id !== "ALL") {
+          // Single account selected
+          processedTagData = processedTagData.filter(
+            (item) => String(item.account_id) === String(filters.account_id)
+          );
+        } else {
+          // Multiple stored accounts filter
+          processedTagData = processedTagData.filter((item) =>
+            storedIds.includes(String(item.account_id))
+          );
+        }
+
+
+
 
         // Compute tagging summary
         const requiredTags = ["Name", "Owner", "Project", "Environment"];

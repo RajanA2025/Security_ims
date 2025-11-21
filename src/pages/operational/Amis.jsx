@@ -16,7 +16,7 @@ import {
   InfoCircleOutlined,
   SearchOutlined
 } from "@ant-design/icons";
-import axios from "axios";
+import api from "../../lib/api";
 
 const header = { backgroundColor: "#4f46e5", color: "white" };
 
@@ -27,17 +27,17 @@ const Amis = () => {
   const [selectedData, setSelectedData] = useState(null);
   const [searchText, setSearchText] = useState("");
 
-  const API_URL = "http://13.212.15.14:8012/amis";
+  const API_ENDPOINT = "/amis";
 
   // Fetch data on load
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(API_URL);
+        const response = await api.get(API_ENDPOINT);
         setData(response.data);
       } catch (error) {
-        console.error("Error fetching CloudTrail data:", error);
+        console.error("Error fetching AMIs data:", error);
       } finally {
         setLoading(false);
       }
@@ -256,24 +256,34 @@ const Amis = () => {
   ];
 
   // Filtered data by username search
-  const filteredData = data.filter(item =>
-    getRecordUsername(item).toLowerCase().includes(searchText.toLowerCase())
-  );
+// Filter based on stored account IDs from localStorage
+const storedAccountIds = JSON.parse(localStorage.getItem("account_ids") || "[]");
+
+const accountFilteredData =
+  storedAccountIds.length > 0 && !storedAccountIds.includes("ALL")
+    ? data.filter(item => storedAccountIds.includes(item.owner_id))
+    : data;
+
+// Apply search filter
+const filteredData = accountFilteredData.filter(item =>
+  getRecordUsername(item).toLowerCase().includes(searchText.toLowerCase())
+);
+
 
   return (
-    <>
+    < div className="p-3">
      
 
       {/* Search input */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 5}}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 5,marginTop:10 }}>
       <Col md={20}>
       <Typography.Title 
   level={4}
   style={{
     fontFamily: "'Roboto', 'Segoe UI', sans-serif",
     fontSize: "20px",
-    fontWeight: 500,
-    color: "black",
+     fontWeight: 600,
+                          color: "#1f2937",
     margin: 0
   }}
 >
@@ -282,7 +292,7 @@ AMI
   </Col>
   <Col md={4}>
           <Input
-            placeholder="Search by AMI Name"
+            placeholder="Seadch by AMI Name"
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={handleSearch}
@@ -317,7 +327,7 @@ AMI
               <Descriptions.Item label="Account ID">{selectedData.owner_id}</Descriptions.Item>
               {/* <Descriptions.Item label="AcoountName">{getRecordUsername(selectedData)}</Descriptions.Item> */}
               <Descriptions.Item label="AMI ID">{selectedData.ami_id || "-"}</Descriptions.Item>
-              <Descriptions.Item label="AMI Name">{selectedData.ami_name || "-"}</Descriptions.Item>
+              <Descriptions.Item label="AMI Ndame">{selectedData.ami_name || "-"}</Descriptions.Item>
               <Descriptions.Item label="AWS Account ">{selectedData.aws_account || "-"}</Descriptions.Item>
               <Descriptions.Item label="Platform">{selectedData.platform || "-"}</Descriptions.Item>
               <Descriptions.Item label="Encrypted">{selectedData.encrypted || "-"}</Descriptions.Item>
@@ -331,7 +341,7 @@ AMI
           </Card>
         )}
       </Modal>
-    </>
+    </div>
   );
 };
 

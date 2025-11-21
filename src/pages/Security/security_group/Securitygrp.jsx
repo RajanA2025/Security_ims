@@ -27,7 +27,7 @@ import {
   SecurityScanFilled,
   SecurityScanTwoTone
 } from "@ant-design/icons";
-import axios from "axios";
+import api from "../../../lib/api";
 import { PortableWifiOffOutlined, PortraitOutlined, SecuritySharp } from "@mui/icons-material";
 
 // Animation variants
@@ -120,54 +120,52 @@ const Securitygrp = () => {
   const { Option } = Select;
   const accountIds = [...new Set(data.map(item => item.account_id))];
   // Fetch data on mount
-  const API_URL = "http://13.212.15.14:8012/security-groups";
+  const API_URL = "http://47.130.218.97:8012/security-groups";
    let storedAccountId = localStorage.getItem("account_ids");
 
   useEffect(() => {
-    const fetchData = async () => {
+       const fetchData = async () => {
       setLoading(true);
       try {
-
-      try {
-        storedAccountId = JSON.parse(storedAccountId);
-        if (Array.isArray(storedAccountId)) {
-          storedAccountId = storedAccountId[0]; // take first ID
+        let storedAccountId = localStorage.getItem("account_ids");
+    
+        // Parse storedAccountId safely
+        try {
+          storedAccountId = JSON.parse(storedAccountId);
+        } catch {
+          storedAccountId = [storedAccountId]; // wrap single ID into array
         }
-      } catch {
-        // keep as string
-      }
-
-        // const response = await axios.get(API_URL);
-        // setData(response.data);
-        // setFilteredData(response.data); // show all initially
-        
-      const [response] = await Promise.all([
-        axios.get(API_URL),
-       
-      ]);
-
-      const normalizeId = (id) => String(id).trim().toLowerCase();
-      const storedId = normalizeId(storedAccountId);
-
-      if (response?.data && Array.isArray(response.data)) {
-        const filtered2 = response.data.filter((item) => {
-          const itemId =
-            item.account_id || item.accountId || item.ACCOUNT_ID || item.Account_ID;
-          return normalizeId(itemId) === storedId;
-        });
-        console.log("Filtered Data 2:", filtered2);
-        setData(filtered2);
-        setFilteredData(filtered2);
-      }
-
-      
+    
+        // Normalize all IDs
+        const normalizeId = (id) => String(id).trim().toLowerCase();
+        const storedIds = Array.isArray(storedAccountId)
+          ? storedAccountId.map(normalizeId)
+          : [normalizeId(storedAccountId)];
+    
+  const [response] = await Promise.all([api.get("/security-groups")]);
+    
+        if (response?.data && Array.isArray(response.data)) {
+    
+          const filteredData = response.data.filter((item) => {
+            const itemId =
+              item.account_id ||
+              item.accountId ||
+              item.ACCOUNT_ID ||
+              item.Account_ID;
+    
+            return storedIds.includes(normalizeId(itemId));
+          });
+    
+          setData(filteredData);
+          setFilteredData(filteredData);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
-
+    
     fetchData();
   }, [storedAccountId]);
 
@@ -283,7 +281,7 @@ const Securitygrp = () => {
   ];
 
   return (
-    <div className="p-5">
+    <div className="p-3">
     
 <Row gutter={[16, 16]} style={{ marginBottom: 5 }}>
   <Col md={16}>

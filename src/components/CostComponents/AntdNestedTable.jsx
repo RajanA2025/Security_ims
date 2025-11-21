@@ -126,18 +126,17 @@ export default function AntdNestedTable({ selectedAccount }) {
   const [dataService, setDataService] = useState([]);
   const [dataContainer, setDataContainer] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expandedKeys, setExpandedKeys] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const { data } = await axios.get("http://13.212.15.14:8002/instances");
+        const { data } = await axios.get("http://47.130.218.97:8002/instances");
         const results = data.results || [];
 
         const storedAccounts = JSON.parse(localStorage.getItem("account_ids")) || [];
-        const filteredResults = results.filter((r) =>
-          storedAccounts.includes(r.account_id)
-        );
+        const filteredResults = results.filter((r) => storedAccounts.includes(r.account_id));
 
         const finalResults = selectedAccount
           ? filteredResults.filter((r) => r.account_id === selectedAccount)
@@ -260,47 +259,66 @@ export default function AntdNestedTable({ selectedAccount }) {
     [labels, costs]
   );
 
-  // ✅ No data fallback
   const noData =
     !loading &&
     (!dataEnv.length && !dataService.length && !dataContainer.length);
 
+  // handle auto-scroll on row expand
+  const handleExpand = (expanded, record) => {
+    if (expanded) {
+      setExpandedKeys((prev) => [...prev, record.key]);
+      setTimeout(() => {
+        const rowEl = document.querySelector(`[data-row-key="${record.key}"]`);
+        if (rowEl) rowEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    } else {
+      setExpandedKeys((prev) => prev.filter((k) => k !== record.key));
+    }
+  };
+
   return (
-    <div>
-      {noData ? (
-        <Empty description="No Data Found" style={{ marginTop: 80 }} />
-      ) : (
-        <>
-          <ResizableChart option={graphOptions} height={250} />
-          <Card style={{ borderRadius: 8, marginTop: 20, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
-            <Tabs activeKey={activeTab} onChange={setActiveTab}>
-              <Tabs.TabPane tab="By Environment" key="environment" />
-              <Tabs.TabPane tab="By Service" key="service" />
-              <Tabs.TabPane tab="By Container" key="container" />
-            </Tabs>
-            {loading ? (
-              <div style={{ textAlign: "center", padding: 50 }}>
-                <Spin size="large" />
-              </div>
-            ) : (
-              <Table
-                columns={columns}
-                dataSource={
-                  activeTab === "environment"
-                    ? dataEnv
-                    : activeTab === "service"
+    <div style={{ overflowX: 'auto', width: '100%' }}>      
+    {noData ? (
+      <Empty description="No Data Found" style={{ marginTop: 80 }} />
+    ) : (
+      <>
+        <ResizableChart option={graphOptions} height={250} />
+        <Card style={{ borderRadius: 8, marginTop: 20, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+          <Tabs activeKey={activeTab} onChange={setActiveTab}>
+            <Tabs.TabPane tab="By Environment" key="environment" />
+            <Tabs.TabPane tab="By Service" key="service" />
+            <Tabs.TabPane tab="By Container" key="container" />
+          </Tabs>
+
+          {loading ? (
+            <div style={{ textAlign: "center", padding: 50 }}>
+              <Spin size="large" />
+            </div>
+          ) : (
+            <Table
+              columns={columns}
+              dataSource={
+                activeTab === "environment"
+                  ? dataEnv
+                  : activeTab === "service"
                     ? dataService
                     : dataContainer
-                }
-                pagination={false}
-                rowKey={(record) => record.key}
-                expandable={{ expandIconColumnIndex: 0, childrenColumnName: "children" }}
-                size="small"
-              />
-            )}
-          </Card>
-        </>
-      )}
+              }
+              pagination={false}
+              rowKey={(record) => record.key}
+              expandable={{
+                expandIconColumnIndex: 0,
+                childrenColumnName: "children",
+                expandedRowKeys: expandedKeys,
+                onExpand: handleExpand,
+              }}
+              size="small"
+              scroll={{ x: 'max-content' }} // horizontal scroll on small screens
+            />
+          )}
+        </Card>
+      </>
+    )}
     </div>
   );
 }

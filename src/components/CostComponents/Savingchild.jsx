@@ -76,11 +76,26 @@ const SavingsChild = () => {
   const [rightsizingFilter, setRightsizingFilter] = useState("underutilized_ec2");
 
   const [filter, setFilter] = useState("All");
+  const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
 
+  const filterByAccounts = (data) => {
+  if (!storedAccountIds.length) return data;
+  return data.filter(item => storedAccountIds.includes(item.account_id));
+};
+
+const fetchKeyPairs = async () => {
+  setLoading(true);
+  try {
+    const res = await axios.get(`${API_BASE_URL}/keypairs2`);
+    setSecurityData(filterByAccounts(res.data));
+  } finally {
+    setLoading(false);
+  }
+};
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get("http://13.212.15.14:8003/resources");
+        const res = await axios.get("http://47.130.218.97:8003/resources");
         const data = res.data;
 
         // ✅ Get stored account IDs from localStorage
@@ -556,8 +571,8 @@ const SavingsChild = () => {
               <Card bordered hoverable onClick={() => setActiveTab("rightsizing")}>
                 <h3>Rightsizing</h3>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: 8 }}>
-                  <Tag color="cyan">{rightsizing[rightsizingFilter]?.length || 0}</Tag>
-                  <Text strong style={{ color: "cyan" }}>
+                  <Tag color="green" icon={<DollarOutlined />}>{rightsizing[rightsizingFilter]?.length || 0}</Tag>
+                  <Text strong style={{ color: "green" }}>
                     Total Savings: ${calculateTotal(rightsizing[rightsizingFilter], "costSaving").toFixed(2)}
                   </Text>
                 </div>

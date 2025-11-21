@@ -1,115 +1,75 @@
 import React, { useState, useEffect, useCallback, useContext, memo } from "react";
 import { useNavigate } from 'react-router-dom';
-
-import { Plus, Minus, Eye, EyeOff } from "lucide-react";
+import { Plus, Minus } from "lucide-react";
 import { CostContext } from "../../Context/CostContext";
 
-const InputField = memo(({ label, value, onChange, type = "text", placeholder, error, readOnly, showPasswordToggle = false, onTogglePassword }) => (
+// ---------------- Input Field ----------------
+const InputField = memo(({ label, value, onChange, type = "text", placeholder, error, readOnly }) => (
   <div className="space-y-1.5">
     <label className="block text-sm font-medium text-gray-700">
       {label} {label !== "Company CID" && <span className="text-red-500">*</span>}
     </label>
-    <div className="relative">
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        readOnly={readOnly}
-        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-10 ${error ? "border-red-500" : "border-gray-300"
-          } ${readOnly ? "bg-gray-200 text-gray-500" : "bg-white"}`}
-      />
-      {showPasswordToggle && (
-        <button
-          type="button"
-          onClick={onTogglePassword}
-          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
-          tabIndex="-1"
-        >
-          {type === "password" ? <Eye size={18} /> : <EyeOff size={18} />}
-        </button>
-      )}
-    </div>
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      readOnly={readOnly}
+      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${error ? "border-red-500" : "border-gray-300"} ${readOnly ? "bg-gray-200 text-gray-500" : "bg-white"}`}
+    />
     {error && <p className="text-red-500 text-sm">{error}</p>}
   </div>
 ));
 
+// ---------------- Pillar Dropdown ----------------
 const PillarDropdown = memo(({ pillars, selected, onChange, error }) => {
-  // ✅ Combine operational_excellence & performance into one button
+  // Map backend/localStorage keys to dropdown keys
+  const mappedPillars = {
+    cost: pillars.cost,
+    security: pillars.security,
+    operational_performance: pillars.operational_excellence || pillars.performance, // merge both
+  };
+
   const available = [
     { key: "cost", label: "Cost" },
     { key: "security", label: "Security" },
     { key: "operational_performance", label: "Operational & Performance" },
-  ].filter((item) => {
-    if (item.key === "operational_performance") {
-      return pillars?.operational_excellence || pillars?.performance;
-    }
-    return pillars?.[item.key];
-  });
+  ].filter(item => mappedPillars[item.key]); // only show if true
 
   const toggle = useCallback(
     (pillarKey) => {
       let updated = [...selected];
-
-      if (pillarKey === "operational_performance") {
-        // ✅ Toggle both operational_excellence & performance together
-        const hasBoth =
-          selected.includes("operational_excellence") &&
-          selected.includes("performance");
-
-        updated = hasBoth
-          ? selected.filter(
-            (p) => p !== "operational_excellence" && p !== "performance"
-          )
-          : [...selected, "operational_excellence", "performance"];
-      } else {
-        updated = selected.includes(pillarKey)
-          ? selected.filter((p) => p !== pillarKey)
-          : [...selected, pillarKey];
-      }
-
+      updated = updated.includes(pillarKey)
+        ? updated.filter((p) => p !== pillarKey)
+        : [...selected, pillarKey];
       onChange(updated);
     },
     [selected, onChange]
   );
 
-  const isActive = (pillarKey) => {
-    if (pillarKey === "operational_performance") {
-      return (
-        selected.includes("operational_excellence") &&
-        selected.includes("performance")
-      );
-    }
-    return selected.includes(pillarKey);
-  };
+  const isActive = (pillarKey) => selected.includes(pillarKey);
 
   return (
     <div className="space-y-1.5">
       <label className="block text-sm font-medium text-gray-700">
-        Select Pillars (Multiple) <span className="text-red-500">*</span>
+        Select Pillars<span className="text-red-500">*</span>
       </label>
 
-      <div
-        className={`flex flex-wrap gap-2 p-2 border rounded-lg transition ${error ? "border-red-500" : "border-gray-300"
-          }`}
-      >
-        {available.length === 0 ? (
-          <p className="text-gray-500 text-sm italic">No available pillars.</p>
-        ) : (
-          available.map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              onClick={() => toggle(item.key)}
-              className={`px-3 py-1 rounded-full text-sm border transition ${isActive(item.key)
-                ? "bg-blue-600 text-white border-blue-600"
-                : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
-                }`}
-            >
-              {item.label}
-            </button>
-          ))
-        )}
+      <div className={`flex flex-wrap gap-2 p-2 border rounded-lg transition ${error ? "border-red-500" : "border-gray-300"}`}>
+        {available.length === 0 && <p className="text-gray-500 text-sm">No pillars available</p>}
+        {available.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => toggle(item.key)}
+            className={`px-3 py-1 rounded-full text-sm border transition ${isActive(item.key)
+              ? "bg-blue-600 text-white border-blue-600"
+              : "bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200"
+              }`}
+          >
+            {item.label}
+          </button>
+        ))}
       </div>
 
       {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
@@ -117,14 +77,14 @@ const PillarDropdown = memo(({ pillars, selected, onChange, error }) => {
   );
 });
 
-
-
-
+// ---------------- Account Card ----------------
 const AccountCard = memo(({ index, acc, errors, updateAccount, removeAccount, canRemove }) => {
   const handleChange = useCallback(
     (field, value) => updateAccount(index, field, value),
     [index, updateAccount]
   );
+
+  const [isEditMode, setIsEditMode] = useState(() => !!localStorage.getItem("edit_account"));
 
   return (
     <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
@@ -142,14 +102,11 @@ const AccountCard = memo(({ index, acc, errors, updateAccount, removeAccount, ca
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-
-        {/* ✅ REMOVED Company CID FROM UI */}
-
         <InputField
           label="Account ID"
           value={acc.accountId}
           onChange={(v) => handleChange("accountId", v)}
-          // readOnly
+          readOnly={isEditMode}
           error={errors[`accountId_${index}`]}
           placeholder="Enter account ID"
         />
@@ -167,30 +124,33 @@ const AccountCard = memo(({ index, acc, errors, updateAccount, removeAccount, ca
           error={errors[`accessKey_${index}`]}
           placeholder="Enter access key"
         />
-        <div className="relative">
-          <InputField
-            label="Secret Key"
-            type={acc.showSecretKey ? "text" : "password"}
-            value={acc.secretKey}
-            onChange={(v) => handleChange("secretKey", v)}
-            error={errors[`secretKey_${index}`]}
-            placeholder="Enter secret key"
-            showPasswordToggle
-            onTogglePassword={() => handleChange("showSecretKey", !acc.showSecretKey)}
-          />
-        </div>
         <InputField
-          label="Bucket Name"
-          value={acc.bucketName}
-          onChange={(v) => handleChange("bucketName", v)}
-          placeholder="Enter bucket name"
+          label="Secret Key"
+          type="password"
+          value={acc.secretKey}
+          onChange={(v) => handleChange("secretKey", v)}
+          error={errors[`secretKey_${index}`]}
+          placeholder="Enter secret key"
         />
-        <InputField
-          label="Prefix"
-          value={acc.prefix}
-          onChange={(v) => handleChange("prefix", v)}
-          placeholder="Enter prefix (e.g., data/)"
-        />
+
+        {/* ✅ Only show these if cost pillar is true */}
+        {acc.pillars?.cost && (
+          <>
+            <InputField
+              label="Bucket Name"
+              value={acc.bucketName}
+              onChange={(v) => handleChange("bucketName", v)}
+              placeholder="Enter bucket name"
+            />
+            <InputField
+              label="Prefix"
+              value={acc.prefix}
+              onChange={(v) => handleChange("prefix", v)}
+              placeholder="Enter prefix (e.g., data/)"
+            />
+          </>
+        )}
+
         <PillarDropdown
           pillars={acc.pillars}
           selected={acc.selectedPillars}
@@ -198,13 +158,17 @@ const AccountCard = memo(({ index, acc, errors, updateAccount, removeAccount, ca
           error={errors[`pillars_${index}`]}
         />
       </div>
+
     </div>
   );
 });
 
-
+// ---------------- Main Screen ----------------
 export default function AccountsScreen() {
   const { addAccount } = useContext(CostContext);
+  const navigate = useNavigate();
+
+  const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({
     accounts: [
       {
@@ -220,56 +184,39 @@ export default function AccountsScreen() {
       },
     ],
   });
-
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState(null);
-  const navigate = useNavigate();
 
-
+  // ---------------- Load edit data ----------------
   useEffect(() => {
-    const storedCid = localStorage.getItem("company_cid");
-    const storedPillars = JSON.parse(localStorage.getItem("pillars")) || {};
     const editData = JSON.parse(localStorage.getItem("edit_account"));
+    const storedCid = localStorage.getItem("company_cid") || "";
+    const storedPillars = JSON.parse(localStorage.getItem("pillars")) || {};
 
-    if (editData) {
-      // ✅ Load edit data into form
-      setFormData({
-        accounts: [
-          {
-            cid: storedCid || "",
-            accountId: editData.account_id || "",
-            accountName: editData.account_name || "",
-            accessKey: editData.access_key || "",
-            secretKey: editData.secret_key || "",
-            bucketName: editData.bucket_name || "",
-            prefix: editData.prefix || "",
-            pillars: storedPillars,
-            selectedPillars: Object.keys(editData.pillars || {}),
-          },
-        ],
-      });
-    } else {
-      // ✅ New Add Mode
-      setFormData({
-        accounts: [
-          {
-            cid: storedCid || "",
-            accountId: "",
-            accountName: "",
-            accessKey: "",
-            secretKey: "",
-            bucketName: "",
-            prefix: "",
-            pillars: storedPillars,
-            selectedPillars: [],
-          },
-        ],
-      });
-    }
+    if (editData) setIsEditMode(true);
+
+    setFormData({
+      accounts: [
+        {
+          cid: storedCid,
+          accountId: editData?.account_id || "",
+          accountName: editData?.account_name || "",
+          accessKey: editData?.access_key || "",
+          secretKey: editData?.secret_key || "",
+          bucketName: editData?.bucket_name || "",
+          prefix: editData?.prefix || "",
+          pillars: storedPillars,
+          selectedPillars: [
+            ...(editData?.pillars?.cost ? ["cost"] : []),
+            ...(editData?.pillars?.security ? ["security"] : []),
+            ...(editData?.pillars?.perfops ? ["operational_performance"] : []),
+          ],
+        },
+      ],
+    });
   }, []);
 
-
-
+  // ---------------- Update account ----------------
   const updateAccount = useCallback((index, field, value) => {
     setFormData((prev) => {
       const updatedAccounts = [...prev.accounts];
@@ -278,15 +225,10 @@ export default function AccountsScreen() {
     });
   }, []);
 
+  // ---------------- Add / Remove account ----------------
   const handleAddAccount = useCallback(() => {
     const storedCid = localStorage.getItem("company_cid") || "";
-    const storedPillars = JSON.parse(localStorage.getItem("pillars")) || {
-      cost: false,
-      security: false,
-      operational_excellence: false,
-      performance: false,
-    };
-
+    const storedPillars = JSON.parse(localStorage.getItem("pillars")) || {};
     setFormData((prev) => ({
       ...prev,
       accounts: [
@@ -313,126 +255,128 @@ export default function AccountsScreen() {
     }));
   }, []);
 
+  // ---------------- Validation ----------------
   const validateForm = useCallback(() => {
     const newErrors = {};
-
     formData.accounts.forEach((acc, i) => {
       if (!acc.accountId.trim()) newErrors[`accountId_${i}`] = "Account ID required";
       if (!acc.accountName.trim()) newErrors[`accountName_${i}`] = "Account name required";
       if (!acc.accessKey.trim()) newErrors[`accessKey_${i}`] = "Access key required";
       if (!acc.secretKey.trim()) newErrors[`secretKey_${i}`] = "Secret key required";
-
-      // ✅ Require at least one pillar to be selected
-      if (!acc.selectedPillars || acc.selectedPillars.length === 0) {
-        newErrors[`pillars_${i}`] = "Select at least one pillar";
-      }
+      if (!acc.selectedPillars || acc.selectedPillars.length === 0) newErrors[`pillars_${i}`] = "Select at least one pillar";
     });
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [formData]);
 
+  // ---------------- Submit ----------------
+  // const handleSubmit = useCallback(async () => {
+  //   if (!validateForm()) {
+  //     setToast({ type: "error", message: "Please fill all required fields." });
+  //     setTimeout(() => setToast(null), 3000);
+  //     return;
+  //   }
 
+  //   const acc = formData.accounts[0];
+  //   const editData = JSON.parse(localStorage.getItem("edit_account"));
+
+  //   const payload = {
+  //     cid: Number(acc.cid),
+  //     account_id: acc.accountId,
+  //     account_name: acc.accountName,
+  //     access_key: acc.accessKey,
+  //     secret_key: acc.secretKey,
+  //     bucket_name: acc.bucketName,
+  //     prefix: acc.prefix,
+  //     cost: acc.selectedPillars.includes("cost"),
+  //     security: acc.selectedPillars.includes("security"),
+  //     perfops: acc.selectedPillars.includes("operational_performance"),
+  //   };
+
+  //   try {
+  //     let response;
+  //     if (editData) {
+  //       response = await fetch(`http://47.130.218.97:8016/api/account/update`, {
+  //         method: "PUT",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify(payload),
+  //       });
+  //     } else {
+  //       response = await fetch("http://47.130.218.97:8016/api/account/add", {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify(payload),
+  //       });
+  //     }
+
+  //     const result = await response.json();
+  //     if (!response.ok) throw new Error(result.message || "Request failed");
+
+  //     localStorage.removeItem("edit_account");
+  //     setToast({ type: "success", message: editData ? "Account Updated" : "Account Created" });
+  //     setTimeout(() => setToast(null), 3000);
+  //     navigate("/imsproduct/accountsmanage");
+  //   } catch (err) {
+  //     console.error("Submit Error:", err);
+  //     setToast({ type: "error", message: err.message || "Something went wrong" });
+  //     setTimeout(() => setToast(null), 3000);
+  //   }
+  // }, [formData, validateForm, navigate]);
   const handleSubmit = useCallback(async () => {
-    if (!validateForm()) {
-      setToast({ type: "error", message: "Please fill all required fields." });
-      setTimeout(() => setToast(null), 3000);
-      return;
-    }
+  if (!validateForm()) {
+    setToast({ type: "error", message: "Please fill all required fields." });
+    setTimeout(() => setToast(null), 3000);
+    return;
+  }
 
-    const editData = JSON.parse(localStorage.getItem("edit_account"));
+  const editData = JSON.parse(localStorage.getItem("edit_account"));
+  const isEdit = !!editData;
 
-    // ✅ If in Edit Mode → Update API
-    if (editData) {
-      try {
-        const acc = formData.accounts[0];
-        const pillarType = acc.selectedPillars[0]; // pick first selected pillar
-
-        const updateURL = `http://13.212.15.14:8015/api/company/update/${acc.cid}/${acc.accountId}/${pillarType}`;
-
-        const response = await fetch(updateURL, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            cid: acc.cid, // ✅ REQUIRED
-            account_name: acc.accountName,
-            access_key: acc.accessKey,
-            secret_key: acc.secretKey,
-            bucket_name: acc.bucketName,
-            prefix: acc.prefix,
-          }),
-        });
-
-
-        const result = await response.json();
-        console.log("Update Result:", result);
-
-        if (!response.ok) throw new Error(result.message || "Update failed");
-
-        localStorage.removeItem("edit_account");
-        navigate("/imsproduct/accountsmanage");
-
-        setToast({ type: "success", message: "Account Updated Successfully!" });
-        setTimeout(() => setToast(null), 3000);
-
-      } catch (err) {
-        console.error("Update Error:", err);
-        setToast({ type: "error", message: err.message });
-        setTimeout(() => setToast(null), 3000);
-      }
-      return;
-    }
-
-    // ✅ Add Mode (existing code remains unchanged)
-    try {
+  try {
+    for (const acc of formData.accounts) {
       const payload = {
-        accounts: formData.accounts.map((acc) => {
-          const selectedPillarsObj = {};
-          acc.selectedPillars.forEach((pillar) => {
-            selectedPillarsObj[pillar] = true;
-          });
-
-          return {
-            cid: acc.cid || 0,
-            account_id: acc.accountId,
-            account_name: acc.accountName,
-            access_key: acc.accessKey,
-            secret_key: acc.secretKey,
-            bucket_name: acc.bucketName,
-            prefix: acc.prefix,
-            pillars: selectedPillarsObj,
-          };
-        }),
+        cid: Number(acc.cid),
+        account_id: acc.accountId,
+        account_name: acc.accountName,
+        access_key: acc.accessKey,
+        secret_key: acc.secretKey,
+        bucket_name: acc.bucketName,
+        prefix: acc.prefix,
+        cost: acc.selectedPillars.includes("cost"),
+        security: acc.selectedPillars.includes("security"),
+        perfops: acc.selectedPillars.includes("operational_performance"),
       };
 
-      const result = await addAccount(payload);
-
-      if (result?.message) {
-        const accountIds = formData.accounts.map((acc) => acc.accountId);
-        localStorage.setItem("account_ids", JSON.stringify(accountIds));
-        navigate("/imsproduct");
-        setToast({ type: "success", message: result.message });
-      }
-
-    } catch (err) {
-      console.error("Submit Error:", err);
-      setToast({ type: "error", message: "Something went wrong. Try again." });
+      await fetch(
+        isEdit
+          ? "http://47.130.218.97:8016/api/account/update"
+          : "http://47.130.218.97:8016/api/account/add",
+        {
+          method: isEdit ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
     }
-  }, [formData, validateForm, addAccount, navigate]);
 
+    localStorage.removeItem("edit_account");
+    setToast({ type: "success", message: isEdit ? "Accounts Updated" : "Accounts Created" });
+    setTimeout(() => setToast(null), 3000);
+    navigate("/imsproduct/accountsmanage");
+  } catch (err) {
+    console.error("Submit Error:", err);
+    setToast({ type: "error", message: err.message || "Something went wrong" });
+    setTimeout(() => setToast(null), 3000);
+  }
+}, [formData, validateForm]);
 
+  
 
-
+  // ---------------- Render ----------------
   return (
     <div className="min-h-screen bg-gradient-to-br flex items-center justify-center p-6">
-      {/* ✅ Toast */}
       {toast && (
-        <div
-          className={`fixed top-5 right-5 px-5 py-3 rounded-lg shadow-lg text-white text-sm font-medium transition-all duration-500 ${toast.type === "success" ? "bg-green-500" : "bg-red-500"
-            }`}
-        >
+        <div className={`fixed top-5 right-5 px-5 py-3 rounded-lg shadow-lg text-white text-sm font-medium transition-all duration-500 ${toast.type === "success" ? "bg-green-500" : "bg-red-500"}`}>
           {toast.message}
         </div>
       )}
@@ -444,46 +388,16 @@ export default function AccountsScreen() {
         </div>
 
         <div className="space-y-5">
-          <div className="flex justify-end">
-            <button
-              onClick={() => {
-                handleAddAccount();
-                localStorage.removeItem("edit_account"); // remove edit mode
-
-                const storedCid = localStorage.getItem("company_cid") || "";
-                const storedPillars = JSON.parse(localStorage.getItem("pillars")) || {
-                  cost: false,
-                  security: false,
-                  operational_excellence: false,
-                  performance: false,
-                };
-
-                // ✅ Hard reset form data to empty new form
-                setFormData({
-                  accounts: [
-                    {
-                      cid: storedCid,
-                      accountId: "",
-                      accountName: "",
-                      accessKey: "",
-                      secretKey: "",
-                      bucketName: "",
-                      prefix: "",
-                      pillars: storedPillars,
-                      selectedPillars: [],
-                    },
-                  ],
-                });
-
-                navigate('/imsproduct/accounts'); // no re-mount required since state is updated directly
-              }}
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-5 rounded-lg shadow-md transition-all duration-200"
-            >
-              <Plus size={18} />
-              Add Account
-            </button>
-
-
+          <div className="flex justify-end items-center">
+            {!isEditMode && (
+              <button
+                onClick={handleAddAccount}
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-5 rounded-lg shadow-md transition-all duration-200"
+              >
+                <Plus size={18} />
+                Add Account
+              </button>
+            )}
           </div>
 
           {formData.accounts.map((acc, index) => (
@@ -505,7 +419,6 @@ export default function AccountsScreen() {
             >
               Submit
             </button>
-
           </div>
         </div>
       </div>

@@ -23,8 +23,7 @@ const CompanyForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState(null);
   const [errors, setErrors] = useState({});
-
-  console.log("Edit company data:", location.state?.company);
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL1;
 
 
   // ✅ Initialize formData (prefill if editing)
@@ -122,19 +121,18 @@ const CompanyForm = () => {
       password: formData.password || undefined,
       cost: features.Cost,
       security: features.Security,
-      performance: isPerfOperational, // 👈 both true if selected
+      performance: isPerfOperational, 
       operational_excellence: isPerfOperational,
       role: storedRole,
       cid: editCompany?.cid,
     };
 
-    console.log("📦 Payload to send:", payload);
 
     try {
       let res;
       if (isEdit) {
         // ✅ Update existing company
-        const response = await fetch("http://13.212.15.14:8006/api/company/update", {
+        const response = await fetch(`${apiBaseUrl}/api/company/update`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -146,7 +144,6 @@ const CompanyForm = () => {
         res = await registerCompany(payload);
       }
 
-      console.log("✅ Response:", res);
 
       if (res?.message?.toLowerCase().includes("success")) {
         showToast(

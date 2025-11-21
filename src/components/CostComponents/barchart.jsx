@@ -29,15 +29,17 @@ const BarChart = () => {
 
   const { costData, loading, error } = useContext(CostContext);
 
-  // Initialize or get ECharts instance
+  // ✅ Initialize ECharts for sharp rendering
   const initChart = (ref) => {
     if (!ref.current) return null;
-    let chart = echarts.getInstanceByDom(ref.current);
-    if (!chart) chart = echarts.init(ref.current);
+    echarts.dispose(ref.current); // Clear previous instance
+    const chart = echarts.init(ref.current, null, {
+      devicePixelRatio: window.devicePixelRatio || 2,
+      renderer: "canvas",
+    });
     return chart;
   };
 
-  // Update chart with latest data
   const updateChart = (ref) => {
     if (!costData || !costData.daily_service_costs) return;
 
@@ -52,8 +54,6 @@ const BarChart = () => {
     });
 
     const services = Array.from(allServices).sort();
-
-    // Assign stable colors
     services.forEach((service) => {
       if (!serviceColors[service]) {
         serviceColors[service] =
@@ -87,24 +87,59 @@ const BarChart = () => {
         bottom: "2%",
         orient: "horizontal",
         data: services,
-        textStyle: { fontSize: 8, fontWeight: 600, color: "#333", fontFamily: " Roboto, sans-serif", },
+        textStyle: {
+          fontSize: 9,
+          fontWeight: 600,
+          color: "#333",
+        },
         padding: [5, 70, 0, 70],
       },
-      grid: { top: "15%", left: "5%", right: "3%", bottom: "12%", containLabel: true },
+      grid: {
+        top: "15%",
+        left: "5%",
+        right: "3%",
+        bottom: "12%",
+        containLabel: true,
+      },
       xAxis: {
         type: "category",
+        name: "Months",
+        nameLocation: "middle",
+        nameGap: 35,
+        nameTextStyle: {
+          padding: 15,
+          color: "rgba(0, 0, 0, 0.9)",
+          fontWeight: 600,
+          fontSize: 14,
+          fontFamily: "Roboto, sans-serif",
+        },
         data: dates,
         axisLabel: {
+          color: "rgba(0, 0, 0, 0.7)",
+          fontWeight: 600,
+          fontSize: 12,
+          fontFamily: "Roboto, sans-serif",
           rotate: 45,
           hideOverlap: true,
-          fontSize: 12,
           formatter: (v) => dayjs(v).format("MMM D"),
         },
       },
       yAxis: {
         type: "value",
         name: "USD ($)",
-        axisLabel: { fontSize: 12, formatter: (val) => `$${val}` },
+        nameTextStyle: {
+          color: "rgba(0, 0, 0, 0.9)",
+          fontWeight: 600,
+          fontSize: 12,
+          fontFamily: "Roboto, sans-serif",
+        },
+        axisLabel: {
+          color: "rgba(0, 0, 0, 0.7)",
+          fontWeight: 600,
+          fontSize: 12,
+          fontFamily: "Roboto, sans-serif",
+          formatter: (val) => `$${val}`,
+        },
       },
       dataZoom: [
         { type: "slider", start: 80, end: 100, top: "0%" },
@@ -117,34 +152,50 @@ const BarChart = () => {
         emphasis: { focus: "series" },
         itemStyle: { color: serviceColors[service] },
         data: normalizedData.map((d) => d[service]),
-        cursor: "default", // 👈 this removes the hand cursor
+        barWidth: "60%",
       })),
     };
 
     const chart = initChart(ref);
-    chart?.setOption(option);
-    chart?.resize();
+    chart.setOption(option);
+    chart.resize();
     return chart;
   };
 
-  // Main chart update
-  useEffect(() => {
-    if (!loading && costData) chartInstanceRef.current = updateChart(chartRef);
+useEffect(() => {
+  if (!loading && costData) {
+    chartInstanceRef.current = updateChart(chartRef);
+  }
 
-    const resizeObserver = new ResizeObserver(() => {
-      chartInstanceRef.current?.resize();
-      modalChartInstanceRef.current?.resize();
-    });
+  // Window resize
+  const resizeHandler = () => {
+    chartInstanceRef.current?.resize();
+    modalChartInstanceRef.current?.resize();
+  };
+  window.addEventListener("resize", resizeHandler);
 
-    if (chartRef.current) resizeObserver.observe(chartRef.current);
-    return () => resizeObserver.disconnect();
-  }, [range, costData, loading]);
+  // ⭐ Observe container resize (sidebar expand)
+  let resizeObserver = new ResizeObserver(() => {
+    chartInstanceRef.current?.resize();
+  });
+
+  if (chartRef.current) {
+    resizeObserver.observe(chartRef.current.parentElement);
+  }
+
+  return () => {
+    window.removeEventListener("resize", resizeHandler);
+    resizeObserver.disconnect();
+  };
+}, [range, costData, loading]);
+
 
   if (loading) return <Spin tip="Loading..." />;
   if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
 
   return (
     <>
+      {/* Main Card */}
       <Card
         style={{
           width: "100%",
@@ -155,7 +206,7 @@ const BarChart = () => {
           boxShadow: "0px 2px 6px rgba(0,0,0,0.2)",
           borderRadius: "8px",
         }}
-        styles={{ body: { padding: 0 } }} // v5 fix
+        styles={{ body: { padding: 0 } }}
       >
         {/* Header */}
         <div
@@ -171,71 +222,68 @@ const BarChart = () => {
             Daily Cost
           </Title>
 
-
-          <div style={{ display: "flex", alignItems: "center", }}>
-            {/* Scaled Select */}
-            <div
-              style={{
-                display: "flex",              // flex container
-                justifyContent: "center",     // horizontal centering
-                alignItems: "center",         // vertical centering
-                transform: "scale(0.7)",      // scale the Select
-                transformOrigin: "center right",  // keep it aligned to top-left
-                paddingRight: "10px",        // space from the button
-              }}
-            >              <Select
-              value={range}
-              onChange={(v) => setRange(v)}
-              size="small"
-              style={{ width: 150, height: 24, textAlign: "center" }}
-              dropdownRender={(menu) => (
-                <div style={{ textAlign: "center", fontSize: "10px" }}>
-                  {menu}
-                </div>
-              )}
-            >
-                <Option value="3M" style={{ textAlign: "center", fontSize: "8px" }}>Last 3 Months</Option>
-                <Option value="6M" style={{ textAlign: "center", fontSize: "8px" }}>Last 6 Months</Option>
-                <Option value="YTD" style={{ textAlign: "center", fontSize: "8px" }}>Year to Date</Option>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div style={{ paddingRight: "10px" }}>
+              <Select
+                value={range}
+                onChange={(v) => setRange(v)}
+                size="middle"
+                style={{ width: 150, height: 28 }}
+                dropdownRender={(menu) => (
+                  <div style={{ textAlign: "center", fontSize: "14px" }}>
+                    {menu}
+                  </div>
+                )}
+              >
+                <Option value="3M">Last 3 Months</Option>
+                <Option value="6M">Last 6 Months</Option>
+                <Option value="YTD">Year to Date</Option>
               </Select>
             </div>
 
-            {/* Button */}
             <Button
               size="small"
               type="default"
               onClick={() => setShowModal(true)}
               icon={<FaExpandArrowsAlt />}
-              style={{ height: 19, display: "flex", alignItems: "center", justifyContent: "center" }}
+              style={{
+                height: 22,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             />
           </div>
-
-
-
         </div>
 
         {/* Chart */}
         <div
           ref={chartRef}
-          style={{ flexGrow: 1, width: "100%", minHeight: 475 }}
+          style={{
+            flexGrow: 1,
+            width: "100%",
+            minHeight: 460,
+            imageRendering: "pixelated",
+            transform: "none",
+          }}
         />
       </Card>
 
-      {/* Modal Fullscreen */}
+      {/* Modal */}
       <Modal
         open={showModal}
         onCancel={() => setShowModal(false)}
         footer={null}
         width="95%"
-        style={{ top: 20 }}
-        styles={{ body: { height: "80vh", padding: 0 } }}
-        destroyOnHidden
+        style={{ top:20, transform: "none" }}
+        styles={{ body: { height: "85vh", padding: 0 } }}
+        destroyOnClose
         afterOpenChange={(open) => {
           if (open && costData) {
-            setTimeout(() => {
+            requestAnimationFrame(() => {
               modalChartInstanceRef.current = updateChart(modalChartRef);
               modalChartInstanceRef.current?.resize();
-            }, 50); // ensures modal DOM is visible
+            });
           } else {
             modalChartInstanceRef.current?.dispose?.();
           }
@@ -265,14 +313,24 @@ const BarChart = () => {
               <Option value="6M">Last 6 Months</Option>
               <Option value="YTD">Year to Date</Option>
             </Select>
-
           </div>
         </div>
 
-        <div ref={modalChartRef} style={{ width: "100%", height: "100%" }} />
+        <div
+          ref={modalChartRef}
+          style={{
+            width: "100%",
+            height: "95%",
+            imageRendering: "pixelated",
+            transform: "none",
+          }}
+        />
       </Modal>
     </>
   );
 };
 
 export default BarChart;
+
+
+

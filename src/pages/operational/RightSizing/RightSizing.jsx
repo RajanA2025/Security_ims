@@ -15,7 +15,7 @@ import {
   SearchOutlined,
   ReloadOutlined
 } from '@ant-design/icons';
-import axios from 'axios';
+import api from '../../../lib/api';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -37,7 +37,7 @@ const RightSizing = () => {
   // Format usage values to ensure they're properly formatted with 2 decimal places
   const formatUsageValue = (value) => {
     if (value === null || value === undefined) return '0.00%';
-    
+
     // If it's already a string with % sign, ensure it has 2 decimal places
     if (typeof value === 'string' && value.endsWith('%')) {
       const num = parseFloat(value);
@@ -46,13 +46,13 @@ const RightSizing = () => {
       }
       return value;
     }
-    
+
     // If it's a number, format with 2 decimal places and add %
     const num = parseFloat(value);
     if (!isNaN(num)) {
       return `${num.toFixed(2)}%`;
     }
-    
+
     return '0.00%';
   };
 
@@ -79,26 +79,21 @@ const RightSizing = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      const apiUrl = 'http://13.212.15.14:8008/performance';
-      console.log('Fetching data from:', apiUrl);
-      
-      const response = await axios({
-        method: 'get',
-        url: apiUrl,
+
+      const API_ENDPOINT = '/performance';
+
+      const response = await api.get(API_ENDPOINT, {
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           'Content-Type': 'application/json',
         },
-        timeout: 10000 // 10 seconds timeout
+        timeout: 10000, // 10 seconds timeout
       });
-      
-      console.log('API Response:', response);
-      
+
+
       // The API returns { data: [...] }, so we need to access response.data.data
       const responseData = response.data?.data || response.data || [];
-      console.log('Received data:', responseData);
-      
+
       if (!Array.isArray(responseData) || responseData.length === 0) {
         setError({
           title: 'No Data Available',
@@ -109,7 +104,7 @@ const RightSizing = () => {
         setFilteredData([]);
         return;
       }
-      
+
       // Transform the API response to match our expected format
       const formattedData = responseData.map((item, index) => ({
         key: item.id || `item-${index}`, // Ant Design requires 'key' for table rows
@@ -123,11 +118,11 @@ const RightSizing = () => {
         // New columns from API data
         cpuWeekly: item.weekly_trend || item.weeklyTrend || 'N/A',
         cpuMonthly: item.monthly_trend || item.monthlyTrend || 'N/A',
-        recommended: item.weekly_sizing_recommendation || 
-                    item.monthly_sizing_recommendation || 
-                    item.weeklySizingRecommendation || 
-                    item.monthlySizingRecommendation || 
-                    'No recommendation',
+        recommended: item.weekly_sizing_recommendation ||
+          item.monthly_sizing_recommendation ||
+          item.weeklySizingRecommendation ||
+          item.monthlySizingRecommendation ||
+          'No recommendation',
         // Include additional fields from the API if needed
         timestamp: item.timestamp,
         weeklyTrend: item.weekly_trend || item.weeklyTrend,
@@ -135,37 +130,39 @@ const RightSizing = () => {
         weeklySizingRecommendation: item.weekly_sizing_recommendation || item.weeklySizingRecommendation,
         monthlySizingRecommendation: item.monthly_sizing_recommendation || item.monthlySizingRecommendation
       }));
-      
-      // Extract unique values for filters
-      const regions = [...new Set(formattedData
-        .map(item => item.region)
-        .filter(region => region && region !== 'N/A')
-      )].sort();
-      
-      const accountIds = [...new Set(formattedData
-        .map(item => item.accountId)
-        .filter(accountId => accountId && accountId !== '')
-      )].sort();
 
-      const accountNames = [...new Set(formattedData
-        .map(item => item.accountName)
-        .filter(accountName => accountName && accountName !== 'N/A')
-      )].sort();
-      
+      // Extract unique values for filters
+      // After formattedData is created
+
+      // Get stored account IDs from localStorage
+      const storedIds = JSON.parse(localStorage.getItem("account_ids") || "[]");
+
+      // Filter by stored account IDs if available
+      let filteredByStorage = formattedData;
+      if (Array.isArray(storedIds) && storedIds.length > 0) {
+        filteredByStorage = formattedData.filter(item => storedIds.includes(item.accountId));
+      }
+
+      // Extract unique values based on filtered list
+      const regions = [...new Set(filteredByStorage.map(item => item.region).filter(r => r && r !== 'N/A'))].sort();
+      const accountIds = [...new Set(filteredByStorage.map(item => item.accountId).filter(a => a && a !== ''))].sort();
+      const accountNames = [...new Set(filteredByStorage.map(item => item.accountName).filter(a => a && a !== 'N/A'))].sort();
+
       setUniqueRegions(regions);
       setUniqueAccountIds(accountIds);
       setUniqueAccountNames(accountNames);
-      
-      console.log('Formatted data:', formattedData);
-      setPerformanceData(formattedData);
-      setFilteredData(formattedData);
-      
+
+      // Set table data from filtered list
+      setPerformanceData(filteredByStorage);
+      setFilteredData(filteredByStorage);
+
+
     } catch (err) {
       console.error('Error fetching performance data:', err);
-      
+
       let errorMessage = err.message;
       let errorType = 'error';
-      
+
       if (err.code === 'ECONNABORTED') {
         errorMessage = 'Request timeout: The server took too long to respond.';
       } else if (err.code === 'ERR_NETWORK' || err.message.includes('Network Error')) {
@@ -176,14 +173,14 @@ const RightSizing = () => {
         // Server responded with an error status
         errorMessage = `Server Error (${err.response.status}): ${err.response.data?.message || err.response.statusText}`;
       }
-      
+
       setError({
         title: 'Failed to Load Data',
         message: errorMessage,
         type: errorType,
         showRetry: true
       });
-      
+
       // Mock data for testing when API fails
       const mockData = [
         {
@@ -235,13 +232,13 @@ const RightSizing = () => {
           recommended: 't3.xlarge'
         }
       ];
-      
+
       setPerformanceData(mockData);
       setFilteredData(mockData);
       setUniqueRegions(['us-east-1', 'us-west-2', 'eu-west-1', 'ap-south-1']);
       setUniqueAccountIds(['ACC-001', 'ACC-002', 'ACC-003']);
       setUniqueAccountNames(['Production Account', 'Development Account', 'Staging Account']);
-      
+
     } finally {
       setLoading(false);
     }
@@ -255,25 +252,25 @@ const RightSizing = () => {
   // Apply filters
   useEffect(() => {
     let result = [...performanceData];
-    
+
     if (filters.accountId) {
-      result = result.filter(item => 
+      result = result.filter(item =>
         item.accountId.toLowerCase().includes(filters.accountId.toLowerCase())
       );
     }
 
     if (filters.accountName) {
-      result = result.filter(item => 
+      result = result.filter(item =>
         item.accountName.toLowerCase().includes(filters.accountName.toLowerCase())
       );
     }
-    
+
     if (filters.region) {
-      result = result.filter(item => 
+      result = result.filter(item =>
         item.region.toLowerCase().includes(filters.region.toLowerCase())
       );
     }
-    
+
     setFilteredData(result);
   }, [filters, performanceData]);
 
@@ -458,12 +455,12 @@ const RightSizing = () => {
   }
 
   return (
-    <div style={{ padding: '0 0 24px 0' }}>
-      <div style={{ maxWidth: '100%', margin: 0, padding: '0 0' }}>
+    // <div style={{ padding: '0 0 24px 0' }}>
+      <div className='p-4' style={{ maxWidth: '100%'}}>
         {/* Header with Filters */}
-        <Row gutter={[16, 8]} style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+        <Row gutter={[16, 8]} style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 4 ,marginTop:10}}>
           <Col xs={24} md={12}>
-            <Typography.Title 
+            <Typography.Title
               level={4}
               style={{
                 fontFamily: "'Roboto', 'Segoe UI', sans-serif",
@@ -473,7 +470,7 @@ const RightSizing = () => {
                 margin: 0
               }}
             >
-              Performance Right Sizing 
+              Performance Right Sizing
             </Typography.Title>
           </Col>
           <Col xs={24} md={12}>
@@ -561,7 +558,7 @@ const RightSizing = () => {
           className="custom-table"
         />
       </div>
-    </div>
+    // </div>
   );
 }
 

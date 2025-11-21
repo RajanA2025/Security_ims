@@ -20,7 +20,7 @@ import {
   FilterOutlined,
   InfoCircleOutlined
 } from "@ant-design/icons";
-import axios from "axios";
+import api from "../../../lib/api";
 
 const header = { backgroundColor: "#4f46e5", color: "white" };
 
@@ -42,58 +42,49 @@ const SecurityTools = () => {
 
   // Fetch data
   useEffect(() => {
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      // ✅ Step 1: Get and normalize storedAccountId
-      let storedAccountId = localStorage.getItem("account_ids");
-
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        storedAccountId = JSON.parse(storedAccountId);
-        if (Array.isArray(storedAccountId)) {
-          storedAccountId = storedAccountId[0]; // take first ID if it's array
+        // Get stored account IDs
+        let storedAccountIds = localStorage.getItem("account_ids");
+
+        try {
+          storedAccountIds = JSON.parse(storedAccountIds);
+        } catch {
+          storedAccountIds = [storedAccountIds]; 
         }
-      } catch {
-        // ignore parse error if it's plain string
+
+        // Normalize function
+        const normalizeId = (id) => String(id).trim().toLowerCase();
+        const storedIds = storedAccountIds.map((id) => normalizeId(id));
+
+        if (tabKey === "1") {
+          const res = await api.get("/kms");
+          if (Array.isArray(res.data)) {
+            const filtered = res.data.filter((item) =>
+              storedIds.includes(normalizeId(item.account_id || item.aws_account))
+            );
+            setKmData(filtered);
+          }
+        } else if (tabKey === "2") {
+          const res = await api.get("/tools");
+          if (Array.isArray(res.data)) {
+            const filtered = res.data.filter((item) =>
+              storedIds.includes(normalizeId(item.account_id || item.aws_account))
+            );
+            setSecurityData(filtered);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching filtered data:", err);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      const normalizeId = (id) => String(id).trim().toLowerCase();
-      const storedId = normalizeId(storedAccountId);
-      console.log("Filtered Account ID:", storedId);
+    fetchData();
+  }, [tabKey]);
 
-      // ✅ Step 2: Fetch API data
-      if (tabKey === "2") {
-        const res = await axios.get("http://13.212.15.14:8012/tools");
-        if (Array.isArray(res.data)) {
-          // Filter only matching account_id
-          const filtered = res.data.filter(
-            (item) =>
-              normalizeId(item.account_id || item.aws_account) === storedId
-          );
-          console.log("Filtered Security Data:", filtered);
-          setSecurityData(filtered);
-        }
-      } else if (tabKey === "1") {
-        const res = await axios.get("http://13.212.15.14:8012/kms");
-        if (Array.isArray(res.data)) {
-          // Filter only matching account_id
-          const filtered = res.data.filter(
-            (item) =>
-              normalizeId(item.account_id || item.aws_account) === storedId
-          );
-          console.log("Filtered KMS Data:", filtered);
-          setKmData(filtered);
-        }
-      }
-    } catch (err) {
-      console.error("Error fetching filtered data:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchData();
-}, [tabKey])
 
   const handleSearch = e => setSearchText(e.target.value);
 
@@ -235,7 +226,7 @@ const SecurityTools = () => {
         <Tag color={value ? "green" : "red"}>{value ? "Enabled" : "Disabled"}</Tag>
       )
     },
-    
+
     {
       title: (
         <span>
@@ -247,7 +238,7 @@ const SecurityTools = () => {
       ),
       dataIndex: "last_accessed_service",
       key: "last_accessed_service",
-    
+
     },
     {
       title: (
@@ -293,7 +284,7 @@ const SecurityTools = () => {
       title: "Last Used Date",
       dataIndex: "last_used_date",
       key: "last_used_date",
-    
+
     },
     // {
     //   title: "Creation Date",
@@ -315,25 +306,25 @@ const SecurityTools = () => {
   ];
 
   return (
-    <div className="p-6">
-     
+    <div className="p-3">
+
 
       <Row gutter={[16, 16]} style={{ justifyContent: "flex-end" }}>
         <Col md={20}>
-        <Typography.Title 
-  level={4}
-  style={{
-    fontFamily: "'Roboto', 'Segoe UI', sans-serif",
-    fontSize: "20px",
-    fontWeight: 500,
-    color: "black",
-    margin: 0
-  }}
->
-Security & KMS Tools
-</Typography.Title>
-      
-     
+          <Typography.Title
+            level={4}
+            style={{
+              fontFamily: "'Roboto', 'Segoe UI', sans-serif",
+              fontSize: "20px",
+              fontWeight: 500,
+              color: "black",
+              margin: 0
+            }}
+          >
+            Security & KMS Tools
+          </Typography.Title>
+
+
         </Col>
         <Col md={4}>
           <Input
@@ -346,7 +337,7 @@ Security & KMS Tools
         </Col>
       </Row>
 
-      <Tabs 
+      <Tabs
         activeKey={tabKey}
         onChange={key => setTabKey(key)}
         style={{
@@ -354,18 +345,18 @@ Security & KMS Tools
           padding: "0px"
         }}
       >
-         <Tabs.TabPane tab="KMS" key="2">
+        <Tabs.TabPane tab="KMS" key="1">
           <Table
             columns={columns1}
             dataSource={kmData.filter(item =>
               item.account_id?.toLowerCase().includes(searchText.toLowerCase())
-            )}
+            )} r
             loading={loading}
             rowKey="username"
             pagination={{ pageSize: 8 }}
           />
         </Tabs.TabPane>
-        <Tabs.TabPane tab="Security" key="1">
+        <Tabs.TabPane tab="Security" key="2">
           <Table
             columns={columns}
             dataSource={securityData.filter(item =>
@@ -376,7 +367,7 @@ Security & KMS Tools
             pagination={{ pageSize: 8 }}
           />
         </Tabs.TabPane>
-       
+
       </Tabs>
 
       <Modal

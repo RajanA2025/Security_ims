@@ -3,7 +3,7 @@ import { Card, Row, Col, Typography, Modal } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
-import axios from 'axios'; // ✅ Added axios import
+import axios from 'axios';
 import securityimg from '../../assets/securityimg.avif';
 
 const { Title, Text } = Typography;
@@ -24,77 +24,51 @@ export default function Imsproduct() {
   });
   const [hasAccount, setHasAccount] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false); // ✅ New modal state
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL1;
 
-  // ✅ Load pillars & check if account exists
-  // useEffect(() => {
-  //   const storedPillars = JSON.parse(localStorage.getItem('pillars'));
-  //   if (storedPillars) setPillars(storedPillars);
-
-  //   const storedAccounts = JSON.parse(localStorage.getItem('account_ids'));
-  //   if (storedAccounts && storedAccounts.length > 0) {
-  //     setHasAccount(true);
-  //   } else {
-  //     setHasAccount(false);
-  //     setIsModalVisible(true); // ✅ Show modal if no account found
-  //   }
-  //   console.log("storedAccounts:", storedAccounts);
-  // }, []);
   const cId = JSON.parse(localStorage.getItem('company_cid'));
+
   useEffect(() => {
     const storedPillars = JSON.parse(localStorage.getItem('pillars'));
-
     if (storedPillars) setPillars(storedPillars);
 
-    // Fetch accounts from API instead of localStorage
     const fetchAccounts = async () => {
       try {
-        const response = await fetch(`http://13.212.15.14:8006/api/accounts/all/${cId}`);
+        const response = await fetch(`${apiBaseUrl}/api/accounts/all/${cId}`);
         const data = await response.json();
 
-        console.log("API accounts data:", data);
-
         if (data && Array.isArray(data.accounts) && data.accounts.length > 0) {
-          console.log("✅ Accounts found:", data.accounts);
           setHasAccount(true);
-          setIsModalVisible(false); // ✅ Hide modal if accounts exist
+          setIsModalVisible(false);
         } else {
-          console.warn("⚠️ No accounts found");
           setHasAccount(false);
-          setIsModalVisible(true); // ✅ Show modal if no accounts found
+          setIsModalVisible(true);
         }
       } catch (error) {
         console.error("❌ Error fetching accounts:", error);
         setHasAccount(false);
-        setIsModalVisible(true); // ✅ Show modal on error
-        alert("Error fetching account data. Please try again later.");
+        setIsModalVisible(true);
       }
     };
 
     fetchAccounts();
   }, [cId]);
 
-
   const handleCreateAccount = () => {
     setIsModalVisible(false);
+    setShowAddModal(false);
     navigate('/imsproduct/accounts');
   };
 
-  // ✅ Unified function for all cards
+  // ✅ Handle card click with "Add Account" modal if empty
   const handleCardClick = async (pillar) => {
     const cid = localStorage.getItem("company_cid");
-    if (!cid) {
-      console.warn("No company_cid found in localStorage");
-      return;
-    }
+    if (!cid) return;
 
     try {
-      const url = `http://13.212.15.14:8006/api/accounts/${cid}/${pillar}`;
-      console.log("Sending request to:", url);
-
+      const url = `http://47.130.218.97:8016/api/accounts/${cid}/${pillar}`;
       const response = await axios.get(url);
-      console.log("API Response:", response.data);
-
-      // ✅ Try to find the correct array in response dynamically
       const accountsArray =
         response.data?.accounts ||
         response.data?.[`${pillar}_accounts`] ||
@@ -102,29 +76,19 @@ export default function Imsproduct() {
         [];
 
       if (Array.isArray(accountsArray) && accountsArray.length > 0) {
-        // ✅ Extract only account IDs
         const accountIds = accountsArray.map((acc) => acc.account_id);
-
-        // ✅ Store the list of IDs
         localStorage.setItem("account_ids", JSON.stringify(accountIds));
-
-        console.log(`✅ Stored ${pillar} account IDs:`, accountIds);
+        navigate(`/${pillar}`);
       } else {
         console.warn(`⚠️ No accounts found for pillar: ${pillar}`);
-        // Don't remove existing data unless necessary
-        // localStorage.removeItem("account_ids");
+        setShowAddModal(true); // ✅ Trigger modal if no accounts
       }
-
-      // ✅ Navigate after storing
-      navigate(`/${pillar}`);
     } catch (error) {
       console.error("❌ Error fetching data:", error);
+      setShowAddModal(true);
     }
   };
 
-
-
-  // ✅ Merge operational & performance
   const isOperationalActive = pillars.operational_excellence && pillars.performance;
 
   return (
@@ -134,14 +98,16 @@ export default function Imsproduct() {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
+        filter: showAddModal ? 'blur(4px)' : 'none', // ✅ Blur background when modal shows
+        transition: 'filter 0.3s ease',
       }}
     >
-      {/* ✅ Top Add Account Button */}
+      {/* ✅ Add Account button (top right) */}
       {hasAccount && (
         <div className="w-full flex justify-end mb-10">
           <button
             onClick={() => {
-              localStorage.removeItem("edit_account"); // ✅ ensures form opens blank
+              localStorage.removeItem("edit_account");
               navigate('/imsproduct/accounts');
             }}
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-5 rounded-lg shadow-md transition-all duration-200"
@@ -149,15 +115,15 @@ export default function Imsproduct() {
             <Plus size={18} />
             Add Account
           </button>
-
         </div>
       )}
 
-      {/* ✅ Modal for Create Account */}
+      {/* ✅ Modal if no account exists initially */}
       <Modal
         title="No Account Found"
         open={isModalVisible}
         closable={false}
+        onCancel={() => setShowAddModal(false)}
         footer={[
           <button
             key="create"
@@ -171,8 +137,27 @@ export default function Imsproduct() {
         <p>You don’t have any accounts yet. Please create an account to continue.</p>
       </Modal>
 
+      {/* ✅ Popup when pillar API returns empty accounts */}
+      <Modal
+        title="Add Account Required"
+        open={showAddModal}
+        onCancel={() => setShowAddModal(false)}
+        footer={[
+          <button
+            key="add"
+            onClick={handleCreateAccount}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-5 py-2 rounded-lg"
+          >
+            Add Account
+          </button>,
+        ]}
+      >
+        <p>You need to add at least one account to access this pillar’s features.</p>
+      </Modal>
+
+
       {/* ✅ Cards Section */}
-      <Row gutter={32} justify="center">
+      <Row gutter={[16, 16]} justify="center">        
         {/* COST CARD */}
         <Col>
           <motion.div
@@ -262,7 +247,7 @@ export default function Imsproduct() {
             whileHover={isOperationalActive ? 'hover' : ''}
             variants={cardAnimation}
             viewport={{ once: true }}
-            onClick={() => isOperationalActive && handleCardClick('operational')}
+            onClick={() => isOperationalActive && handleCardClick('perfops')}
             style={{ cursor: isOperationalActive ? 'pointer' : 'not-allowed' }}
           >
             <Card

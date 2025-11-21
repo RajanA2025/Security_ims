@@ -78,27 +78,39 @@ const Top5 = () => {
           .join("<br/>"),
       textStyle: { fontSize: 10, fontWeight: 500, color: "#333" },
     },
-    grid: { left: "0%", right: "10%", bottom: "2%", top: "10%", containLabel: true },
+    grid: { left: "0%", right: "14%", bottom: "2%", top: "0%", containLabel: true },
     xAxis: [{
       type: "value",
       name: "USD ($)",
       axisLabel: {
-        formatter: (v) => `₹${Math.round(v)}`
+        color: "#333",
+        fontWeight: 600,
+        fontSize: 12,
+        fontFamily: "Roboto, sans-serif",
+        formatter: (v) => `$ ${Math.round(v)}`,
       },
-      nameTextStyle: { fontSize: 12, fontWeight: 600 },
+      nameTextStyle: {
+        color: "#333",
+        fontWeight: 600,
+        fontSize: 12,
+        fontFamily: "Roboto, sans-serif",
+      },
     }],
     yAxis: [{
       type: "category",
       data: categories,
       axisLabel: {
-        fontSize: isSmall ? 9 : 11,
-        fontWeight: 500,
+        color: "#333",
+        fontWeight: 600,
+        fontSize: 12,
+        fontFamily: "Roboto, sans-serif",
         rotate: 40,
         interval: 0,
         formatter: (value) =>
           value.length > 10 ? value.slice(0, 5) + "..." : value,
       },
     }],
+
     legend: {
       type: "scroll",
       orient: "horizontal",

@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   IconButton,
   Tooltip,
   Badge,
-  useTheme
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { Typography } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -22,8 +23,7 @@ import {
   MdMoneyOff,
   MdSavings,
   MdPublic,
-  MdProductionQuantityLimits,
-  MdAccountCircle
+  MdAccountCircle,
 } from "react-icons/md";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
@@ -34,134 +34,136 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [openMenu, setOpenMenu] = useState(null);
+
+  // Auto collapse sidebar on mobile
+  useEffect(() => {
+    if (isMobile) setIsExpanded(false);
+  }, [isMobile, setIsExpanded]);
 
   const toggleSidebar = () => setIsExpanded((prev) => !prev);
 
-  // ✅ Path detection
-  const isSecurity = location.pathname.toLowerCase().startsWith("/security");
-  const isOperational = location.pathname.toLowerCase().startsWith("/operational");
-  const isAdmin = location.pathname.toLowerCase().startsWith("/admin");
-  const isProduct = location.pathname.toLowerCase().startsWith("/imsproduct");
-
-  const layout = isSecurity
+  // Detect layout
+  const path = location.pathname.toLowerCase();
+  const layout = path.startsWith("/security")
     ? "1"
-    : isOperational
-    ? "2"
-    : isAdmin
-    ? "4"
-    : isProduct
-    ? "5"
-    : "3";
+    : path.startsWith("/perfops")
+      ? "2"
+      : path.startsWith("/admin")
+        ? "4"
+        : path.startsWith("/imsproduct")
+          ? "5"
+          : "3";
 
-  // ✅ Sidebar menu groups
-  const navItems = [
+  // Menu definitions
+  const navItemsSecurity = [
     { icon: <MdDashboard size={30} />, label: "Dashboard", path: "/security" },
-    { icon: <MdInsights size={30} />, label: "IAM Insights", badge: true, path: "/security/iaminsights" },
+    {
+      icon: <MdInsights size={30} />,
+      label: "IAM Insights",
+      badge: true,
+      path: "/security/iaminsights",
+    },
     { icon: <MdOutlineSecurity size={30} />, label: "Security Group", path: "/security/group" },
     { icon: <MdCloudCircle size={30} />, label: "Cloud Trail", path: "/security/cloudtrail" },
-    { icon: <GoTools size={30} />, label: "Security Tools", path: "/security/tools" }
+    { icon: <GoTools size={30} />, label: "Security Tools", path: "/security/tools" },
   ];
 
-  const navItems1 = [
-    { icon: <MdDashboard size={30} />, label: "Dashboard", path: "/operational" },
+  const navItemsOps = [
+    { icon: <MdDashboard size={30} />, label: "Dashboard", path: "/perfops" },
     {
       icon: <MdBusiness size={30} />,
       label: "Business",
       badge: true,
       subMenu: [
-        { icon: <MdBusiness size={24} />, label: "Snapshot", path: "/operational/snapshot" },
-        { label: "AMI", path: "/operational/ami" }
-      ]
+        { icon: <MdBusiness size={24} />, label: "Snapshot", path: "/perfops/snapshot" },
+        { label: "AMI", path: "/perfops/ami" },
+      ],
     },
-    { icon: <MdAccessibility size={30} />, label: "Observability", path: "/operational/observability" },
-    { icon: <MdCloudySnowing size={30} />, label: "Cloud Watch", path: "/operational/cloudwatch" },
-    { icon: <MdMonitor size={30} />, label: "Monitoring", path: "/operational/monitoring" },
-    { icon: <MdRampRight size={30} />, label: "RightSizing", path: "/operational/rightsizing" }
+    { icon: <MdAccessibility size={30} />, label: "Observability", path: "/perfops/observability" },
+    { icon: <MdCloudySnowing size={30} />, label: "Cloud Watch", path: "/perfops/cloudwatch" },
+    { icon: <MdMonitor size={30} />, label: "Monitoring", path: "/perfops/monitoring" },
+    { icon: <MdRampRight size={30} />, label: "RightSizing", path: "/perfops/rightsizing" },
   ];
 
-  const navItems2 = [
-    { icon: <MdMoney size={30} />, label: "Cost Overview", path: "/cost", badge: false },
-    { icon: <MdMoneyOff size={30} />, label: "Cost Deepdrive", path: "/cost/cost-deepdrive", badge: false },
-    { icon: <MdSavings size={30} />, label: "Saving Opportunity", path: "/cost/savings", badge: false },
-    { icon: <MdPublic size={30} />, label: "Compliance", path: "/cost/compliance", badge: false }
+  const navItemsCost = [
+    { icon: <MdMoney size={30} />, label: "Cost Overview", path: "/cost" },
+    { icon: <MdMoneyOff size={30} />, label: "Cost Deepdrive", path: "/cost/cost-deepdrive" },
+    { icon: <MdSavings size={30} />, label: "Saving Opportunity", path: "/cost/savings" },
+    { icon: <MdPublic size={30} />, label: "Compliance", path: "/cost/compliance" },
   ];
 
   const navItemsAdmin = [
-    { icon: <ManageAccountsIcon fontSize="large" />, label: "Manage Accounts", path: "/admin", badge: false }
+    { icon: <ManageAccountsIcon fontSize="large" />, label: "Manage Accounts", path: "/admin" },
   ];
 
   const navItemsProduct = [
-    { icon: <MdDashboard size={30} />, label: "IMS Dashboard", path: "/imsproduct" },
-    // { icon: <MdProductionQuantityLimits size={30} />, label: "Products", path: "/imsproduct/products" },
-    { icon: <MdAccountCircle size={30} />, label: "Account Manage", path: "/imsproduct/accountsmanage" }
+    { icon: <MdDashboard size={30} />, label: "Dashboard", path: "/imsproduct" },
+    { icon: <MdAccountCircle size={30} />, label: "Account", path: "/imsproduct/accountsmanage" },
   ];
 
-  // ✅ Handle navigation and submenu toggle
   const handleNavClick = (item) => {
     if (item.subMenu) {
       setOpenMenu((prev) => (prev === item.label ? null : item.label));
     } else {
       navigate(item.path);
       setOpenMenu(null);
+      if (isMobile) setIsExpanded(false); // close on mobile after click
     }
   };
 
-  // ✅ Choose menu based on layout
   const itemsToRender =
     layout === "1"
-      ? navItems
+      ? navItemsSecurity
       : layout === "2"
-      ? navItems1
-      : layout === "4"
-      ? navItemsAdmin
-      : layout === "5"
-      ? navItemsProduct
-      : navItems2;
+        ? navItemsOps
+        : layout === "4"
+          ? navItemsAdmin
+          : layout === "5"
+            ? navItemsProduct
+            : navItemsCost;
 
   return (
     <Box
       sx={{
-        width: isExpanded ? 200 : 90,
-        bgcolor: "#4f46e5",
+        width: isExpanded ? 200 : isMobile ? 0 : 90,
+        bgcolor: isMobile ? "rgba(79, 70, 229, 0.8)" : "#4f46e5", // <-- opacity on mobile
         height: "100vh",
-        borderRight: `1px solid ${theme.palette.divider}`,
-        position: "relative",
-        transition: "width 0.3s ease",
-        pt: 2
+        position: isMobile ? "absolute" : "relative",
+        transition: "all 0.3s ease",
+        top: isMobile ? 56 : 0,   // <-- responsive top        left: 0,
+        zIndex: 1200,
+        pt: 2,
+        overflowX: "hidden",
       }}
     >
-      {/* Toggle button */}
-      <IconButton
-        onClick={toggleSidebar}
-        sx={{
-          position: "absolute",
-          top: 10,
-          right: -15,
-          bgcolor: "#4f46e5",
-          color: "white",
-          "&:hover": { bgcolor: "#63B3ED" },
-          zIndex: 10
-        }}
-      >
-        {isExpanded ? <IoIosArrowBack /> : <IoIosArrowForward />}
-      </IconButton>
+
+      {/* Toggle button for desktop */}
+      {!isMobile && (
+        <IconButton
+          onClick={toggleSidebar}
+          sx={{
+            position: "absolute",
+            top: 10,
+            right: -15,
+            bgcolor: "#4f46e5",
+            color: "white",
+            "&:hover": { bgcolor: "#63B3ED" },
+            zIndex: 10,
+          }}
+        >
+          {isExpanded ? <IoIosArrowBack /> : <IoIosArrowForward />}
+        </IconButton>
+
+
+      )}
 
       {/* Menu Items */}
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 1,
-          px: isExpanded ? 2 : 1,
-          fontSize: 30
-        }}
-      >
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1, px: isExpanded ? 2 : 1 }}>
         {itemsToRender.map((item, index) => {
           const isActive = location.pathname === item.path;
-          const isParentActive = item.subMenu?.some(
-            (sub) => sub.path === location.pathname
-          );
+          const isParentActive = item.subMenu?.some((sub) => sub.path === location.pathname);
           const isOpen = openMenu === item.label;
 
           return (
@@ -178,7 +180,7 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
                     borderRadius: "8px",
                     padding: "6px 8px",
                     transition: "background-color 0.2s ease",
-                    "&:hover": { backgroundColor: "#4338ca", color: "white" }
+                    "&:hover": { backgroundColor: "#4338ca", color: "white" },
                   }}
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -194,15 +196,7 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
                       item.icon
                     )}
                     {isExpanded && (
-                      <Typography.Text
-                        style={{
-                          color: "inherit",
-                          fontWeight: "500",
-                          fontFamily:
-                            "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
-                          fontSize: "16px"
-                        }}
-                      >
+                      <Typography.Text style={{ color: "inherit", fontWeight: 500, fontSize: "16px" }}>
                         {item.label}
                       </Typography.Text>
                     )}
@@ -213,14 +207,7 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
 
               {/* Submenu */}
               {item.subMenu && isOpen && (
-                <Box
-                  sx={{
-                    pl: isExpanded ? 7 : 2,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 1
-                  }}
-                >
+                <Box sx={{ pl: isExpanded ? 7 : 2, display: "flex", flexDirection: "column", gap: 1 }}>
                   {item.subMenu.map((subItem, subIndex) => {
                     const isSubActive = location.pathname === subItem.path;
                     return (
@@ -229,6 +216,7 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(subItem.path);
+                          if (isMobile) setIsExpanded(false);
                         }}
                         sx={{
                           color: isSubActive ? "white" : "#C8D9F0",
@@ -236,7 +224,7 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
                           borderRadius: "6px",
                           padding: isExpanded ? "4px 8px" : "4px",
                           fontSize: 14,
-                          "&:hover": { backgroundColor: "#5b21b6", color: "white" }
+                          "&:hover": { backgroundColor: "#5b21b6", color: "white" },
                         }}
                       >
                         {isExpanded ? subItem.label : <MdOutlineSecurity />}
@@ -254,3 +242,5 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
 };
 
 export default Sidebar;
+
+

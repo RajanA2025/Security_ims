@@ -16,10 +16,9 @@ export const Costdeepdrive = () => {
       storedAccounts = [storedAccounts];
 
 
-      console.log("storedAccounts:", storedAccounts);
     }
 
-    fetch("http://13.212.15.14:8002/instances")
+    fetch("http://47.130.218.97:8002/instances")
       .then((res) => res.json())
       .then((res) => {
         const results = res.results || [];
@@ -85,3 +84,5 @@ export const Costdeepdrive = () => {
     </div>
   );
 };
+
+

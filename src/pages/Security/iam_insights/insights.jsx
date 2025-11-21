@@ -32,7 +32,7 @@ import {
   CalendarOutlined,
   GlobalOutlined,
 } from "@ant-design/icons";
-import axios from "axios";
+import api from "../../../lib/api";
 
 // Animation variants
 const containerVariants = {
@@ -110,7 +110,7 @@ const Insights = () => {
   const [selectedData1, setSelectedData1] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [selectedAccountId, setSelectedAccountId] = useState(null);
-  const API_URL = "http://13.212.15.14:8012/iam";
+
   const { Option } = Select;
   const accountIds = [...new Set(data.map(item => item.account_id))];
 
@@ -119,52 +119,6 @@ const Insights = () => {
   const [isPolicyDetailModalOpen, setIsPolicyDetailModalOpen] = useState(false);
   const [selectedPolicyDetail, setSelectedPolicyDetail] = useState(null);
 
-  // Fetch data on mount
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     setLoading(true);
-  //     try {
-  //       let storedAccountId = localStorage.getItem("account_ids");
-
-  //     try {
-  //       storedAccountId = JSON.parse(storedAccountId);
-  //       if (Array.isArray(storedAccountId)) {
-  //         storedAccountId = storedAccountId[0]; // take first ID
-  //       }
-  //     } catch {
-  //       // keep as string
-  //     }
-
-  //       // const response = await axios.get(API_URL);
-  //       // setData(response.data);
-  //       // setFilteredData(response.data);
-  //        const [response1] = await Promise.all([
-  //       axios.get(API_URL),
-     
-  //     ]);
-
-  //     const normalizeId = (id) => String(id).trim().toLowerCase();
-  //     const storedId = normalizeId(storedAccountId);
-
-  //     if (response1?.data && Array.isArray(response1.data)) {
-  //       const filteredData = response1.data.filter((item) => {
-  //         const itemId =
-  //           item.account_id || item.accountId || item.ACCOUNT_ID || item.Account_ID;
-  //         return normalizeId(itemId) === storedId;
-  //       });
-  //       console.log("Filtered dataaaaaaaaaaaaa:", filteredData);
-  //       setData(filteredData);
-  //       setFilteredData(filteredData);
-  //     }
-  //     } catch (error) {
-  //       console.error("Error fetching data:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, []);
 
   useEffect(() => {
   const fetchData = async () => {
@@ -185,7 +139,7 @@ const Insights = () => {
         ? storedAccountId.map(normalizeId)
         : [normalizeId(storedAccountId)];
 
-      const [response1] = await Promise.all([axios.get(API_URL)]);
+  const [response1] = await Promise.all([api.get("/iam")]);
 
       if (response1?.data && Array.isArray(response1.data)) {
         const filteredData = response1.data.filter((item) => {
@@ -198,7 +152,6 @@ const Insights = () => {
           return storedIds.includes(normalizeId(itemId));
         });
 
-        console.log("Filtered Data:", filteredData);
         setData(filteredData);
         setFilteredData(filteredData);
       }
@@ -778,7 +731,7 @@ IAM Insights
                   borderRadius: '12px',
                   border: 'none',
                   background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                 }}
                 bodyStyle={{ padding: '24px' }}
               >
