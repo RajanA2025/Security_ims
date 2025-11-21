@@ -329,20 +329,20 @@ function Dashboard() {
 
             <SectionTitle delay={0.4}>Observability</SectionTitle>
             <Row gutter={[16, 16]}>
-              <Col md={15}>
+              <Col xs={24} sm={24} md={15} lg={15} xl={15}>
                 <Card
                   bodyStyle={{ padding: 0 }}
                   style={{
                     borderRadius: "10px",
                     boxShadow: "0px 2px 6px rgba(0,0,0,0.1)",
                     background: "#fff",
-
                   }}
                 >
                   <Chart labels={labels} data={data} title="Overall Observability" />
                 </Card>
               </Col>
-              <Col md={9}>
+
+              <Col xs={24} sm={24} md={9} lg={9} xl={9}>
                 <Card
                   bodyStyle={{ padding: 0 }}
                   style={{
@@ -356,10 +356,16 @@ function Dashboard() {
               </Col>
             </Row>
 
+
             <br />
             <SectionTitle delay={0.6}>Snapshot</SectionTitle>
             <Row gutter={[16, 16]}>
-              <Col md={9}>
+              <Col
+                xs={24}   // Mobile: full width
+                sm={24}   // Small tablets: full width
+                md={12}   // Medium screens: half width
+                lg={9}    // Large screens: 9 columns
+              >
                 <Card
                   bodyStyle={{ padding: 0 }}
                   style={{
@@ -372,6 +378,7 @@ function Dashboard() {
                 </Card>
               </Col>
             </Row>
+
           </motion.div>
         )}
       </AnimatePresence>

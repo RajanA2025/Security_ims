@@ -43,13 +43,13 @@ const containerVariants = {
 };
 
 const cardVariants = {
-  hidden: { 
-    opacity: 0, 
+  hidden: {
+    opacity: 0,
     y: 20,
     scale: 0.95
   },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     y: 0,
     scale: 1,
     transition: {
@@ -72,8 +72,8 @@ const cardVariants = {
 
 const progressVariants = {
   hidden: { pathLength: 0, opacity: 0 },
-  visible: { 
-    pathLength: 1, 
+  visible: {
+    pathLength: 1,
     opacity: 1,
     transition: {
       pathLength: { duration: 1.5, ease: "easeOut" },
@@ -87,16 +87,16 @@ const AnimatedProgress = ({ percent, strokeColor, delay = 0 }) => (
   <motion.div
     initial={{ scale: 0, rotate: -180 }}
     animate={{ scale: 1, rotate: 0 }}
-    transition={{ 
+    transition={{
       delay,
       type: "spring",
       stiffness: 200,
       damping: 15
     }}
   >
-    <Progress 
-      type="circle" 
-      percent={percent} 
+    <Progress
+      type="circle"
+      percent={percent}
       strokeColor={strokeColor}
       width={80}
     />
@@ -121,100 +121,9 @@ const Securitygrp = () => {
   const accountIds = [...new Set(data.map(item => item.account_id))];
   // Fetch data on mount
   const API_URL = "http://47.130.218.97:8012/security-groups/filter";
-   let storedAccountId = localStorage.getItem("account_ids");
+  let storedAccountId = localStorage.getItem("account_ids");
 
-  // useEffect(() => {
-  //   // const fetchData = async () => {
-  //   //   setLoading(true);
-  //   //   try {
-
-  //   //   try {
-  //   //     storedAccountId = JSON.parse(storedAccountId);
-  //   //     if (Array.isArray(storedAccountId)) {
-  //   //       storedAccountId = storedAccountId[0]; // take first ID
-  //   //     }
-  //   //   } catch {
-  //   //     // keep as string
-  //   //   }
-
-  //   //     // const response = await axios.get(API_URL);
-  //   //     // setData(response.data);
-  //   //     // setFilteredData(response.data); // show all initially
-        
-  //   //   const [response] = await Promise.all([
-  //   //     axios.get(API_URL),
-       
-  //   //   ]);
-
-  //   //   const normalizeId = (id) => String(id).trim().toLowerCase();
-  //   //   const storedId = normalizeId(storedAccountId);
-
-  //   //   if (response?.data && Array.isArray(response.data)) {
-  //   //     const filtered2 = response.data.filter((item) => {
-  //   //       const itemId =
-  //   //         item.account_id || item.accountId || item.ACCOUNT_ID || item.Account_ID;
-  //   //       return normalizeId(itemId) === storedId;
-  //   //     });
-  //   //     console.log("Filtered Data 2:", filtered2);
-  //   //     setData(filtered2);
-  //   //     setFilteredData(filtered2);
-  //   //   }
-
-      
-  //   //   } catch (error) {
-  //   //     console.error("Error fetching data:", error);
-  //   //   } finally {
-  //   //     setLoading(false);
-  //   //   }
-  //   // };
-
-  //   const fetchData = async () => {
-  //     setLoading(true);
-  //     try {
-  //       let storedAccountId = localStorage.getItem("account_ids");
-    
-  //       // Parse storedAccountId safely
-  //       try {
-  //         storedAccountId = JSON.parse(storedAccountId);
-  //       } catch {
-  //         storedAccountId = [storedAccountId]; // wrap single ID into array
-  //       }
-    
-  //       // Normalize all IDs
-  //       const normalizeId = (id) => String(id).trim().toLowerCase();
-  //       const storedIds = Array.isArray(storedAccountId)
-  //         ? storedAccountId.map(normalizeId)
-  //         : [normalizeId(storedAccountId)];
-    
-  //       const [response] = await Promise.all([axios.get(API_URL)]);
-    
-  //       if (response?.data && Array.isArray(response.data)) {
-    
-  //         const filteredData = response.data.filter((item) => {
-  //           const itemId =
-  //             item.account_id ||
-  //             item.accountId ||
-  //             item.ACCOUNT_ID ||
-  //             item.Account_ID;
-    
-  //           return storedIds.includes(normalizeId(itemId));
-  //         });
-    
-  //         console.log("Filtered Data 2:", filteredData);
-  //         setData(filteredData);
-  //         setFilteredData(filteredData);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching data:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-    
-  //   fetchData();
-  // }, [storedAccountId]);
-
- useEffect(() => {
+    useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
@@ -269,7 +178,7 @@ const Securitygrp = () => {
     setSearchText(value);
     handleFilters(value, selectedAccountId);
   };
-  
+
   const handleAccountChange = (value) => {
     setSelectedAccountId(value);
     handleFilters(searchText, value);
@@ -277,19 +186,19 @@ const Securitygrp = () => {
 
   const handleFilters = (searchValue, accountValue) => {
     let filtered = data;
-  
+
     // Filter by account_id if selected
     if (accountValue) {
       filtered = filtered.filter(item => item.account_id === accountValue);
     }
-  
+
     // Filter by username if search text is entered
     if (searchValue.trim() !== "") {
       filtered = filtered.filter(item =>
         item.sg_name.toLowerCase().includes(searchValue.toLowerCase())
       );
     }
-  
+
     setFilteredData(filtered);
   };
   // Open modal
@@ -310,10 +219,6 @@ const Securitygrp = () => {
   const IpEnabledCount = filteredData.filter((item) => item.ip_range === "0.0.0.0/0")
     .length;
 
-//   const mfaPercent = total ? Math.round((mfaTrueCount / total) * 100) : 0;
-//   const passwordPercent = total
-//     ? Math.round((passwordEnabledCount / total) * 100)
-//     : 0;
   const OrphanedPercent = total
     ? Math.round((OrphanedEnabledCount / total) * 100)
     : 0;
@@ -336,11 +241,11 @@ const Securitygrp = () => {
       width: 100
     },
     {
-        title: "Security Name",
-        dataIndex: "sg_name",
-        key: "sg_name",
-        width: 100
-      },
+      title: "Security Name",
+      dataIndex: "sg_name",
+      key: "sg_name",
+      width: 100
+    },
     {
       title: "Orphaned",
       dataIndex: "is_orphaned",
@@ -350,8 +255,8 @@ const Securitygrp = () => {
         <Tag color={value ? "green" : "red"}>{value ? "True" : "False"}</Tag>
       )
     },
-   
-    
+
+
     {
       title: "IP Range",
       dataIndex: "ip_range",
@@ -375,47 +280,44 @@ const Securitygrp = () => {
 
   return (
     <div className="p-3">
-    
-<Row gutter={[16, 16]} style={{ marginBottom: 5 }}>
-  <Col md={16}>
-  <Typography.Title 
-  level={4}
-  style={{
-    fontFamily: "'Roboto', 'Segoe UI', sans-serif",
-    fontSize: "20px",
-    fontWeight: 500,
-    color: "black",
-    margin: 0
-  }}
->
-Security Group
-</Typography.Title>
-  </Col>
-  <Col md={4}>
-    <Select
-      placeholder="Filter by Account ID"
-      style={{ width: "100%" }}
-      allowClear
-      value={selectedAccountId}
-      onChange={handleAccountChange}
-    >
-      {accountIds.map((id) => (
-        <Option key={id} value={id}>
-          {id}
-        </Option>
-      ))}
-    </Select>
-  </Col>
-  <Col md={4}>
-    <Input
-      placeholder="Security Name"
-      prefix={<SearchOutlined />}
-      value={searchText}
-      onChange={handleSearch}
-      allowClear
-    />
-  </Col>
-</Row>
+
+      <Row gutter={[16, 16]} style={{ marginBottom: 10 }}>
+        <Col xs={24} sm={24} md={16}>  <Typography.Title
+          level={4}
+          style={{
+            fontFamily: "'Roboto', 'Segoe UI', sans-serif",
+            fontSize: "20px",
+            fontWeight: 500,
+            color: "black",
+            margin: 0
+          }}
+        >
+          Security Group
+        </Typography.Title>
+        </Col>
+        <Col xs={24} sm={12} md={4}>    <Select
+          placeholder="Filter by Account ID"
+          style={{ width: "100%" }}
+          allowClear
+          value={selectedAccountId}
+          onChange={handleAccountChange}
+        >
+          {accountIds.map((id) => (
+            <Option key={id} value={id}>
+              {id}
+            </Option>
+          ))}
+        </Select>
+        </Col>
+        <Col xs={24} sm={12} md={4}>    <Input
+          placeholder="Security Name"
+          prefix={<SearchOutlined />}
+          value={searchText}
+          onChange={handleSearch}
+          allowClear
+        />
+        </Col>
+      </Row>
       {/* Stats Cards */}
       <motion.div
         variants={containerVariants}
@@ -432,16 +334,17 @@ Security Group
               whileHover="hover"
               style={{ height: '100%' }}
             >
-              <Card 
+              <Card
                 hoverable={false}
-                style={{ 
+                style={{
                   height: '100%',
                   borderRadius: 12,
                   border: 'none',
                   background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                  borderTop: `5px solid #722ed1`
                 }}
-                bodyStyle={{ 
+                bodyStyle={{
                   padding: '24px',
                   display: 'flex',
                   flexDirection: 'column',
@@ -453,7 +356,7 @@ Security Group
                   <motion.div
                     initial={{ scale: 0, rotate: -90 }}
                     animate={{ scale: 1, rotate: 0 }}
-                    transition={{ 
+                    transition={{
                       delay: 0.1,
                       type: "spring",
                       stiffness: 200
@@ -462,9 +365,9 @@ Security Group
                   >
                     <SecurityScanFilled style={{ fontSize: 32, color: "#722ed1" }} />
                   </motion.div>
-                  <AnimatedProgress 
-                    percent={OrphanedPercent} 
-                    strokeColor={OrphanedPercent > 75 ? "#52c41a" : OrphanedPercent > 50 ? "#fa8c16" : "#ff4d4f"} 
+                  <AnimatedProgress
+                    percent={OrphanedPercent}
+                    strokeColor={OrphanedPercent > 75 ? "#52c41a" : OrphanedPercent > 50 ? "#fa8c16" : "#ff4d4f"}
                     delay={0.2}
                   />
                   <motion.div
@@ -473,8 +376,8 @@ Security Group
                     transition={{ delay: 0.3 }}
                     style={{ marginTop: 16 }}
                   >
-                    <div style={{ 
-                      fontWeight: 600, 
+                    <div style={{
+                      fontWeight: 600,
                       fontSize: '16px',
                       marginBottom: 4,
                       display: 'flex',
@@ -482,8 +385,8 @@ Security Group
                       justifyContent: 'center'
                     }}>
                       Orphaned Groups
-                      <Tooltip 
-                        placement="top" 
+                      <Tooltip
+                        placement="top"
                         title="Remove orphaned security groups that are not associated with any resources and are no longer needed."
                       >
                         <InfoCircleOutlined style={{ marginLeft: 6, color: "#8c8c8c" }} />
@@ -505,16 +408,18 @@ Security Group
               whileHover="hover"
               style={{ height: '100%' }}
             >
-              <Card 
+              <Card
                 hoverable={false}
-                style={{ 
+                style={{
                   height: '100%',
                   borderRadius: 12,
                   border: 'none',
                   background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                  borderTop: `5px solid #1890ff`
+
                 }}
-                bodyStyle={{ 
+                bodyStyle={{
                   padding: '24px',
                   display: 'flex',
                   flexDirection: 'column',
@@ -526,7 +431,7 @@ Security Group
                   <motion.div
                     initial={{ scale: 0, rotate: -90 }}
                     animate={{ scale: 1, rotate: 0 }}
-                    transition={{ 
+                    transition={{
                       delay: 0.2,
                       type: "spring",
                       stiffness: 200
@@ -549,7 +454,7 @@ Security Group
                         textShadow: '0 2px 4px rgba(0,0,0,0.1)'
                       }}
                       animate={{ scale: [1, 1.05, 1] }}
-                      transition={{ 
+                      transition={{
                         duration: 2,
                         repeat: Infinity,
                         repeatType: "reverse"
@@ -563,8 +468,8 @@ Security Group
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
                   >
-                    <div style={{ 
-                      fontWeight: 600, 
+                    <div style={{
+                      fontWeight: 600,
                       fontSize: '16px',
                       marginBottom: 4,
                       display: 'flex',
@@ -572,17 +477,17 @@ Security Group
                       justifyContent: 'center'
                     }}>
                       Open SSH
-                      <Tooltip 
-                        placement="top" 
+                      <Tooltip
+                        placement="top"
                         title="Restrict open SSH access by limiting inbound traffic to trusted IP addresses only."
                       >
                         <InfoCircleOutlined style={{ marginLeft: 6, color: "#ff4d4f" }} />
                       </Tooltip>
                     </div>
-                    <div style={{ 
-                      color: sshCount > 0 ? "#ff4d4f" : "#52c41a", 
+                    <div style={{
+                      color: sshCount > 0 ? "#ff4d4f" : "#52c41a",
                       fontWeight: 500,
-                      fontSize: 14 
+                      fontSize: 14
                     }}>
                       {sshCount > 0 ? "Needs attention" : "Secure"}
                     </div>
@@ -599,16 +504,18 @@ Security Group
               whileHover="hover"
               style={{ height: '100%' }}
             >
-              <Card 
+              <Card
                 hoverable={false}
-                style={{ 
+                style={{
                   height: '100%',
                   borderRadius: 12,
                   border: 'none',
                   background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                                    borderTop: `5px solid #722ed1`
+
                 }}
-                bodyStyle={{ 
+                bodyStyle={{
                   padding: '24px',
                   display: 'flex',
                   flexDirection: 'column',
@@ -620,7 +527,7 @@ Security Group
                   <motion.div
                     initial={{ scale: 0, rotate: -90 }}
                     animate={{ scale: 1, rotate: 0 }}
-                    transition={{ 
+                    transition={{
                       delay: 0.3,
                       type: "spring",
                       stiffness: 200
@@ -643,7 +550,7 @@ Security Group
                         textShadow: '0 2px 4px rgba(0,0,0,0.1)'
                       }}
                       animate={{ scale: [1, 1.05, 1] }}
-                      transition={{ 
+                      transition={{
                         duration: 2,
                         repeat: Infinity,
                         repeatType: "reverse"
@@ -657,8 +564,8 @@ Security Group
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
                   >
-                    <div style={{ 
-                      fontWeight: 600, 
+                    <div style={{
+                      fontWeight: 600,
                       fontSize: '16px',
                       marginBottom: 4,
                       display: 'flex',
@@ -666,17 +573,17 @@ Security Group
                       justifyContent: 'center'
                     }}>
                       Open RDP
-                      <Tooltip 
-                        placement="top" 
+                      <Tooltip
+                        placement="top"
                         title="Restrict RDP (port 3389) access to Windows instances by allowing only trusted IP addresses"
                       >
                         <InfoCircleOutlined style={{ marginLeft: 6, color: "#8c8c8c" }} />
                       </Tooltip>
                     </div>
-                    <div style={{ 
-                      color: RDPCount > 0 ? "#ff4d4f" : "#52c41a", 
+                    <div style={{
+                      color: RDPCount > 0 ? "#ff4d4f" : "#52c41a",
                       fontWeight: 500,
-                      fontSize: 14 
+                      fontSize: 14
                     }}>
                       {RDPCount > 0 ? "Needs attention" : "Secure"}
                     </div>
@@ -693,28 +600,30 @@ Security Group
               whileHover="hover"
               style={{ height: '100%' }}
             >
-              <Card 
+              <Card
                 hoverable={false}
-                style={{ 
+                style={{
                   height: '100%',
                   borderRadius: 12,
                   border: 'none',
                   background: 'linear-gradient(135deg, #ffffff 0%, #f8faff 100%)',
                   boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
                 }}
-                bodyStyle={{ 
+                bodyStyle={{
                   padding: '24px',
                   display: 'flex',
                   flexDirection: 'column',
                   height: '100%',
-                  justifyContent: 'space-between'
+                  justifyContent: 'space-between',
+                                    borderTop: `5px solid #fa8c16`
+
                 }}
               >
                 <div style={{ textAlign: 'center' }}>
                   <motion.div
                     initial={{ scale: 0, rotate: -90 }}
                     animate={{ scale: 1, rotate: 0 }}
-                    transition={{ 
+                    transition={{
                       delay: 0.4,
                       type: "spring",
                       stiffness: 200
@@ -723,8 +632,8 @@ Security Group
                   >
                     <PortableWifiOffOutlined style={{ fontSize: 32, color: "#fa8c16" }} />
                   </motion.div>
-                  <AnimatedProgress 
-                    percent={IpPercent} 
+                  <AnimatedProgress
+                    percent={IpPercent}
                     strokeColor={IpPercent > 75 ? "#ff4d4f" : IpPercent > 50 ? "#fa8c16" : "#52c41a"}
                     delay={0.5}
                   />
@@ -734,8 +643,8 @@ Security Group
                     transition={{ delay: 0.6 }}
                     style={{ marginTop: 16 }}
                   >
-                    <div style={{ 
-                      fontWeight: 600, 
+                    <div style={{
+                      fontWeight: 600,
                       fontSize: '16px',
                       marginBottom: 4,
                       display: 'flex',
@@ -743,8 +652,8 @@ Security Group
                       justifyContent: 'center'
                     }}>
                       All Traffic Open
-                      <Tooltip 
-                        placement="top" 
+                      <Tooltip
+                        placement="top"
                         title="Restrict 'All Traffic' rules in security groups to only trusted sources and required ports."
                       >
                         <InfoCircleOutlined style={{ marginLeft: 6, color: "#8c8c8c" }} />
@@ -792,7 +701,7 @@ Security Group
 
       {/* Modal */}
       <Modal
-      
+
         title={`${selectedData?.account_name || ""} - Account Details`}
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
@@ -805,7 +714,7 @@ Security Group
               <Descriptions bordered column={2} size="small">
                 <Descriptions.Item label="Account ID">{selectedData.account_id}</Descriptions.Item>
                 <Descriptions.Item label="Account Name">{selectedData.account_name}</Descriptions.Item>
-                 <Descriptions.Item label="From Port">{selectedData.from_port}</Descriptions.Item>
+                <Descriptions.Item label="From Port">{selectedData.from_port}</Descriptions.Item>
                 <Descriptions.Item label="To Port">{selectedData.to_port}</Descriptions.Item>
                 <Descriptions.Item label="SecurityGroup Id">{selectedData.sg_id}</Descriptions.Item>
                 <Descriptions.Item label="SecurityGroup Name">{selectedData.sg_name}</Descriptions.Item>

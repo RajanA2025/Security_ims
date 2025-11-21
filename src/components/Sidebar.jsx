@@ -135,7 +135,7 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
         top: isMobile ? 56 : 0,   // <-- responsive top        left: 0,
         zIndex: 1200,
         pt: 2,
-        overflowX: "hidden",
+        overflowX: isMobile ? "hidden" : "visible",
       }}
     >
 
@@ -146,15 +146,21 @@ const Sidebar = ({ isExpanded, setIsExpanded }) => {
           sx={{
             position: "absolute",
             top: 10,
-            right: -15,
+            right: isExpanded ? "-10px" : "-10px",  // adjust how much sticks out
             bgcolor: "#4f46e5",
             color: "white",
-            "&:hover": { bgcolor: "#63B3ED" },
-            zIndex: 10,
+            width: 35,
+            height: 35,
+            borderRadius: "50%",
+            // boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+            "&:hover": { bgcolor: "#1007b9ff" },
+            zIndex: 20,
           }}
         >
           {isExpanded ? <IoIosArrowBack /> : <IoIosArrowForward />}
         </IconButton>
+
+
 
 
       )}

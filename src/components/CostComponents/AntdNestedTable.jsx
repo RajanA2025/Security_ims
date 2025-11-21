@@ -127,6 +127,9 @@ export default function AntdNestedTable({ selectedAccount }) {
   const [dataContainer, setDataContainer] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedKeys, setExpandedKeys] = useState([]);
+  const tableContainerRef = useRef(null);
+
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -297,18 +300,43 @@ export default function AntdNestedTable({ selectedAccount }) {
   // handle auto-scroll on row expand
   const handleExpand = (expanded, record) => {
     if (expanded) {
-      setExpandedKeys((prev) => [...prev, record.key]);
+      setExpandedKeys(prev => [...prev, record.key]);
+
       setTimeout(() => {
-        const rowEl = document.querySelector(`[data-row-key="${record.key}"]`);
-        if (rowEl) rowEl.scrollIntoView({ behavior: "smooth", block: "start" });
+        const rowEl = document.querySelector(`tr[data-row-key="${record.key}"]`);
+
+        if (rowEl && tableContainerRef.current) {
+          const container = tableContainerRef.current;
+
+          const rowTop = rowEl.getBoundingClientRect().top;
+          const containerTop = container.getBoundingClientRect().top;
+
+          const offset = rowTop - containerTop + container.scrollTop - 20;
+
+          container.scrollTo({
+            top: offset,
+            behavior: "smooth"
+          });
+        }
       }, 100);
     } else {
-      setExpandedKeys((prev) => prev.filter((k) => k !== record.key));
+      setExpandedKeys(prev => prev.filter(k => k !== record.key));
     }
   };
 
+
+
+
   return (
-    <div style={{ overflowX: 'auto', width: '100%' }}>
+    <div
+      ref={tableContainerRef}
+      style={{
+        overflowX: "auto",
+        overflowY: "auto",
+        maxHeight: 500,       // adjust height if needed (table scroll area)
+        width: "100%"
+      }}
+    >
       {noData ? (
         <Empty description="No Data Found" style={{ marginTop: 80 }} />
       ) : (

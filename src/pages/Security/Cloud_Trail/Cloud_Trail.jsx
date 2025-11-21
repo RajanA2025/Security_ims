@@ -214,7 +214,7 @@ const Cloud_Trail = () => {
 
 
       {/* Search input */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 5 }}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 10 }}>
         <Col md={19}>
           <Typography.Title
             level={4}

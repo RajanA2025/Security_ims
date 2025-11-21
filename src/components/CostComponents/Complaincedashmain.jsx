@@ -9,7 +9,7 @@ const { Text } = Typography;
 
 export const Complaincedashmain = () => {
   const { costData, resourcesData, tagSummary, loading, error } = useContext(CostContext);
-    const [showAccountModal, setShowAccountModal] = useState(false);
+  const [showAccountModal, setShowAccountModal] = useState(false);
 
 
   // ✅ Get localStorage account IDs
@@ -65,7 +65,7 @@ export const Complaincedashmain = () => {
 
   useEffect(() => {
     const fetchInstances = async () => {
-     
+
       try {
         // Read account_ids from localStorage
         let stored = localStorage.getItem("account_ids");
@@ -131,7 +131,7 @@ export const Complaincedashmain = () => {
           }
 
         }
-        
+
       } catch (err) {
         console.error("❌ Instance API Error:", err);
       }
@@ -339,7 +339,7 @@ export const Complaincedashmain = () => {
   }
 
   return (
-    <div style={{ fontFamily: "'Roboto', sans-serif",}}>
+    <div style={{ fontFamily: "'Roboto', sans-serif", }}>
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={24} md={12} lg={8}><AutoStartStopCard /></Col>
         <Col xs={24} sm={24} md={12} lg={8}><CostBreakdownCard /></Col>

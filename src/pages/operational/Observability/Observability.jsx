@@ -171,77 +171,108 @@ const Observability = () => {
   };
 
   // Security Tab Columns
-  const columns = [
-    {
-      title: (
-        <span>
-          Account Id{" "}
-          <Tooltip title="The AWS account's name.">
-            <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
-          </Tooltip>
-        </span>
-      ),
-      dataIndex: "account_id",
-      key: "account_id",
-      filters: accountIds.map(id => ({ text: id, value: id })),
-      onFilter: (value, record) => record.account_id === value
-    },
-    {
-      title: (
-        <span>
-          Account Name{" "}
-          <Tooltip title="The AWS account's name.">
-            <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
-          </Tooltip>
-        </span>
-      ),
-      dataIndex: "account_name",
-      key: "account_name"
-    },
-    {
-      title: (
-        <span>
-          Region{" "}
-          <Tooltip title="AWS region where the service is running.">
-            <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
-          </Tooltip>
-        </span>
-      ),
-      dataIndex: "region",
-      key: "region",
-      filters: getUniqueOptions(securityData, "region"),
-      onFilter: (value, record) => record.region === value
-    },
-    {
-      title: (
-        <span>
-          Status{" "}
-          <Tooltip title="Indicates if the tool is active or disabled.">
-            <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
-          </Tooltip>
-        </span>
-      ),
-      dataIndex: "status",
-      key: "status",
-      filters: statusIds.map(id => ({ text: id, value: id })),
-      onFilter: (value, record) => record.status === value,
-      render: value => (
-        <Tag color={value === "Disabled" ? "red" : "green"}>{value}</Tag>
-      )
-    },
-    {
-      title: "More Details",
-      key: "action",
-      render: (_, record) => (
-        <Tooltip title="View Details">
-          <EyeOutlined
-            style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
-            onClick={() => handleOpenKeyPair(record)}
-          />
+const columns = [
+  {
+    title: (
+      <span>
+        Account Id{" "}
+        <Tooltip title="The AWS account's ID.">
+          <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
         </Tooltip>
-      )
-    }
-  ];
+      </span>
+    ),
+    dataIndex: "account_id",
+    key: "account_id",
+    filters: accountIds.map(id => ({ text: id, value: id })),
+    onFilter: (value, record) => record.account_id === value
+  },
+
+  {
+    title: (
+      <span>
+        Account Name{" "}
+        <Tooltip title="The AWS account's name.">
+          <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
+        </Tooltip>
+      </span>
+    ),
+    dataIndex: "account_name",
+    key: "account_name"
+  },
+
+  {
+    title: (
+      <span>
+        Region{" "}
+        <Tooltip title="AWS region where the service is running.">
+          <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
+        </Tooltip>
+      </span>
+    ),
+    dataIndex: "region",
+    key: "region",
+    filters: getUniqueOptions(securityData, "region"),
+    onFilter: (value, record) => record.region === value
+  },
+
+  // ✅ NEW COLUMN — KEY PAIR NAME
+  {
+    title: (
+      <span>
+        Key Pair Name{" "}
+        <Tooltip title="The name of the EC2 Key Pair.">
+          <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
+        </Tooltip>
+      </span>
+    ),
+    dataIndex: "key_name",
+    key: "key_name",
+    filters: getUniqueOptions(securityData, "key_name"),
+    onFilter: (value, record) => record.key_name === value
+  },
+
+  {
+    title: (
+      <span>
+        Status{" "}
+        <Tooltip title="Indicates if the key is active, orphaned, or disabled.">
+          <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
+        </Tooltip>
+      </span>
+    ),
+    dataIndex: "status",
+    key: "status",
+    filters: statusIds.map(id => ({ text: id, value: id })),
+    onFilter: (value, record) => record.status === value,
+    render: value => (
+      <Tag
+        color={
+          value === "Disabled"
+            ? "red"
+            : value === "Orphaned"
+            ? "volcano"
+            : "green"
+        }
+      >
+        {value}
+      </Tag>
+    )
+  },
+
+  {
+    title: "More Details",
+    key: "action",
+    render: (_, record) => (
+      <Tooltip title="View Details">
+        <EyeOutlined
+          style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
+          onClick={() => handleOpenKeyPair(record)}
+        />
+      </Tooltip>
+    )
+  }
+];
+
 
   // EIP Tab Columns
   const eipColumns = [
@@ -544,75 +575,82 @@ const Observability = () => {
        
       </Row>
       
-      <Tabs
-        defaultActiveKey="1"
-        onChange={key => setTabKey(key)}
-        style={{
-          marginTop: "0px",
-          padding: "0px"
-        }}
-      >
-        <Tabs.TabPane tab="Key Pair" key="1">
-          <Table
-            columns={columns}
-            dataSource={securityData.filter(item =>
-              (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
-              (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
-            )}
-            loading={loading}
-            rowKey={(record) => record.allocation_id || record.volume_id || record.key_id || 'key'}
-            pagination={{ pageSize: 8 }}
-          />
-        </Tabs.TabPane>
-        <Tabs.TabPane tab="Unassociated Elastic IP" key="2">
-          <Table
-            columns={eipColumns}
-            dataSource={eipData.filter(item =>
-              (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
-              (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
-            )}
-            loading={loading}
-            rowKey={(record) => record.allocation_id || 'eip-key'}
-            pagination={{ pageSize: 8 }}
-          />
-        </Tabs.TabPane>
-        <Tabs.TabPane tab="Orphaned volume" key="3">
-          <Table
-            columns={volumeColumns}
-            dataSource={volumeData.filter(item =>
-              (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
-              (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
-            )}
-            loading={loading}
-            rowKey={(record) => record.volume_id || 'volume-key'}
-            pagination={{ pageSize: 8 }}
-          />
-        </Tabs.TabPane>
-        <Tabs.TabPane tab="S3 Details" key="4">
-          <Table
-            columns={s3Columns}
-            dataSource={s3Data.filter(item =>
-              (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
-              (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
-            )}
-            loading={loading}
-            rowKey={record => record.bucket_name || 's3-key'}
-            pagination={{ pageSize: 8 }}
-          />
-        </Tabs.TabPane>
-        <Tabs.TabPane tab="EC2 Details" key="5">
-          <Table
-            columns={ec2Columns}
-            dataSource={ec2Data.filter(item =>
-              (item.account_name?.toLowerCase().includes(searchName.toLowerCase())) &&
-              (item.account_id?.toLowerCase().includes(searchId.toLowerCase()))
-            )}
-            loading={loading}
-            rowKey={record => record.instance_id || 'ec2-key'}
-            pagination={{ pageSize: 8 }}
-          />
-        </Tabs.TabPane>
-      </Tabs>
+     <Tabs
+  defaultActiveKey="1"
+  onChange={key => setTabKey(key)}
+  style={{ marginTop: "0px", padding: "0px" }}
+>
+  <Tabs.TabPane tab="Key Pair" key="1">
+    <Table
+      columns={columns}
+      dataSource={securityData.filter(item =>
+        item.account_name?.toLowerCase().includes(searchName.toLowerCase()) &&
+        item.account_id?.toLowerCase().includes(searchId.toLowerCase())
+      )}
+      loading={loading}
+      rowKey={(record) => record.allocation_id || record.volume_id || record.key_id || 'key'}
+      pagination={{ pageSize: 8 }}
+      scroll={{ x: "max-content" }}   // ✅ Responsive
+    />
+  </Tabs.TabPane>
+
+  <Tabs.TabPane tab="Unassociated Elastic IP" key="2">
+    <Table
+      columns={eipColumns}
+      dataSource={eipData.filter(item =>
+        item.account_name?.toLowerCase().includes(searchName.toLowerCase()) &&
+        item.account_id?.toLowerCase().includes(searchId.toLowerCase())
+      )}
+      loading={loading}
+      rowKey={(record) => record.allocation_id || 'eip-key'}
+      pagination={{ pageSize: 8 }}
+      scroll={{ x: "max-content" }}   // ✅ Responsive
+    />
+  </Tabs.TabPane>
+
+  <Tabs.TabPane tab="Orphaned volume" key="3">
+    <Table
+      columns={volumeColumns}
+      dataSource={volumeData.filter(item =>
+        item.account_name?.toLowerCase().includes(searchName.toLowerCase()) &&
+        item.account_id?.toLowerCase().includes(searchId.toLowerCase())
+      )}
+      loading={loading}
+      rowKey={(record) => record.volume_id || 'volume-key'}
+      pagination={{ pageSize: 8 }}
+      scroll={{ x: "max-content" }}   // ✅ Responsive
+    />
+  </Tabs.TabPane>
+
+  <Tabs.TabPane tab="S3 Details" key="4">
+    <Table
+      columns={s3Columns}
+      dataSource={s3Data.filter(item =>
+        item.account_name?.toLowerCase().includes(searchName.toLowerCase()) &&
+        item.account_id?.toLowerCase().includes(searchId.toLowerCase())
+      )}
+      loading={loading}
+      rowKey={record => record.bucket_name || 's3-key'}
+      pagination={{ pageSize: 8 }}
+      scroll={{ x: "max-content" }}   // ✅ Responsive
+    />
+  </Tabs.TabPane>
+
+  <Tabs.TabPane tab="EC2 Details" key="5">
+    <Table
+      columns={ec2Columns}
+      dataSource={ec2Data.filter(item =>
+        item.account_name?.toLowerCase().includes(searchName.toLowerCase()) &&
+        item.account_id?.toLowerCase().includes(searchId.toLowerCase())
+      )}
+      loading={loading}
+      rowKey={record => record.instance_id || 'ec2-key'}
+      pagination={{ pageSize: 8 }}
+      scroll={{ x: "max-content" }}   // ✅ Responsive
+    />
+  </Tabs.TabPane>
+</Tabs>
+
 
       {/* Key Pair Modal */}
       <Modal

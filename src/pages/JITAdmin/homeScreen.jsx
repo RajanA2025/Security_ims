@@ -314,7 +314,17 @@ const Admin = () => {
                   </td>
 
                   {/* Actions */}
-                  <td className="px-4 py-3 space-x-2">
+                  <td
+                    className="
+    flex flex-wrap 
+    items-center
+    gap-2 
+    px-2 py-2 
+    sm:px-3 
+    md:px-4 md:py-3 
+    lg:px-5
+  "
+                  >
                     {editingId === acc.cid ? (
                       <>
                         <button
