@@ -101,7 +101,7 @@ function App() {
 
           {/* Cost */}
           <Route path="/cost" element={<Dashboard2 />} />
-          <Route path="/cost/cost-deepdrive" element={<Costdeepdrive />} />
+          <Route path="/cost/cost-deepdive" element={<Costdeepdrive />} />
           <Route path="/cost/savings" element={<Savings />} />
           <Route path="/cost/compliance" element={<Complaince />} />
 

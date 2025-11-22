@@ -122,17 +122,17 @@ export const Savingdashmain = () => {
 
   const headerStyle = {
     display: "flex",
-    
+
     justifyContent: "space-between",
     alignItems: "center",
   };
   const valueTitleStyle = { margin: 0, textAlign: "center" };
 
   return (
-    <div style={{ padding: "20px 10px" }}>
+    <div style={{ padding: "20px 0px" }}>
       <Row gutter={[16, 16]}>
         {/* Potential Savings */}
-        <Col xs={24} sm={12} md={5}>
+        <Col xs={24} sm={12} md={12} lg={5}>
           <Card
             bodyStyle={cardStyle("white")}
             style={{ borderTop: "4px solid #52c41a" }}
@@ -165,121 +165,118 @@ export const Savingdashmain = () => {
         </Col>
 
         {/* Realized Savings */}
-        <Col xs={24} sm={12} md={5}>
-          <Card
-            bodyStyle={cardStyle("white")}
-            style={{ borderTop: "4px solid #1890ff" }}
-          >
-            <div style={headerStyle}>
-              <Text strong>Realized Savings</Text>
-              <img src={realsaveimg} alt="savings" width={40} height={40} />
-            </div>
-            <div style={{ textAlign: "center", margin: "20px 0" }}>
-              <Title level={4} style={{ ...valueTitleStyle, marginBottom: "6px" }}>
-                {realizedAmount !== null
-                  ? `$${realizedAmount.toLocaleString()}`
-                  : "Loading..."}
-              </Title>
-              <Text type="secondary" style={{ fontSize: 14, display: "block" }}>
-                (Annualized Savings)
-              </Text>
-            </div>
-          </Card>
+        <Col xs={24} sm={12} md={12} lg={5}>          <Card
+          bodyStyle={cardStyle("white")}
+          style={{ borderTop: "4px solid #1890ff" }}
+        >
+          <div style={headerStyle}>
+            <Text strong>Realized Savings</Text>
+            <img src={realsaveimg} alt="savings" width={40} height={40} />
+          </div>
+          <div style={{ textAlign: "center", margin: "20px 0" }}>
+            <Title level={4} style={{ ...valueTitleStyle, marginBottom: "6px" }}>
+              {realizedAmount !== null
+                ? `$${realizedAmount.toLocaleString()}`
+                : "Loading..."}
+            </Title>
+            <Text type="secondary" style={{ fontSize: 14, display: "block" }}>
+              (Annualized Savings)
+            </Text>
+          </div>
+        </Card>
         </Col>
 
         {/* Implementation Status */}
-        <Col xs={24} sm={12} md={5}>
-          <Card
-            bodyStyle={cardStyle("white")}
-            style={{ borderTop: "4px solid #fa8c16" }}
+        <Col xs={24} sm={12} md={12} lg={5}>          <Card
+          bodyStyle={cardStyle("white")}
+          style={{ borderTop: "4px solid #fa8c16" }}
+        >
+          <div style={headerStyle}>
+            <Text strong style={{ fontSize: 14 }}>
+              Implementation Status
+            </Text>
+            <img src={piechartimg} alt="savings" width={40} height={40} />
+          </div>
+          <div
+            style={{
+              marginTop: "7px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+            }}
           >
-            <div style={headerStyle}>
-              <Text strong style={{ fontSize: 14 }}>
-                Implementation Status
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <Text
+                type="secondary"
+                style={{ fontSize: 14, flex: 1, textAlign: "right" }}
+              >
+                Total Costs
               </Text>
-              <img src={piechartimg} alt="savings" width={40} height={40} />
+              <Text
+                strong
+                style={{
+                  fontSize: 20,
+                  flex: 1,
+                  textAlign: "left",
+                  paddingLeft: "10px",
+                  color: "#1677ff",
+                }}
+              >
+                {unassignedCost !== null
+                  ? `$${unassignedCost.total.toLocaleString()}`
+                  : "Loading..."}
+              </Text>
             </div>
-            <div
-              style={{
-                marginTop: "7px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "8px",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <Text
-                  type="secondary"
-                  style={{ fontSize: 14, flex: 1, textAlign: "right" }}
-                >
-                  Total Costs
-                </Text>
-                <Text
-                  strong
-                  style={{
-                    fontSize: 20,
-                    flex: 1,
-                    textAlign: "left",
-                    paddingLeft: "10px",
-                    color: "#1677ff",
-                  }}
-                >
-                  {unassignedCost !== null
-                    ? `$${unassignedCost.total.toLocaleString()}`
-                    : "Loading..."}
-                </Text>
-              </div>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <Text
-                  type="secondary"
-                  style={{ fontSize: 14, flex: 1, textAlign: "right" }}
-                >
-                  Assigned
-                </Text>
-                <Text
-                  strong
-                  style={{
-                    fontSize: 20,
-                    flex: 1,
-                    textAlign: "left",
-                    paddingLeft: "10px",
-                    color: "green",
-                  }}
-                >
-                  {unassignedCost !== null
-                    ? `$${unassignedCost.assigned.toLocaleString()}`
-                    : "Loading..."}
-                </Text>
-              </div>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <Text
-                  type="secondary"
-                  style={{ fontSize: 14, flex: 1, textAlign: "right" }}
-                >
-                  Unassigned
-                </Text>
-                <Text
-                  strong
-                  style={{
-                    fontSize: 20,
-                    flex: 1,
-                    textAlign: "left",
-                    paddingLeft: "10px",
-                    color: "red",
-                  }}
-                >
-                  {unassignedCost !== null
-                    ? `$${unassignedCost.unassigned.toLocaleString()}`
-                    : "Loading..."}
-                </Text>
-              </div>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <Text
+                type="secondary"
+                style={{ fontSize: 14, flex: 1, textAlign: "right" }}
+              >
+                Assigned
+              </Text>
+              <Text
+                strong
+                style={{
+                  fontSize: 20,
+                  flex: 1,
+                  textAlign: "left",
+                  paddingLeft: "10px",
+                  color: "green",
+                }}
+              >
+                {unassignedCost !== null
+                  ? `$${unassignedCost.assigned.toLocaleString()}`
+                  : "Loading..."}
+              </Text>
             </div>
-          </Card>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <Text
+                type="secondary"
+                style={{ fontSize: 14, flex: 1, textAlign: "right" }}
+              >
+                Unassigned
+              </Text>
+              <Text
+                strong
+                style={{
+                  fontSize: 20,
+                  flex: 1,
+                  textAlign: "left",
+                  paddingLeft: "10px",
+                  color: "red",
+                }}
+              >
+                {unassignedCost !== null
+                  ? `$${unassignedCost.unassigned.toLocaleString()}`
+                  : "Loading..."}
+              </Text>
+            </div>
+          </div>
+        </Card>
         </Col>
 
         {/* Chart */}
-        <Col xs={24} sm={24} md={9}>
-          <LogAxisChart />
+        <Col xs={24} sm={24} md={24} lg={9}>          <LogAxisChart />
           {/* <SavingsTrendGraph/> */}
         </Col>
       </Row>

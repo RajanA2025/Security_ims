@@ -40,6 +40,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("company_cid");
     localStorage.removeItem("pillars");
     localStorage.removeItem("account_ids");
+    localStorage.removeItem("timeModal");
+        localStorage.removeItem("old_account_ids");
     setIsAuthenticated(false);
   };
 

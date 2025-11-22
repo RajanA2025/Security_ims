@@ -25,9 +25,17 @@ body {
 } */
 
 @keyframes blink {
-  0% { opacity: 1; }
-  50% { opacity: 0; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
 
 /* 
@@ -49,29 +57,35 @@ p {
 .app-container {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Full height of screen */
-  overflow: hidden; /* Prevent entire page scrolling */
+  height: 100vh;
+  /* Full height of screen */
+  overflow: hidden;
+  /* Prevent entire page scrolling */
 }
 
 .dashboard {
   display: flex;
   flex: 1;
-  overflow: hidden; /* Prevent sidebar from pushing scroll */
+  overflow: hidden;
+  /* Prevent sidebar from pushing scroll */
 }
 
 .main-content {
   flex: 1;
   padding: 1rem;
-  overflow-y: auto; /* Only this part scrolls */
+  overflow-y: auto;
+  /* Only this part scrolls */
   padding: 20px;
-  background-color: #f5f5f5; /* Optional */
+  background-color: #f5f5f5;
+  /* Optional */
 }
 
 /* Optional: Keep sidebar fixed in place */
 .sidebar {
   flex-shrink: 0;
   height: 100%;
-  overflow-y: auto; /* If sidebar needs its own scroll */
+  overflow-y: auto;
+  /* If sidebar needs its own scroll */
 }
 
 .traffic-card .ant-card-body {
@@ -80,18 +94,21 @@ p {
 }
 
 .css-dev-only-do-not-override-15wnser.ant-card .ant-card-body {
-  padding: 10px !important;}
-/* Monitoring Table Styles */
-.monitoring-table-row {
-  height: 56px; /* Increased row height for 16px spacing (48px content + 8px padding) */
+  padding: 10px !important;
 }
 
-.monitoring-table-row > td {
+/* Monitoring Table Styles */
+.monitoring-table-row {
+  height: 56px;
+  /* Increased row height for 16px spacing (48px content + 8px padding) */
+}
+
+.monitoring-table-row>td {
   padding: 16px 8px;
   border-color: #f0f0f0;
 }
 
-.monitoring-table-row:hover > td {
+.monitoring-table-row:hover>td {
   background: #fafafa;
 }
 
@@ -101,36 +118,35 @@ p {
 }
 
 .custom-table .ant-table-container,
-.custom-table .ant-table-thead > tr > th,
-.custom-table .ant-table-tbody > tr > td {
+.custom-table .ant-table-thead>tr>th,
+.custom-table .ant-table-tbody>tr>td {
   border: none !important;
   border-bottom: 1px solid #f0f0f0 !important;
 }
 
-.custom-table .ant-table-thead > tr > th {
+.custom-table .ant-table-thead>tr>th {
   background: #fafafa;
   font-weight: 500;
 }
 
-.custom-table .ant-table-tbody > tr > td {
+.custom-table .ant-table-tbody>tr>td {
   background: #fff;
 }
 
-.custom-table .ant-table-tbody > tr:hover > td {
+.custom-table .ant-table-tbody>tr:hover>td {
   background: #fafafa !important;
 }
 
 
-  /* // */
+/* // */
 
-  /* File: src/App.css */
+/* File: src/App.css */
 body {
   margin: 0;
   padding: 0;
 }
 
-.ant-typography 
-{
+.ant-typography {
   font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 400;
   font-size: 14px;
@@ -140,7 +156,8 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  overflow: hidden; /* prevent body scroll */
+  overflow: hidden;
+  /* prevent body scroll */
 }
 
 /* Header fixed at top */
@@ -149,10 +166,11 @@ body {
   top: 0;
   left: 0;
   width: 100%;
-  height: 60px; /* adjust as needed */
+  height: 60px;
+  /* adjust as needed */
   background-color: #fff;
   z-index: 1000;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Dashboard below header */
@@ -166,14 +184,16 @@ body {
 .sidebar {
   position: fixed;
   left: 0;
-  width: 250px; /* expanded width */
+  width: 250px;
+  /* expanded width */
   overflow-y: auto;
   background-color: #f5f5f5;
   transition: width 0.3s ease;
 }
 
 .sidebar.collapsed {
-  width: 80px; /* collapsed width */
+  width: 80px;
+  /* collapsed width */
 }
 
 /* Main content scrollable */
@@ -185,13 +205,15 @@ body {
 }
 
 .main-content.sidebar-collapsed {
-  margin-left: 80px; /* match collapsed sidebar */
+  margin-left: 80px;
+  /* match collapsed sidebar */
 }
 
 
 /* Make checkbox box smaller */
 .custom-checkbox-group .ant-checkbox-inner {
-  width: 10px;   /* smaller square */
+  width: 10px;
+  /* smaller square */
   height: 10px;
 }
 
@@ -226,3 +248,22 @@ body {
 }
 
 
+/* MOBILE: Show only short date format */
+@media (max-width: 480px) {
+ .mobile-range-picker {
+    width: 160px !important;        /* ↓↓↓ Reduce width here */
+    min-width: 290px !important;
+  }
+
+  /* Hide the long displayed placeholder */
+  .ant-picker-range .ant-picker-range-separator {
+    padding: 0 10px !important;
+  }
+
+  /* Make calendar scrollable on small screens */
+  .ant-picker-panels {
+    display: block !important;
+    overflow-y: auto !important;
+    max-height: 350px !important;
+  }
+}

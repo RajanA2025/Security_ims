@@ -14,6 +14,7 @@ export const CostProvider = ({ children }) => {
     not_tagged: 0,
     total_resources: 0,
   });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -24,11 +25,13 @@ export const CostProvider = ({ children }) => {
     end_date: null,
   });
 
-  const [accounts, setAccounts] = useState([]);
+  const [accounts, setAccounts] = useState([]); // full list for dropdown
   const [apps, setApps] = useState([]);
   const [Current_acc, setCurrent_acc] = useState();
 
-  // 🔸 To prevent duplicate API calls
+  // 🔥 FIX ADDED → TreeSelect ONLY using POST returned accounts
+  const [treeData, setTreeData] = useState([]);
+
   const hasFetchedCompanies = useRef(false);
 
   useEffect(() => {
@@ -36,7 +39,9 @@ export const CostProvider = ({ children }) => {
     setCurrent_acc(account);
   }, []);
 
-  // 🔹 Register new company
+  // --------------------------
+  // Register Company
+  // --------------------------
   const registerCompany = async (companyData) => {
     try {
       setLoading(true);
@@ -52,20 +57,27 @@ export const CostProvider = ({ children }) => {
     }
   };
 
-  // 🔹 Login company
+  // --------------------------
+  // Login
+  // --------------------------
   const loginCompany = async (loginData) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.post(`/api/company/login`, loginData);
-      const result = response.data;
-      if (response.status < 200 || response.status >= 300) throw new Error(result.message || "Login failed");
 
-      // Some backends may return 200 without a token. Treat any successful login (200)
-      // as authenticated: store the token if provided, otherwise store a boolean flag.
-      const authValue = result?.token ? result.token : "true";
+      const response = await fetch(`${apiBaseUrl}/api/company/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(loginData),
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Login failed");
+
+      const authValue = result.token ? result.token : "true";
       localStorage.setItem("auth_token", authValue);
-      if (result?.cid) localStorage.setItem("company_cid", result.cid);
+
+      if (result.cid) localStorage.setItem("company_cid", result.cid);
 
       return result;
     } catch (err) {
@@ -77,14 +89,28 @@ export const CostProvider = ({ children }) => {
     }
   };
 
-  // 🔹 Add account
+  // --------------------------
+  // Add Account
+  // --------------------------
   const addAccount = async (accountData) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.post(`/api/account/add`, accountData);
-      const result = response.data;
-      if (response.status < 200 || response.status >= 300) throw new Error(result.message || "Account creation failed");
+
+      const token = localStorage.getItem("auth_token");
+
+      const response = await fetch(`http://47.130.218.97:8016/api/account/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify(accountData),
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Account creation failed");
+
       return result;
     } catch (err) {
       console.error("Add Account Error:", err);
@@ -95,9 +121,10 @@ export const CostProvider = ({ children }) => {
     }
   };
 
-  // 🔹 Get all companies (fixed)
+  // --------------------------
+  // All Companies
+  // --------------------------
   const getAllCompanies = async (forceRefresh = false) => {
-    // Prevent infinite loop fetches
     if (hasFetchedCompanies.current && !forceRefresh) {
       return companies;
     }
@@ -106,12 +133,22 @@ export const CostProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      const response = await api.get(`/api/company/all`);
-      const result = response.data;
-      if (response.status < 200 || response.status >= 300) throw new Error(result.message || "Failed to fetch companies");
+      const token = localStorage.getItem("auth_token");
+
+      const response = await fetch(`${apiBaseUrl}/api/company/all`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Failed to fetch companies");
 
       setCompanies(result);
-      hasFetchedCompanies.current = true; // ✅ mark as fetched
+      hasFetchedCompanies.current = true;
+
       return result;
     } catch (err) {
       console.error("Get All Companies Error:", err);
@@ -122,20 +159,27 @@ export const CostProvider = ({ children }) => {
     }
   };
 
-  // 🔹 Get all accounts for a specific company
+  // --------------------------
+  // All Accounts for a Company
+  // --------------------------
   const getAllAccounts = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // 🔸 Get the company CID dynamically from localStorage
       const cid = localStorage.getItem("company_cid");
-      if (!cid) throw new Error("Company ID not found. Please log in again.");
+      if (!cid) throw new Error("Company ID missing");
 
-      // 🔸 Dynamic endpoint using template literal
-      const response = await api.get(`/api/accounts/all/${cid}`);
-      const result = response.data;
-      if (response.status < 200 || response.status >= 300) throw new Error(result.message || "Failed to fetch accounts");
+      const response = await fetch(`${apiBaseUrl}/api/accounts/all/${cid}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+        },
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Failed to fetch accounts");
 
       return result;
     } catch (err) {
@@ -147,88 +191,104 @@ export const CostProvider = ({ children }) => {
     }
   };
 
-
-
-  // 🔹 Fetch cost & tag data
+  // Main Data Fetch
   useEffect(() => {
     const fetchAllData = async () => {
       try {
         setLoading(true);
 
-        // Retrieve filters and localStorage account IDs
-        const { account_id, start_date, end_date } = filters;
-        const accountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
+        // ---------------------------
+        // 1️⃣ Get stored + selected IDs
+        // ---------------------------
+        const storedIds = JSON.parse(localStorage.getItem("account_ids")) || [];
+        const { account_id } = filters;
 
-        // Prepare POST body
         const postBody = {
-          account_ids: account_id && account_id !== "ALL" ? [account_id] : accountIds,
-          start_date: start_date || "",
-          end_date: end_date || "",
+          account_ids: account_id && account_id !== "ALL" ? [account_id] : storedIds,
         };
 
+        console.log("➡️ POST Body:", postBody);
 
-        // POST request instead of GET
+        // ---------------------------
+        // 2️⃣ API Calls (ALL POST)
+        // ---------------------------
         const [costRes, resourcesRes, tagRes] = await Promise.all([
-          api.post(`/cost-summary`, postBody),
-          api.get(`/resources`),
-          api.get(`/tags`),
+          // COST SUMMARY
+          fetch("http://47.130.218.97:8021/cost-summary", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(postBody),
+          }),
+
+          // RESOURCES FILTER
+          fetch("http://47.130.218.97:8003/resources/filter", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(postBody),
+          }),
+
+          // TAGS FILTER
+          fetch("http://47.130.218.97:8007/tags/filter", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(postBody),
+          }),
         ]);
 
-        if (costRes.status < 200 || costRes.status >= 300 || resourcesRes.status < 200 || resourcesRes.status >= 300 || tagRes.status < 200 || tagRes.status >= 300)
-          throw new Error("Failed to fetch data");
+        // ---------------------------
+        // 3️⃣ Parse JSON
+        // ---------------------------
+        const costJson = await costRes.json();
+        const resourcesJson = await resourcesRes.json();
+        const tagsJson = await tagRes.json();
 
-        const costJson = costRes.data;
-        const resourcesJson = resourcesRes.data;
-        const tagsJson = tagRes.data;
+        // ---------------------------
+        // 4️⃣ Build TreeSelect
+        // ---------------------------
+        const apiAccountIds = costJson?.account_ids || [];
 
-        // Build account list
-        const accountList = costJson?.all_account_ids || [];
-        const orderedAccounts = accountList.includes("ALL")
-          ? accountList
-          : ["ALL", ...accountList];
+        setTreeData(
+          apiAccountIds.map((id) => ({
+            title: id,
+            value: id,
+          }))
+        );
 
-        const appList =
-          costJson?.top_5?.top_apps_current_month?.map((a) => a.app_name) || [];
+        // ---------------------------
+        // 5️⃣ Build Accounts Dropdown
+        // ---------------------------
+        const allIds = costJson?.all_account_ids || [];
+        const orderedAccounts = allIds.includes("ALL")
+          ? allIds
+          : ["ALL", ...allIds];
 
         setAccounts(orderedAccounts);
-        setApps(appList);
 
-        // Process tags
-        // Get selected account from filters or localStorage
-        // const selectedAcc = filters.account_id || localStorage.getItem("account_ids");
-
-        // Process + Filter tags by selected account
-        let processedTagData = Array.isArray(tagsJson)
+        // ---------------------------
+        // 6️⃣ Tag Data (Already filtered from backend)
+        // ---------------------------
+        const processedTagData = Array.isArray(tagsJson)
           ? tagsJson.map((res, i) => ({
             id: res.id || i + 1,
-            account_name: res.account_name || "",
-            account_id: res.account_id || "",
-            region: res.region || "",
-            service: res.service || "",
-            resource: res.resource || "",
+            account_name: res.account_name,
+            account_id: res.account_id,
+            region: res.region,
+            service: res.service,
+            resource: res.resource,
             tags: res.tags || {},
           }))
           : [];
 
-        // Apply multi-account filtering
-        const storedIds = JSON.parse(localStorage.getItem("account_ids")) || [];
+        // ---------------------------
+        // 7️⃣ Apps
+        // ---------------------------
+        const appList =
+          costJson?.top_5?.top_apps_current_month?.map((a) => a.app_name) || [];
+        setApps(appList);
 
-        if (filters.account_id && filters.account_id !== "ALL") {
-          // Single account selected
-          processedTagData = processedTagData.filter(
-            (item) => String(item.account_id) === String(filters.account_id)
-          );
-        } else {
-          // Multiple stored accounts filter
-          processedTagData = processedTagData.filter((item) =>
-            storedIds.includes(String(item.account_id))
-          );
-        }
-
-
-
-
-        // Compute tagging summary
+        // ---------------------------
+        // 8️⃣ Tag Summary
+        // ---------------------------
         const requiredTags = ["Name", "Owner", "Project", "Environment"];
         const summary = {
           fully_tagged: 0,
@@ -238,23 +298,21 @@ export const CostProvider = ({ children }) => {
         };
 
         processedTagData.forEach((res) => {
-          const matched = requiredTags.filter(
-            (t) => res.tags[t] !== null && res.tags[t] !== "" && res.tags[t] !== undefined
-          ).length;
-
+          const matched = requiredTags.filter((t) => res.tags[t]).length;
           if (matched === requiredTags.length) summary.fully_tagged++;
           else if (matched > 0) summary.partially_tagged++;
           else summary.not_tagged++;
         });
 
-        // Set final states
-        setCostData(costJson);
-        setResourcesData(resourcesJson);
+        // ---------------------------
+        // 9️⃣ Set All Final Data
+        // ---------------------------
         setTagData(processedTagData);
         setTagSummary(summary);
-
+        setCostData(costJson);
+        setResourcesData(resourcesJson);
       } catch (err) {
-        console.error("❌ Fetch error:", err);
+        console.error("Fetch error:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -278,12 +336,14 @@ export const CostProvider = ({ children }) => {
         setFilters,
         accounts,
         apps,
+        treeData,          // 🔥 FIX ADDED
+        setTreeData,       // 🔥 FIX ADDED
         registerCompany,
         loginCompany,
         addAccount,
         getAllCompanies,
         companies,
-        getAllAccounts
+        getAllAccounts,
       }}
     >
       {children}

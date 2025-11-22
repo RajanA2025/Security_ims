@@ -294,7 +294,17 @@ const Companyadmin = () => {
                       </span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-center space-x-2">
+<td
+  className="
+    text-center
+    flex flex-wrap justify-center        
+    gap-2                                 
+    px-2 py-2                              
+    sm:px-3 sm:py-2                        
+    md:px-4 md:py-3                        
+    lg:px-5 lg:py-3                        
+  "
+>
                     {editingId === acc.cid ? (
                       <>
                         <button
