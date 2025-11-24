@@ -36,6 +36,8 @@ const Dashboard = () => {
   const [change, setChange] = useState(null);
   const [top5Services, setTop5Services] = useState([]);
   const isMobile = window.innerWidth < 480;
+  const [expandedKeys, setExpandedKeys] = useState([]);
+
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -89,11 +91,26 @@ const Dashboard = () => {
 
   /** ================== TreeSelect Data ================== */
 
+  const parentLabel = (
+    <span
+      onClick={(e) => {
+        e.stopPropagation();   // prevent select event
+        setExpandedKeys(prev =>
+          prev.includes("accounts") ? [] : ["accounts"]
+        );
+      }}
+      style={{ cursor: "pointer", fontWeight: 600 }}
+    >
+      Accounts
+    </span>
+  );
+
+
   const treeData = [
     {
-      title: "Accounts",
+      title: parentLabel,   // <--- custom clickable title
       value: "accounts",
-      selectable: false,
+      selectable: false,    // prevent selecting parent
       children: accounts
         .filter(acc => acc !== "ALL")
         .map(acc => ({
@@ -103,6 +120,7 @@ const Dashboard = () => {
         })),
     },
   ];
+
 
   const storedIds = JSON.parse(localStorage.getItem("account_ids")) || [];
 
@@ -152,24 +170,27 @@ const Dashboard = () => {
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <Card
               size="small"
-              style={{ borderRadius: 12, border:"none", background: "none" }}
+              style={{ borderRadius: 12, border: "none", background: "none" }}
               bodyStyle={{ padding: "8px 0px" }}
             >
               <Space>
                 <TreeSelect
-                  treeData={filteredTreeData}   // <--- Filter applied
+                  treeData={filteredTreeData}
                   value={context}
                   onChange={handleContextChange}
+
+                  treeExpandedKeys={expandedKeys}
+                  onTreeExpand={(keys) => setExpandedKeys(keys)}
+
                   placeholder="Select filter"
                   style={{ minWidth: 170, maxWidth: 170, width: "100%" }}
                   suffixIcon={<DownOutlined />}
                   allowClear
                   dropdownStyle={{ padding: "12px 0" }}
                   treeLine
-                  fieldNames={{ title: "title", value: "value", children: "children" }}
-                  treeNodeLabelProp="title"
                   showArrow
                 />
+
 
 
                 <RangePicker
@@ -310,7 +331,7 @@ const Dashboard = () => {
       </Row>
 
       {/* Savings */}
-      <Row style={{ marginTop: 16 ,}}>
+      <Row style={{ marginTop: 16, }}>
         <Col xs={24}>
           <Savingdashmain />
         </Col>
