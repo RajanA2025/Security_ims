@@ -1,25 +1,50 @@
 import React, { useState, useEffect, useCallback, useContext, memo } from "react";
 import { useNavigate } from 'react-router-dom';
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Eye, EyeOff } from "lucide-react";
 import { CostContext } from "../../Context/CostContext";
 
+
 // ---------------- Input Field ----------------
-const InputField = memo(({ label, value, onChange, type = "text", placeholder, error, readOnly }) => (
-  <div className="space-y-1.5">
-    <label className="block text-sm font-medium text-gray-700">
-      {label} {label !== "Company CID" && <span className="text-red-500">*</span>}
-    </label>
-    <input
-      type={type}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      readOnly={readOnly}
-      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${error ? "border-red-500" : "border-gray-300"} ${readOnly ? "bg-gray-200 text-gray-500" : "bg-white"}`}
-    />
-    {error && <p className="text-red-500 text-sm">{error}</p>}
-  </div>
-));
+const InputField = memo(({ label, value, onChange, type = "text", placeholder, error, readOnly }) => {
+  const [showPassword, setShowPassword] = useState(false);
+
+  const isPassword = type === "password";
+
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-sm font-medium text-gray-700">
+        {label} {label !== "Company CID" && <span className="text-red-500">*</span>}
+      </label>
+
+      <div className="relative">
+        <input
+          type={isPassword && showPassword ? "text" : type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          readOnly={readOnly}
+          className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 
+            focus:ring-blue-500 focus:border-blue-500 transition-all 
+            ${error ? "border-red-500" : "border-gray-300"} 
+            ${readOnly ? "bg-gray-200 text-gray-500" : "bg-white"}`}
+        />
+
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-900"
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        )}
+      </div>
+
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+    </div>
+  );
+});
+
 
 // ---------------- Pillar Dropdown ----------------
 const PillarDropdown = memo(({ pillars, selected, onChange, error }) => {
@@ -105,11 +130,16 @@ const AccountCard = memo(({ index, acc, errors, updateAccount, removeAccount, ca
         <InputField
           label="Account ID"
           value={acc.accountId}
-          onChange={(v) => handleChange("accountId", v)}
-          readOnly={isEditMode}
-          error={errors[`accountId_${index}`]}
+          onChange={(v) => {
+            // allow only numbers
+            const clean = v.replace(/\D/g, "");
+            handleChange("accountId", clean);
+          }}
           placeholder="Enter account ID"
+          error={errors[`accountId_${index}`]}
         />
+
+
         <InputField
           label="Account Name"
           value={acc.accountName}
@@ -120,7 +150,7 @@ const AccountCard = memo(({ index, acc, errors, updateAccount, removeAccount, ca
         <InputField
           label="Access Key"
           value={acc.accessKey}
-          onChange={(v) => handleChange("accessKey", v)}
+          onChange={(v) => handleChange("accessKey", v.trim())}
           error={errors[`accessKey_${index}`]}
           placeholder="Enter access key"
         />
@@ -128,10 +158,11 @@ const AccountCard = memo(({ index, acc, errors, updateAccount, removeAccount, ca
           label="Secret Key"
           type="password"
           value={acc.secretKey}
-          onChange={(v) => handleChange("secretKey", v)}
+          onChange={(v) => handleChange("secretKey", v.trim())}
           error={errors[`secretKey_${index}`]}
           placeholder="Enter secret key"
         />
+
 
         {/* ✅ Only show these if cost pillar is true */}
         {acc.pillars?.cost && (
@@ -139,14 +170,17 @@ const AccountCard = memo(({ index, acc, errors, updateAccount, removeAccount, ca
             <InputField
               label="Bucket Name"
               value={acc.bucketName}
-              onChange={(v) => handleChange("bucketName", v)}
+              onChange={(v) => handleChange("bucketName", v.toLowerCase())}
               placeholder="Enter bucket name"
+              error={errors[`bucketName_${index}`]}   // <-- add this
             />
             <InputField
               label="Prefix"
               value={acc.prefix}
               onChange={(v) => handleChange("prefix", v)}
               placeholder="Enter prefix (e.g., data/)"
+              error={errors[`prefix_${index}`]}       // <-- add this
+
             />
           </>
         )}
@@ -186,6 +220,8 @@ export default function AccountsScreen() {
   });
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   // ---------------- Load edit data ----------------
   useEffect(() => {
@@ -260,16 +296,26 @@ export default function AccountsScreen() {
   // ---------------- Validation ----------------
   const validateForm = useCallback(() => {
     const newErrors = {};
+
     formData.accounts.forEach((acc, i) => {
       if (!acc.accountId.trim()) newErrors[`accountId_${i}`] = "Account ID required";
       if (!acc.accountName.trim()) newErrors[`accountName_${i}`] = "Account name required";
       if (!acc.accessKey.trim()) newErrors[`accessKey_${i}`] = "Access key required";
       if (!acc.secretKey.trim()) newErrors[`secretKey_${i}`] = "Secret key required";
-      if (!acc.selectedPillars || acc.selectedPillars.length === 0) newErrors[`pillars_${i}`] = "Select at least one pillar";
+
+      // 🔥 Required Pillars
+      if (!acc.selectedPillars || acc.selectedPillars.length === 0)
+        newErrors[`pillars_${i}`] = "Select at least one pillar";
+
+      if (!acc.bucketName.trim()) newErrors[`bucketName_${i}`] = "Bucket name required";
+      if (!acc.prefix.trim()) newErrors[`prefix_${i}`] = "Prefix required";
+
     });
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [formData]);
+
 
   // ---------------- Submit ----------------
   // const handleSubmit = useCallback(async () => {
@@ -419,9 +465,9 @@ export default function AccountsScreen() {
             <button
               onClick={handleSubmit}
               className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 shadow-lg hover:shadow-xl"
+              disabled={isSubmitting}
             >
-              Submit
-            </button>
+              {isSubmitting ? "Submitting..." : "Submit"}            </button>
           </div>
         </div>
       </div>
