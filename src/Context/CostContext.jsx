@@ -39,9 +39,7 @@ export const CostProvider = ({ children }) => {
     setCurrent_acc(account);
   }, []);
 
-  // --------------------------
   // Register Company
-  // --------------------------
   const registerCompany = async (companyData) => {
     try {
       setLoading(true);
@@ -57,9 +55,7 @@ export const CostProvider = ({ children }) => {
     }
   };
 
-  // --------------------------
   // Login
-  // --------------------------
   const loginCompany = async (loginData) => {
     try {
       setLoading(true);
@@ -89,9 +85,7 @@ export const CostProvider = ({ children }) => {
     }
   };
 
-  // --------------------------
   // Add Account
-  // --------------------------
   const addAccount = async (accountData) => {
     try {
       setLoading(true);
@@ -121,9 +115,7 @@ export const CostProvider = ({ children }) => {
     }
   };
 
-  // --------------------------
   // All Companies
-  // --------------------------
   const getAllCompanies = async (forceRefresh = false) => {
     if (hasFetchedCompanies.current && !forceRefresh) {
       return companies;
@@ -159,9 +151,7 @@ export const CostProvider = ({ children }) => {
     }
   };
 
-  // --------------------------
   // All Accounts for a Company
-  // --------------------------
   const getAllAccounts = async () => {
     try {
       setLoading(true);

@@ -60,10 +60,44 @@ const CompanyForm = () => {
   const featuresList = ["Cost", "Security", "Performance & Operational",];
 
   // Input change
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+const handleInputChange = (e) => {
+  const { name, value } = e.target;
+  const letterOnlyFields = ["companyName", "name"];
+
+  if (letterOnlyFields.includes(name)) {
+    let cleaned = value.replace(/[^A-Za-z ]/g, ""); // remove numbers & symbols
+
+    // Live error handling
+    if (/[^A-Za-z ]/.test(value)) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "Only letters are allowed",
+      }));
+    } else if (cleaned.trim().length < 3) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "Must be at least 3 characters",
+      }));
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
+
+    // Format the text
+    cleaned = cleaned.replace(/\s+/g, " "); // remove multiple spaces
+    cleaned = cleaned.replace(/\b\w/g, (c) => c.toUpperCase()); // auto-capitalize
+
+    setFormData((prev) => ({ ...prev, [name]: cleaned }));
+    return;
+  }
+
+  setFormData((prev) => ({ ...prev, [name]: value }));
+};
+
+
+
 
   // Feature toggle
   const handleFeatureToggle = (feature) => {
