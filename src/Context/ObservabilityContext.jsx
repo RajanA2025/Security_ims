@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import api from "../lib/api";
-
+import axios from "axios";
 const ObservabilityContext = createContext();
 
 export const ObservabilityProvider = ({ children }) => {
