@@ -26,6 +26,7 @@ import {
 } from '@ant-design/icons';
 import CpuUsageChart from '../../../components/WorldPopulationChart';
 import api from '../../../lib/api';
+import axios from 'axios';
 
 const { Title, Text } = Typography;
 const { Option } = Select;

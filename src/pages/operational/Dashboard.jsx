@@ -13,6 +13,7 @@ import Chart from "../../components/dashboard/chart";
 import HalfPieChart from "../../components/dashboard/halfpiechart";
 import api from "../../lib/api";
 import { useObservability } from "../../Context/ObservabilityContext";
+import axios from "axios";
 
 const { Title } = Typography;
 
