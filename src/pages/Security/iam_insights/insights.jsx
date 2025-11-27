@@ -33,6 +33,7 @@ import {
   GlobalOutlined,
 } from "@ant-design/icons";
 import api from "../../../lib/api";
+import axios from "axios";
 
 // Animation variants
 const containerVariants = {

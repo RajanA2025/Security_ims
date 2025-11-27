@@ -307,8 +307,12 @@ export default function AccountsScreen() {
       if (!acc.selectedPillars || acc.selectedPillars.length === 0)
         newErrors[`pillars_${i}`] = "Select at least one pillar";
 
-      if (!acc.bucketName.trim()) newErrors[`bucketName_${i}`] = "Bucket name required";
-      if (!acc.prefix.trim()) newErrors[`prefix_${i}`] = "Prefix required";
+      // Validate only for Cost pillar
+      if (acc.selectedPillars.includes("cost")) {
+        if (!acc.bucketName.trim()) newErrors[`bucketName_${i}`] = "Bucket name required";
+        if (!acc.prefix.trim()) newErrors[`prefix_${i}`] = "Prefix required";
+      }
+
 
     });
 
