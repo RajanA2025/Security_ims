@@ -17,7 +17,6 @@ export const CostProvider = ({ children }) => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
   const [filters, setFilters] = useState({
     account_id: null,
     app: null,
@@ -28,6 +27,7 @@ export const CostProvider = ({ children }) => {
   const [accounts, setAccounts] = useState([]); // full list for dropdown
   const [apps, setApps] = useState([]);
   const [Current_acc, setCurrent_acc] = useState();
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL1;
 
   // 🔥 FIX ADDED → TreeSelect ONLY using POST returned accounts
   const [treeData, setTreeData] = useState([]);
@@ -39,9 +39,7 @@ export const CostProvider = ({ children }) => {
     setCurrent_acc(account);
   }, []);
 
-  // --------------------------
   // Register Company
-  // --------------------------
   const registerCompany = async (companyData) => {
     try {
       setLoading(true);
@@ -57,9 +55,7 @@ export const CostProvider = ({ children }) => {
     }
   };
 
-  // --------------------------
   // Login
-  // --------------------------
   const loginCompany = async (loginData) => {
     try {
       setLoading(true);
@@ -89,9 +85,7 @@ export const CostProvider = ({ children }) => {
     }
   };
 
-  // --------------------------
   // Add Account
-  // --------------------------
   const addAccount = async (accountData) => {
     try {
       setLoading(true);
@@ -121,9 +115,7 @@ export const CostProvider = ({ children }) => {
     }
   };
 
-  // --------------------------
   // All Companies
-  // --------------------------
   const getAllCompanies = async (forceRefresh = false) => {
     if (hasFetchedCompanies.current && !forceRefresh) {
       return companies;
@@ -159,9 +151,7 @@ export const CostProvider = ({ children }) => {
     }
   };
 
-  // --------------------------
   // All Accounts for a Company
-  // --------------------------
   const getAllAccounts = async () => {
     try {
       setLoading(true);
