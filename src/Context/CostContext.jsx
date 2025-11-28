@@ -72,7 +72,7 @@ export const CostProvider = ({ children }) => {
 
       const authValue = result.token ? result.token : "true";
       localStorage.setItem("auth_token", authValue);
-
+      localStorage.setItem("jwt_token", authValue);
       if (result.cid) localStorage.setItem("company_cid", result.cid);
 
       return result;
