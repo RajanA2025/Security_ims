@@ -16,14 +16,13 @@ import { useNavigate, useLocation } from "react-router-dom";
 const Profile = () => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
-  // Determine role based on route
-  const basePath = location.pathname.toLowerCase().split("/")[1];
-  const isAdmin = basePath === "admin";
-  const isCompanyAdmin = basePath === "imsproduct";
+  // Read token from localStorage
+  const token = localStorage.getItem("auth_token");
 
-  // Super Admin profile
+  // If token is "admin-auth" → show admin profile
+  const isAdmin = token === "admin-auth";
+
   const adminProfile = {
     fullName: "System Administrator",
     email: "admin@jit.com",
@@ -37,7 +36,6 @@ const Profile = () => {
     bio: "Responsible for managing the entire platform, company accounts, and operational structure.",
   };
 
-  // Company Admin profile
   const companyProfile = {
     fullName: user?.adminName || user?.username || "Company Admin",
     email: user?.email || "company@example.com",
@@ -53,8 +51,9 @@ const Profile = () => {
       "Manages company dashboards, cost optimization, and cloud infrastructure insights.",
   };
 
-  // Select profile based on route
+  // Choose profile based on token
   const profile = isAdmin ? adminProfile : companyProfile;
+
 
   return (
     <Box sx={{ maxWidth: 900, margin: "auto", mt: 5, p: 3 }}>
