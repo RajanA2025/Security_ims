@@ -23,22 +23,22 @@ const Header = ({ isExpanded, setIsExpanded }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth(); // ⬅️ get user from auth
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [lastUpdated, setLastUpdated] = useState("");
 
-  // Detect current page
+  // Layout title based on path
   const path = location.pathname.toLowerCase();
   const layout = path.startsWith("/security")
     ? "Security"
     : path.startsWith("/perfops")
-    ? "Performance & Operational Excellence"
-    : path.startsWith("/imsproduct")
-    ? "IMS Product"
-    : path.startsWith("/admin")
-    ? "Admin"
-    : "Cost";
+      ? "Performance & Operational Excellence"
+      : path.startsWith("/imsproduct")
+        ? "IMS Product"
+        : path.startsWith("/admin")
+          ? "Admin"
+          : "Cost";
 
   // Last updated time
   useEffect(() => {
@@ -46,13 +46,30 @@ const Header = ({ isExpanded, setIsExpanded }) => {
       const now = new Date();
       const date = now.toLocaleDateString("en-GB");
       const day = now.toLocaleDateString("en-US", { weekday: "long" });
-      const time = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      setLastUpdated(`Last updated: ${date}, ${day}, Time: 2:00 AM IST`); // Static time as per requirement
+      setLastUpdated(`Last updated: ${date}, ${day}, Time: 2:00 AM IST`);
     };
     updateTime();
     const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  // 🔥 Role-based navigation
+  const basePath = location.pathname.toLowerCase().split("/")[1];
+
+  const handleProfileClick = () => {
+    setAnchorEl(null);
+
+    if (basePath === "admin") {
+      navigate("/admin/profile");
+    }
+    else if (basePath === "imsproduct") {
+      navigate("/imsproduct/profile");
+    }
+    else {
+      navigate("/admin/profile"); // default
+    }
+  };
+
 
   return (
     <AppBar
@@ -78,11 +95,10 @@ const Header = ({ isExpanded, setIsExpanded }) => {
       >
         {/* LEFT BLOCK */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1, minWidth: 200 }}>
-          {/* Hamburger for mobile */}
           {isMobile && (
             <IconButton
               onClick={() => setIsExpanded((prev) => !prev)}
-              sx={{ color: "#374151", transition: "transform 0.3s", "&:hover": { transform: "scale(1.1)" } }}
+              sx={{ color: "#374151" }}
             >
               <MenuIcon />
             </IconButton>
@@ -92,14 +108,8 @@ const Header = ({ isExpanded, setIsExpanded }) => {
           <img
             src={logo}
             alt="logo"
-            style={{
-              height: isMobile ? 40 : 55,
-              cursor: "pointer",
-              transition: "transform 0.3s",
-            }}
+            style={{ height: isMobile ? 40 : 55, cursor: "pointer" }}
             onClick={() => navigate("/imsproduct")}
-            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
-            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
           />
 
           {/* Title */}
@@ -111,7 +121,6 @@ const Header = ({ isExpanded, setIsExpanded }) => {
                 fontWeight: 700,
                 fontSize: isMobile ? 17 : 21,
                 color: "#222",
-                whiteSpace: "wrap",
               }}
             >
               {layout}
@@ -125,7 +134,7 @@ const Header = ({ isExpanded, setIsExpanded }) => {
         </Box>
 
         {/* RIGHT BLOCK */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2.5, flexWrap: "nowrap" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2.5 }}>
           <Tooltip title={isMobile ? lastUpdated : ""} arrow>
             <Box
               sx={{
@@ -136,9 +145,6 @@ const Header = ({ isExpanded, setIsExpanded }) => {
                 py: 0.7,
                 borderRadius: 2,
                 border: "1px solid #e2e8f0",
-                cursor: "default",
-                transition: "all 0.2s ease",
-                "&:hover": { boxShadow: isMobile ? "0 2px 6px rgba(0,0,0,0.15)" : "none" },
               }}
             >
               <AccessTime sx={{ fontSize: 18, mr: isMobile ? 0 : 1, color: "#6b7280" }} />
@@ -154,11 +160,7 @@ const Header = ({ isExpanded, setIsExpanded }) => {
 
           <IconButton
             onClick={(e) => setAnchorEl(e.currentTarget)}
-            sx={{
-              color: "#374151",
-              "&:hover": { bgcolor: "#f3f4f6", transform: "scale(1.05)" },
-              transition: "all 0.2s",
-            }}
+            sx={{ color: "#374151" }}
           >
             <AccountCircleOutlined fontSize="medium" />
           </IconButton>
@@ -169,17 +171,11 @@ const Header = ({ isExpanded, setIsExpanded }) => {
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={() => setAnchorEl(null)}
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          transformOrigin={{ vertical: "top", horizontal: "right" }}
         >
-          <MenuItem
-            onClick={() => {
-              setAnchorEl(null);
-              alert("Go to Profile");
-            }}
-          >
+          <MenuItem onClick={handleProfileClick}>
             <AccountCircleOutlined /> &nbsp; Profile
           </MenuItem>
+
           <MenuItem
             onClick={() => {
               setAnchorEl(null);

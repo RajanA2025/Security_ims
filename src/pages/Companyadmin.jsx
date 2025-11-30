@@ -260,8 +260,9 @@ const Companyadmin = () => {
                   <td className="px-4 py-3">
                     <div className="flex  justify-center flex-wrap gap-1">
                       {Object.entries(acc.pillars)
-                        .filter(([_, value]) => value)
-                        .map(([pillar]) => {
+                        .filter((entry) => entry[1])
+                        .map((entry) => {
+                          const pillar = entry[0];
                           const PillarNames = {
                             cost: "Cost",
                             security: "Security",
@@ -283,28 +284,21 @@ const Companyadmin = () => {
                   <td className="px-4 py-3">
                     <div className="flex justify-center">
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${acc.status === "approved"
-                          ? "bg-green-100 text-green-700"
-                          : acc.status === "pending"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-red-100 text-red-700"
-                          }`}
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${(() => {
+                          if (acc.status === "approved") {
+                            return "bg-green-100 text-green-700";
+                          }
+                          if (acc.status === "pending") {
+                            return "bg-yellow-100 text-yellow-700";
+                          }
+                          return "bg-red-100 text-red-700";
+                        })()}`}
                       >
                         {acc.status}
                       </span>
                     </div>
                   </td>
-<td
-  className="
-    text-center
-    flex flex-wrap justify-center        
-    gap-2                                 
-    px-2 py-2                              
-    sm:px-3 sm:py-2                        
-    md:px-4 md:py-3                        
-    lg:px-5 lg:py-3                        
-  "
->
+                  <td className="text-center flex flex-wrap justify-center gap-2 px-2 py-2 sm:px-3 sm:py-2 md:px-4 md:py-3 lg:px-5 lg:py-3">
                     {editingId === acc.cid ? (
                       <>
                         <button
