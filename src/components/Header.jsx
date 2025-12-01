@@ -23,12 +23,16 @@ const Header = ({ isExpanded, setIsExpanded }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout, user } = useAuth(); // ⬅️ get user from auth
+  const { logout } = useAuth();
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [lastUpdated, setLastUpdated] = useState("");
 
-  // Layout title based on path
+  // 🔥 Get token once
+  const token = localStorage.getItem("auth_token");
+  const isAdmin = token === "admin-auth";
+
+  // Layout title
   const path = location.pathname.toLowerCase();
   const layout = path.startsWith("/security")
     ? "Security"
@@ -40,7 +44,7 @@ const Header = ({ isExpanded, setIsExpanded }) => {
           ? "Admin"
           : "Cost";
 
-  // Last updated time
+  // Time updater
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
@@ -53,23 +57,16 @@ const Header = ({ isExpanded, setIsExpanded }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // 🔥 Role-based navigation
-  const basePath = location.pathname.toLowerCase().split("/")[1];
-
+  // 🔥 Profile Navigation (ADMIN vs COMPANY)
   const handleProfileClick = () => {
     setAnchorEl(null);
 
-    if (basePath === "admin") {
-      navigate("/admin/profile");
-    }
-    else if (basePath === "imsproduct") {
-      navigate("/imsproduct/profile");
-    }
-    else {
-      navigate("/admin/profile"); // default
+    if (isAdmin) {
+      navigate("/admin/profile"); // ADMIN PAGE
+    } else {
+      navigate("/imsproduct/profile"); // COMPANY PROFILE PAGE
     }
   };
-
 
   return (
     <AppBar
@@ -93,13 +90,10 @@ const Header = ({ isExpanded, setIsExpanded }) => {
           rowGap: 1.5,
         }}
       >
-        {/* LEFT BLOCK */}
+        {/* LEFT AREA */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1, minWidth: 200 }}>
           {isMobile && (
-            <IconButton
-              onClick={() => setIsExpanded((prev) => !prev)}
-              sx={{ color: "#374151" }}
-            >
+            <IconButton onClick={() => setIsExpanded((prev) => !prev)} sx={{ color: "#374151" }}>
               <MenuIcon />
             </IconButton>
           )}
@@ -125,6 +119,7 @@ const Header = ({ isExpanded, setIsExpanded }) => {
             >
               {layout}
             </Typography.Title>
+
             {!isMobile && (
               <Typography.Text style={{ fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
                 Insight Management System
@@ -133,7 +128,7 @@ const Header = ({ isExpanded, setIsExpanded }) => {
           </Box>
         </Box>
 
-        {/* RIGHT BLOCK */}
+        {/* RIGHT AREA */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2.5 }}>
           <Tooltip title={isMobile ? lastUpdated : ""} arrow>
             <Box
@@ -158,20 +153,13 @@ const Header = ({ isExpanded, setIsExpanded }) => {
 
           <Divider orientation="vertical" flexItem />
 
-          <IconButton
-            onClick={(e) => setAnchorEl(e.currentTarget)}
-            sx={{ color: "#374151" }}
-          >
+          <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ color: "#374151" }}>
             <AccountCircleOutlined fontSize="medium" />
           </IconButton>
         </Box>
 
-        {/* Profile Dropdown */}
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={() => setAnchorEl(null)}
-        >
+        {/* Profile Menu */}
+        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
           <MenuItem onClick={handleProfileClick}>
             <AccountCircleOutlined /> &nbsp; Profile
           </MenuItem>

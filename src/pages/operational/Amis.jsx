@@ -17,6 +17,7 @@ import {
   SearchOutlined
 } from "@ant-design/icons";
 import api from "../../lib/api";
+import axios from "axios";
 
 const header = { backgroundColor: "#4f46e5", color: "white" };
 
