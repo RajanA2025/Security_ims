@@ -170,10 +170,6 @@ const fetchPerformanceData = async () => {
       showRetry: true,
     });
 
-    // fallback mock data
-    setPerformanceData(mockData);
-    setFilteredData(mockData);
-
   } finally {
     setLoading(false);
   }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FiChevronDown, FiChevronUp, FiMenu, FiX } from 'react-icons/fi';
-import jitLogo from '../../../assets/jitlogo.png';
+import jitLogo from 'c:/project/jit_ms1/Security_ims/src/assets/jitlogo.png';
 
 const JitHeader = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
