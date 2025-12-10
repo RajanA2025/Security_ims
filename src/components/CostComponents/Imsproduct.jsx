@@ -35,7 +35,11 @@ export default function Imsproduct() {
 
     const fetchAccounts = async () => {
       try {
-        const response = await fetch(`${apiBaseUrl}/api/accounts/all/${cId}`);
+        const response = await fetch(`${apiBaseUrl}/api/accounts/all/${cId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          },
+        });
         const data = await response.json();
 
         if (data && Array.isArray(data.accounts) && data.accounts.length > 0) {
