@@ -75,6 +75,7 @@ const Header = ({ isDashboard }) => {
 
   const [isProductsOpen, setIsProductsOpen] = useState(false);
   const [productModal, setProductModal] = useState('');
+  const [isServicesOpen, setIsServicesOpen] = useState(false);
 
   // Dropdown animation variants
   const dropdownAnim = {
@@ -168,7 +169,42 @@ const Header = ({ isDashboard }) => {
               </AnimatePresence>
             </div>
 
-            {/* Services Dropdown - REMOVED */}
+            {/* Services Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setIsServicesOpen(!isServicesOpen)}
+                className="flex items-center text-lg font-semibold text-slate-700 hover:text-[#181ed4] transition-colors duration-300 px-2 py-1"
+                aria-haspopup="true"
+                aria-expanded={isServicesOpen}
+              >
+                <span className="mr-1">Services</span>
+                <ChevronDown className={`w-4 h-4 ml-1 transition-transform duration-200 ${isServicesOpen ? 'rotate-180' : ''}`} />
+              </button>
+              <AnimatePresence>
+                {isServicesOpen && (
+                  <motion.div
+                    {...dropdownAnim}
+                    className="absolute z-20 top-full left-1/2 -translate-x-1/2 mt-2 w-64 bg-white rounded-xl shadow-2xl py-2 border border-slate-200"
+                  >
+                    <Link
+                      to="/service1"
+                      className="flex items-center gap-2 px-4 py-3 text-base text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200"
+                      onClick={() => setIsServicesOpen(false)}
+                    >
+                      Service 1
+                    </Link>
+                    <Link
+                      to="/service2"
+                      className="flex items-center gap-2 px-4 py-3 text-base text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200"
+                      onClick={() => setIsServicesOpen(false)}
+                    >
+                      Service 2
+                    </Link>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
           </nav>
           {/* Product Modal */}
           <AnimatePresence>
@@ -184,7 +220,6 @@ const Header = ({ isDashboard }) => {
                   initial={{ scale: 0.95, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.95, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
                   className="fixed inset-0 z-[100] flex items-center justify-center p-2"
                   style={{ pointerEvents: 'auto', minHeight: '100vh' }}
                   onClick={e => e.stopPropagation()}

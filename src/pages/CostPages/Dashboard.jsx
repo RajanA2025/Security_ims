@@ -89,16 +89,33 @@ const Dashboard = () => {
     setFilters({ account_id: null, app: null, start_date: null, end_date: null });
   };
 
+  const handleTreeExpand = (keys) => {
+    setExpandedKeys(keys);
+  };
+
+  const handleParentLabelClick = (e) => {
+    e.stopPropagation();   // prevent select event
+    setExpandedKeys(prev =>
+      prev.includes("accounts") ? [] : ["accounts"]
+    );
+  };
+
+  // Expose handlers for testing (only in test environment)
+  if (typeof window !== 'undefined' && window.location?.hostname === 'localhost') {
+    window.DashboardHandlers = {
+      handleContextChange,
+      handleDateChange,
+      handleReset,
+      handleTreeExpand,
+      handleParentLabelClick
+    };
+  }
+
   /** ================== TreeSelect Data ================== */
 
   const parentLabel = (
     <span
-      onClick={(e) => {
-        e.stopPropagation();   // prevent select event
-        setExpandedKeys(prev =>
-          prev.includes("accounts") ? [] : ["accounts"]
-        );
-      }}
+      onClick={handleParentLabelClick}
       style={{ cursor: "pointer", fontWeight: 600 }}
     >
       Accounts
@@ -180,7 +197,7 @@ const Dashboard = () => {
                   onChange={handleContextChange}
 
                   treeExpandedKeys={expandedKeys}
-                  onTreeExpand={(keys) => setExpandedKeys(keys)}
+                  onTreeExpand={handleTreeExpand}
 
                   placeholder="Select filter"
                   style={{ minWidth: 170, maxWidth: 170, width: "100%" }}
