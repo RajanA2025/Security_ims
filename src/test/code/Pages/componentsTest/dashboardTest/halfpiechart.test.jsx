@@ -77,4 +77,33 @@ describe('HalfPieChart', () => {
     unmount()
     expect(disposeMock).toHaveBeenCalledTimes(1)
   })
+
+  it('tooltip formatter formats correctly with name, value and percent', () => {
+    render(<HalfPieChart labels={['Test','Demo']} data={[25,75]} />)
+
+    const passedOption = setOptionMock.mock.calls[0][0]
+    expect(passedOption).toHaveProperty('tooltip')
+    
+    const tooltip = passedOption.tooltip
+    expect(tooltip.formatter).toBeDefined()
+    expect(typeof tooltip.formatter).toBe('function')
+    
+    // Test the formatter function with mock params
+    const mockParams = {
+      name: 'Test',
+      value: 25,
+      percent: 25
+    }
+    const result = tooltip.formatter(mockParams)
+    expect(result).toBe('Test: 25 (25%)')
+    
+    // Test with different values
+    const mockParams2 = {
+      name: 'Demo',
+      value: 75,
+      percent: 75
+    }
+    const result2 = tooltip.formatter(mockParams2)
+    expect(result2).toBe('Demo: 75 (75%)')
+  })
 })

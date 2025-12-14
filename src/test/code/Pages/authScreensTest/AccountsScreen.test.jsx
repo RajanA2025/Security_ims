@@ -169,6 +169,76 @@ describe("AccountsScreen", () => {
     global.fetch.mockRestore?.();
   });
 
+  test("can remove a pillar from selection", async () => {
+    render(<AccountsScreen />);
+    
+    // Click the Cost pillar to select it
+    const costBtn = screen.getByRole("button", { name: /Cost/i });
+    fireEvent.click(costBtn);
+    
+    // Click it again to remove it (testing line 68)
+    fireEvent.click(costBtn);
+    
+    // The button should still be there but not selected
+    expect(costBtn).toBeInTheDocument();
+    // Check if the button is not selected (it should not have the selected classes)
+    expect(costBtn).not.toHaveClass("bg-blue-600");
+    expect(costBtn).not.toHaveClass("text-white");
+  });
+
+  test("can remove an account", () => {
+    render(<AccountsScreen />);
+    
+    // Add a second account
+    const addBtn = screen.getByRole("button", { name: /Add Account/i });
+    fireEvent.click(addBtn);
+    
+    // Find and click the remove button on the first account
+    const account1Header = screen.getByText("Account 1").closest("div");
+    const removeBtn = within(account1Header).getByTestId("icon-minus");
+    fireEvent.click(removeBtn);
+    
+    // After removal, the first account should be renumbered to "Account 1" (was Account 2)
+    // So we should still see "Account 1" but not "Account 2"
+    expect(screen.getByText("Account 1")).toBeInTheDocument();
+    expect(screen.queryByText("Account 2")).not.toBeInTheDocument();
+  });
+
+  test("shows error when form submission fails", async () => {
+    // Mock fetch to throw an error (this will trigger the catch block)
+    global.fetch = vi.fn(() =>
+      Promise.reject(new Error("Network error"))
+    );
+
+    render(<AccountsScreen />);
+
+    // Fill required fields
+    fillInput("Enter account id", "12345678");
+    fillInput("Enter account name", "Test Account");
+    fillInput("Enter access key", "AKIA_TEST");
+    fillInput("Enter secret key", "SECRET_123");
+    
+    // Select a pillar
+    const costBtn = screen.getByRole("button", { name: /Cost/i });
+    fireEvent.click(costBtn);
+    
+    // Fill bucket name and prefix (required when cost is selected)
+    fillInput("Enter bucket name", "test-bucket");
+    fillInput("Enter prefix", "test/");
+
+    // Submit the form
+    const submitBtn = screen.getByRole("button", { name: /Submit/i });
+    fireEvent.click(submitBtn);
+
+    // Should show error toast
+    await waitFor(() => {
+      expect(screen.getByText(/Network error/)).toBeInTheDocument();
+    });
+
+    // Cleanup
+    global.fetch.mockRestore?.();
+  });
+
   test("secret key visibility toggle works", () => {
     render(<AccountsScreen />);
 

@@ -2,48 +2,100 @@ import React, { useContext, useMemo } from "react";
 import { Table, Spin, Alert, Tag } from "antd";
 import { CostContext } from "../../Context/CostContext";
 
+/**
+ * Compliancechild — improved robustness
+ * - safe localStorage parsing with fallbacks
+ * - memoized derived arrays to avoid inline duplication
+ * - deterministic row keys
+ * - robust tagging/status logic
+ * - no console.error leaks
+ */
+
 const Compliancechild = () => {
   const { tagData, loading, error } = useContext(CostContext);
 
+  const requiredTags = useMemo(() => ["Name", "Owner", "Project", "Environment"], []);
 
+  // Safe parse of localStorage account_ids -> returns array of trimmed strings
+  const storedAccountIds = useMemo(() => {
+    try {
+      const raw = localStorage.getItem("account_ids");
+      if (raw == null) return [];
+      const s = String(raw).trim();
+      if (s === "") return [];
 
-  const requiredTags = ["Name", "Owner", "Project", "Environment"];
+      // Try JSON parse
+      try {
+        const parsed = JSON.parse(s);
+        if (Array.isArray(parsed)) return parsed.map((v) => String(v ?? "").trim()).filter(Boolean);
+        // If parsed a single primitive
+        if (typeof parsed === "string" || typeof parsed === "number") return [String(parsed).trim()].filter(Boolean);
+        // Fallback to CSV string if it's something else
+      } catch {
+        // Not JSON — treat as CSV or single id
+        if (s.includes(",")) {
+          return s.split(",").map((v) => String(v ?? "").trim()).filter(Boolean);
+        }
+        return [s];
+      }
+    } catch (e) {
+      // localStorage may be unavailable — return empty list
+      return [];
+    }
+    return [];
+  }, []);
 
-  const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
-
-  // ✅ Filter data by localStorage account_ids
+  // Filter tagData by storedAccountIds in a memoized and defensive way
   const filteredTagData = useMemo(() => {
-    if (!Array.isArray(tagData)) return [];
+    if (!Array.isArray(tagData) || tagData.length === 0) return [];
 
-    // Convert both to strings for accurate matching
-    const normalizedIds = storedAccountIds.map(String);
-    const filtered = tagData.filter((item) =>
-      normalizedIds.includes(String(item.account_id))
-    );
+    if (!storedAccountIds || storedAccountIds.length === 0) {
+      // If no stored ids, return the backend-provided data (no client-side filtering)
+      return tagData;
+    }
 
-    return filtered;
+    const idSet = new Set(storedAccountIds.map((id) => String(id).trim()));
+    return tagData.filter((item) => idSet.has(String(item?.account_id ?? "").trim()));
   }, [tagData, storedAccountIds]);
 
-  // ✅ Add IDs for table key
-  const dataWithIds = filteredTagData.map((item, index) => ({
-    ...item,
-    id: index + 1,
-  }));
+  // Add stable numeric id for rowKey (avoid using array index for react key where possible)
+  const dataWithIds = useMemo(() => {
+    return filteredTagData.map((item, idx) => ({
+      // Prefer an existing unique identifier if present (id, resource, arn), otherwise fallback to index-based id
+      id: item.id ?? item.resource ?? `${String(item.account_id ?? "acc")}-${idx + 1}`,
+      ...item,
+    }));
+  }, [filteredTagData]);
 
-  // ✅ Tagging logic
+  // Return tagging status in a pure function (no inline side effects)
   const getTagStatus = (tags) => {
-    if (!tags) return "Not Tagged";
-    const present = requiredTags.filter(
-      (tag) => tags[tag] !== null && tags[tag] !== "" && tags[tag] !== undefined
-    );
-    if (present.length === requiredTags.length) return "Fully Tagged";
-    if (present.length > 0) return "Partially Tagged";
+    if (!tags || typeof tags !== "object") return "Not Tagged";
+
+    const presentCount = requiredTags.reduce((acc, t) => {
+      const v = tags[t];
+      if (v !== null && v !== undefined && String(v).trim() !== "") return acc + 1;
+      return acc;
+    }, 0);
+
+    if (presentCount === requiredTags.length) return "Fully Tagged";
+    if (presentCount > 0) return "Partially Tagged";
     return "Not Tagged";
   };
 
-  const uniqueValues = (key) =>
-    [...new Set(dataWithIds.map((r) => r[key]))].filter(Boolean);
+  // Safe helper for listing available/missing tags
+  const listAvailableTags = (tags) => {
+    if (!tags || typeof tags !== "object") return [];
+    return requiredTags.filter((t) => tags[t] !== null && tags[t] !== undefined && String(tags[t]).trim() !== "");
+  };
 
+  const listMissingTags = (tags) =>
+    requiredTags.filter((t) => !tags || tags[t] === null || tags[t] === undefined || String(tags[t]).trim() === "");
+
+  // Unique-values helper (defensive)
+  const uniqueValues = (key) =>
+    Array.from(new Set(dataWithIds.map((r) => r?.[key]).filter((v) => v != null && String(v).trim() !== "")));
+
+  // Columns (no inline mutation)
   const columns = [
     { title: "ID", dataIndex: "id", key: "id", width: 60 },
     {
@@ -52,7 +104,7 @@ const Compliancechild = () => {
       key: "account_name",
       width: 190,
       filters: uniqueValues("account_name").map((val) => ({ text: val, value: val })),
-      onFilter: (value, record) => record.account_name === value,
+      onFilter: (value, record) => String(record.account_name) === String(value),
     },
     {
       title: "Account ID",
@@ -60,7 +112,7 @@ const Compliancechild = () => {
       key: "account_id",
       width: 160,
       filters: uniqueValues("account_id").map((val) => ({ text: val, value: val })),
-      onFilter: (value, record) => record.account_id === value,
+      onFilter: (value, record) => String(record.account_id) === String(value),
     },
     {
       title: "Region",
@@ -68,7 +120,7 @@ const Compliancechild = () => {
       key: "region",
       width: 120,
       filters: uniqueValues("region").map((val) => ({ text: val, value: val })),
-      onFilter: (value, record) => record.region === value,
+      onFilter: (value, record) => String(record.region) === String(value),
     },
     {
       title: "Service",
@@ -76,7 +128,7 @@ const Compliancechild = () => {
       key: "service",
       width: 150,
       filters: uniqueValues("service").map((val) => ({ text: val, value: val })),
-      onFilter: (value, record) => record.service === value,
+      onFilter: (value, record) => String(record.service) === String(value),
     },
     {
       title: "Resource ARN",
@@ -84,6 +136,7 @@ const Compliancechild = () => {
       key: "resource",
       width: 250,
       ellipsis: true,
+      render: (text) => (text ? String(text) : "-"),
     },
     {
       title: "Tagging Status",
@@ -98,12 +151,7 @@ const Compliancechild = () => {
       onFilter: (value, record) => getTagStatus(record.tags) === value,
       render: (tags) => {
         const status = getTagStatus(tags);
-        const color =
-          status === "Fully Tagged"
-            ? "green"
-            : status === "Partially Tagged"
-            ? "gold"
-            : "red";
+        const color = status === "Fully Tagged" ? "green" : status === "Partially Tagged" ? "gold" : "red";
         return <Tag color={color}>{status}</Tag>;
       },
     },
@@ -113,10 +161,7 @@ const Compliancechild = () => {
       key: "available_tags",
       width: 200,
       render: (tags) => {
-        if (!tags) return "-";
-        const available = requiredTags.filter(
-          (key) => tags[key] !== null && tags[key] !== "" && tags[key] !== undefined
-        );
+        const available = listAvailableTags(tags);
         return available.length ? available.join(", ") : "-";
       },
     },
@@ -126,20 +171,18 @@ const Compliancechild = () => {
       key: "missing_tags",
       width: 200,
       render: (tags) => {
-        const missing = requiredTags.filter(
-          (key) =>
-            !tags || tags[key] === null || tags[key] === "" || tags[key] === undefined
-        );
+        const missing = listMissingTags(tags);
         return missing.length ? missing.join(", ") : "-";
       },
     },
   ];
 
+  // Loading / error / empty states
   if (loading)
     return <Spin tip="Loading..." style={{ display: "block", margin: "20px auto" }} />;
   if (error)
     return <Alert message="Error" description={error} type="error" showIcon />;
-  if (dataWithIds.length === 0)
+  if (!dataWithIds || dataWithIds.length === 0)
     return <Alert message="No matching accounts found" type="info" showIcon />;
 
   return (
@@ -159,7 +202,7 @@ const Compliancechild = () => {
       <Table
         dataSource={dataWithIds}
         columns={columns}
-        rowKey="id"
+        rowKey={(record) => String(record.id)}
         pagination={{ pageSize: 10 }}
         scroll={{ x: 1400 }}
       />

@@ -11,15 +11,18 @@ const Header = ({ isDashboard }) => {
   const [isMobileProductsOpen, setIsMobileProductsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const location = useLocation();
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  // Handle window resize
+  const solutionsRef = useRef(null);
+  const productsButtonRef = useRef(null);
+
+  const [isProductsOpen, setIsProductsOpen] = useState(false);
+  const [productModal, setProductModal] = useState('');
+
+  // Handle window resize: close mobile menu when moving to desktop
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
       if (window.innerWidth >= 768) {
         setIsMobileMenuOpen(false);
-        document.body.style.overflow = '';
       }
     };
 
@@ -27,9 +30,11 @@ const Header = ({ isDashboard }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Handle body scroll when mobile menu is open
+  // Handle body scroll lock for mobile menu & product modal
   useEffect(() => {
-    if (isMobileMenuOpen) {
+    const shouldLock = isMobileMenuOpen || !!productModal;
+
+    if (shouldLock) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -38,16 +43,16 @@ const Header = ({ isDashboard }) => {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isMobileMenuOpen]);
+  }, [isMobileMenuOpen, productModal]);
 
-  const solutionsRef = useRef(null);
-  const productsButtonRef = useRef(null);
-
+  // Close products dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (solutionsRef.current && 
-          !solutionsRef.current.contains(event.target) && 
-          !productsButtonRef.current?.contains(event.target)) {
+      if (
+        solutionsRef.current &&
+        !solutionsRef.current.contains(event.target) &&
+        !productsButtonRef.current?.contains(event.target)
+      ) {
         setIsProductsOpen(false);
       }
     };
@@ -71,9 +76,6 @@ const Header = ({ isDashboard }) => {
     { key: 'intellichat', label: 'IntelliChat' }
   ];
 
-  const [isProductsOpen, setIsProductsOpen] = useState(false);
-  const [productModal, setProductModal] = useState('');
-
   // Dropdown animation variants
   const dropdownAnim = {
     initial: { opacity: 0, y: 10 },
@@ -81,18 +83,6 @@ const Header = ({ isDashboard }) => {
     exit: { opacity: 0, y: 10 },
     transition: { duration: 0.2 }
   };
-
-  // Hide body scroll when mobile menu is open
-  useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isMobileMenuOpen]);
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/50 shadow-sm">
@@ -131,7 +121,11 @@ const Header = ({ isDashboard }) => {
                 aria-expanded={isProductsOpen}
               >
                 <span className="mr-1">Products</span>
-                <ChevronDown className={`w-4 h-4 ml-1 transition-transform duration-200 ${isProductsOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  className={`w-4 h-4 ml-1 transition-transform duration-200 ${
+                    isProductsOpen ? 'rotate-180' : ''
+                  }`}
+                />
               </button>
               <AnimatePresence>
                 {isProductsOpen && (
@@ -139,7 +133,7 @@ const Header = ({ isDashboard }) => {
                     {...dropdownAnim}
                     className="absolute z-20 top-full left-1/2 -translate-x-1/2 mt-2 w-64 bg-white rounded-xl shadow-2xl py-2 border border-slate-200"
                   >
-                    {products.map((product) => (
+                    {products.map((product) =>
                       product.path ? (
                         <Link
                           key={product.key}
@@ -154,13 +148,16 @@ const Header = ({ isDashboard }) => {
                         <button
                           key={product.key}
                           className="flex items-center gap-2 w-full text-left px-4 py-3 text-base text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200"
-                          onClick={() => { setIsProductsOpen(false); setProductModal(product.label); }}
+                          onClick={() => {
+                            setIsProductsOpen(false);
+                            setProductModal(product.label);
+                          }}
                         >
                           {product.key === 'IMS' && <Logo className="h-5 w-5 object-contain" />}
                           {product.label}
                         </button>
                       )
-                    ))}
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -168,6 +165,7 @@ const Header = ({ isDashboard }) => {
 
             {/* Services Dropdown - REMOVED */}
           </nav>
+
           {/* Product Modal */}
           <AnimatePresence>
             {productModal && (
@@ -185,7 +183,7 @@ const Header = ({ isDashboard }) => {
                   transition={{ duration: 0.3 }}
                   className="fixed inset-0 z-[100] flex items-center justify-center p-2"
                   style={{ pointerEvents: 'auto', minHeight: '100vh' }}
-                  onClick={e => e.stopPropagation()}
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <div className="relative flex flex-col items-center justify-center w-full max-w-xs sm:max-w-md bg-white/60 backdrop-blur-lg rounded-2xl shadow-2xl p-6 sm:p-8 border border-white/30 overflow-auto">
                     <button
@@ -200,9 +198,12 @@ const Header = ({ isDashboard }) => {
                       <div className="bg-blue-100 p-4 rounded-full mb-3 shadow-sm flex items-center justify-center">
                         <Clock className="h-8 w-8 text-blue-600" />
                       </div>
-                      <h2 className="text-2xl font-extrabold text-slate-900 mb-2 tracking-tight">Coming Soon</h2>
+                      <h2 className="text-2xl font-extrabold text-slate-900 mb-2 tracking-tight">
+                        Coming Soon
+                      </h2>
                       <p className="text-base text-slate-700 text-center max-w-xs">
-                        Our Developers are working on that.<br />Soon this product will be in Market.
+                        Our Developers are working on that.<br />
+                        Soon this product will be in Market.
                       </p>
                     </div>
                   </div>
@@ -241,7 +242,7 @@ const Header = ({ isDashboard }) => {
               </>
             )}
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              onClick={() => setIsMobileMenuOpen((open) => !open)}
               className="md:hidden text-slate-700 hover:text-blue-600 transition-colors z-50"
               aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
             >
@@ -269,13 +270,13 @@ const Header = ({ isDashboard }) => {
                 exit={{ x: '-100%' }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 className="fixed inset-y-0 left-0 w-4/5 max-w-xs bg-white shadow-2xl p-6 space-y-4 flex flex-col z-[1000]"
-                onClick={e => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center space-x-2 mb-4">
                   <div className="bg-gradient-to-br from-[#181ed4] to-[#6a82fb] p-2 rounded-xl shadow-lg">
                     {/* <Logo className="h-6 w-6 object-contain" /> */}
                   </div>
-                  <span className="text-2xl font-bold text-[#181ed4]">IMS</span>
+                <span className="text-2xl font-bold text-[#181ed4]">IMS</span>
                 </div>
                 {navItems.map((item) => (
                   <Link
@@ -297,7 +298,11 @@ const Header = ({ isDashboard }) => {
                     aria-controls="mobile-products-dropdown"
                   >
                     Products
-                    <ChevronDown className={`w-4 h-4 ml-1 transition-transform duration-200 ${isMobileProductsOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown
+                      className={`w-4 h-4 ml-1 transition-transform duration-200 ${
+                        isMobileProductsOpen ? 'rotate-180' : ''
+                      }`}
+                    />
                   </button>
                   <AnimatePresence>
                     {isMobileProductsOpen && (
@@ -307,13 +312,16 @@ const Header = ({ isDashboard }) => {
                         exit={{ height: 0, opacity: 0 }}
                         id="mobile-products-dropdown"
                         className="overflow-hidden"
-                      > 
-                        {products.map((product) => (
+                      >
+                        {products.map((product) =>
                           product.path ? (
                             <Link
                               key={product.key}
                               to={product.path}
-                              onClick={() => { setIsMobileMenuOpen(false); setIsMobileProductsOpen(false); }}
+                              onClick={() => {
+                                setIsMobileMenuOpen(false);
+                                setIsMobileProductsOpen(false);
+                              }}
                               className="block py-2 pl-4 text-base text-slate-700 hover:text-[#181ed4] transition-colors"
                             >
                               {/* <Logo className="h-5 w-5 inline mr-2 object-contain" /> */}
@@ -323,13 +331,16 @@ const Header = ({ isDashboard }) => {
                             <button
                               key={product.key}
                               className="block w-full text-left py-2 pl-4 text-base text-slate-700 hover:text-[#181ed4] transition-colors"
-                              onClick={() => { setIsMobileProductsOpen(false); setProductModal(product.label); }}
+                              onClick={() => {
+                                setIsMobileProductsOpen(false);
+                                setProductModal(product.label);
+                              }}
                             >
                               {/* <Logo className="h-5 w-5 inline mr-2 object-contain" /> */}
                               {product.label}
                             </button>
                           )
-                        ))}
+                        )}
                       </motion.div>
                     )}
                   </AnimatePresence>

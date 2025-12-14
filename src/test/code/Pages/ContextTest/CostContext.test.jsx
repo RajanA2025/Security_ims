@@ -79,6 +79,23 @@ describe('CostContext', () => {
           }}
         />
         <div id="companies-result" data-testid="companies-result" />
+
+        <button
+          data-testid="call-getallaccounts"
+          onClick={async () => {
+            const res = await ctx.getAllAccounts()
+            const el = document.getElementById('accounts-result')
+            if (el) el.textContent = JSON.stringify(res)
+          }}
+        />
+        <div id="accounts-result" data-testid="accounts-result" />
+
+        <button
+          data-testid="set-filters"
+          onClick={() => {
+            ctx.setFilters({ account_id: 'test-account', app: 'test-app', start_date: '2024-01-01', end_date: '2024-12-31' })
+          }}
+        />
       </div>
     )
   }
@@ -293,5 +310,367 @@ describe('CostContext', () => {
 
     // Ensure fetch was called additional times (forceRefresh triggered a new fetch)
     expect(fetchMock.mock.calls.length).toBeGreaterThanOrEqual(callsBefore + 1)
+  })
+
+  it('getAllAccounts fetches accounts for company', async () => {
+    // Set company_cid in localStorage
+    localStorage.setItem('company_cid', 'test-company-id')
+    localStorage.setItem('auth_token', 'test-token')
+
+    const mockAccounts = [{ id: 'acc1', name: 'Account 1' }]
+    
+    global.fetch = vi.fn((url) => {
+      if (url.includes('/api/accounts/all/test-company-id')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => mockAccounts
+        })
+      }
+      // mount fallback
+      return Promise.resolve({ ok: true, json: async () => ({ account_ids: [], all_account_ids: [], top_5: { top_apps_current_month: [] } }) })
+    })
+
+    render(
+      <CostProvider>
+        <Consumer />
+      </CostProvider>
+    )
+
+    await act(async () => {
+      screen.getByTestId('call-getallaccounts').click()
+    })
+
+    await waitFor(() => {
+      const accountsRes = screen.getByTestId('accounts-result').textContent
+      expect(accountsRes).toContain('Account 1')
+    })
+  })
+
+  it('getAllAccounts handles missing company ID', async () => {
+    // Don't set company_cid in localStorage
+    localStorage.setItem('auth_token', 'test-token')
+
+    global.fetch = vi.fn(() => 
+      Promise.resolve({ ok: true, json: async () => ({ account_ids: [], all_account_ids: [], top_5: { top_apps_current_month: [] } }) })
+    )
+
+    render(
+      <CostProvider>
+        <Consumer />
+      </CostProvider>
+    )
+
+    await act(async () => {
+      screen.getByTestId('call-getallaccounts').click()
+    })
+
+    await waitFor(() => {
+      const accountsRes = screen.getByTestId('accounts-result').textContent
+      expect(accountsRes).toContain('Company ID missing')
+    })
+  })
+
+  it('handles error scenarios in API calls', async () => {
+    // Mock fetch to return errors
+    global.fetch = vi.fn((url) => {
+      if (url.includes('/cost-summary')) {
+        return Promise.resolve({
+          ok: false,
+          json: async () => ({ message: 'Cost fetch failed' })
+        })
+      }
+      if (url.includes('/resources/filter')) {
+        return Promise.reject(new Error('Network error'))
+      }
+      if (url.includes('/tags/filter')) {
+        return Promise.resolve({
+          ok: false,
+          json: async () => ({ message: 'Tags fetch failed' })
+        })
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) })
+    })
+
+    render(
+      <CostProvider>
+        <Consumer />
+      </CostProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('error').textContent).toBeTruthy()
+      expect(screen.getByTestId('loading').textContent).toBe('false')
+    })
+  })
+
+  it('registerCompany handles API errors', async () => {
+    // Mock api.post to reject
+    api.post.mockRejectedValue(new Error('Network error'))
+
+    global.fetch = vi.fn(() =>
+      Promise.resolve({ ok: true, json: async () => ({ account_ids: [], all_account_ids: [], top_5: { top_apps_current_month: [] } }) })
+    )
+
+    render(
+      <CostProvider>
+        <Consumer />
+      </CostProvider>
+    )
+
+    await act(async () => {
+      screen.getByTestId('call-register').click()
+    })
+
+    await waitFor(() => {
+      const reg = screen.getByTestId('register-result').textContent
+      expect(reg).toContain('"error":"Network error"')
+    })
+  })
+
+  it('loginCompany handles authentication errors', async () => {
+    global.fetch = vi.fn((url) => {
+      if (url.includes('/api/company/login')) {
+        return Promise.resolve({
+          ok: false,
+          json: async () => ({ message: 'Invalid credentials' })
+        })
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ account_ids: [], all_account_ids: [], top_5: { top_apps_current_month: [] } }) })
+    })
+
+    render(
+      <CostProvider>
+        <Consumer />
+      </CostProvider>
+    )
+
+    await act(async () => {
+      screen.getByTestId('call-login').click()
+    })
+
+    await waitFor(() => {
+      const loginRes = screen.getByTestId('login-result').textContent
+      expect(loginRes).toContain('Invalid credentials')
+    })
+  })
+
+  it('addAccount handles API errors', async () => {
+    global.fetch = vi.fn((url) => {
+      if (url.includes('/api/account/add')) {
+        return Promise.resolve({
+          ok: false,
+          json: async () => ({ message: 'Account creation failed' })
+        })
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ account_ids: [], all_account_ids: [], top_5: { top_apps_current_month: [] } }) })
+    })
+
+    render(
+      <CostProvider>
+        <Consumer />
+      </CostProvider>
+    )
+
+    await act(async () => {
+      screen.getByTestId('call-addaccount').click()
+    })
+
+    await waitFor(() => {
+      const addRes = screen.getByTestId('add-result').textContent
+      expect(addRes).toContain('Account creation failed')
+    })
+  })
+
+  it('setFilters updates context and triggers data refetch', async () => {
+    let fetchCallCount = 0
+    
+    global.fetch = vi.fn(() => {
+      fetchCallCount++
+      return Promise.resolve({ 
+        ok: true, 
+        json: async () => ({ 
+          account_ids: ['acc-1'], 
+          all_account_ids: ['acc-1'], 
+          top_5: { top_apps_current_month: [] } 
+        }) 
+      })
+    })
+
+    render(
+      <CostProvider>
+        <Consumer />
+      </CostProvider>
+    )
+
+    // Wait for initial fetch
+    await waitFor(() => {
+      expect(screen.getByTestId('loading').textContent).toBe('false')
+    })
+
+    const callsBefore = fetchCallCount
+
+    // Change filters
+    await act(async () => {
+      screen.getByTestId('set-filters').click()
+    })
+
+    // Wait for refetch
+    await waitFor(() => {
+      expect(fetchCallCount).toBeGreaterThan(callsBefore)
+    })
+  })
+
+  it('processes tag data correctly with missing tags', async () => {
+    global.fetch = vi.fn((url) => {
+      if (url.includes('/tags/filter')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ([
+            { id: 1, account_name: 'acc-1', account_id: 'acc-1', region: 'us-east-1', service: 's3', resource: 'r1', tags: {} }, // no tags
+            { id: 2, account_name: 'acc-2', account_id: 'acc-2', region: 'us-east-1', service: 'ec2', resource: 'r2', tags: null }, // null tags
+            { id: 3, account_name: 'acc-3', account_id: 'acc-3', region: 'us-east-1', service: 'lambda', resource: 'r3', tags: { Name: 'test' } } // partial tags
+          ])
+        })
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ account_ids: [], all_account_ids: [], top_5: { top_apps_current_month: [] } }) })
+    })
+
+    render(
+      <CostProvider>
+        <Consumer />
+      </CostProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('tag-summary-total').textContent).toBe('3')
+      expect(screen.getByTestId('loading').textContent).toBe('false')
+    })
+  })
+
+  it('handles invalid JSON in localStorage account_ids', async () => {
+    // Set invalid JSON in localStorage
+    localStorage.setItem('account_ids', 'invalid-json-string')
+
+    global.fetch = vi.fn(() => 
+      Promise.resolve({ ok: true, json: async () => ({ account_ids: [], all_account_ids: [], top_5: { top_apps_current_month: [] } }) })
+    )
+
+    render(
+      <CostProvider>
+        <Consumer />
+      </CostProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('loading').textContent).toBe('false')
+    })
+  })
+
+  it('handles getAllAccounts API errors', async () => {
+    localStorage.setItem('company_cid', 'test-company-id')
+    localStorage.setItem('auth_token', 'test-token')
+
+    global.fetch = vi.fn((url) => {
+      if (url.includes('/api/accounts/all/test-company-id')) {
+        return Promise.reject(new Error('Network error'))
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ account_ids: [], all_account_ids: [], top_5: { top_apps_current_month: [] } }) })
+    })
+
+    render(
+      <CostProvider>
+        <Consumer />
+      </CostProvider>
+    )
+
+    await act(async () => {
+      screen.getByTestId('call-getallaccounts').click()
+    })
+
+    await waitFor(() => {
+      const accountsRes = screen.getByTestId('accounts-result').textContent
+      expect(accountsRes).toContain('"error":"Network error"')
+    })
+  })
+
+  it('handles getAllCompanies API errors', async () => {
+    global.fetch = vi.fn((url) => {
+      if (url.includes('/api/company/all')) {
+        return Promise.reject(new Error('Network error'))
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ account_ids: [], all_account_ids: [], top_5: { top_apps_current_month: [] } }) })
+    })
+
+    render(
+      <CostProvider>
+        <Consumer />
+      </CostProvider>
+    )
+
+    await act(async () => {
+      screen.getByTestId('call-getallcompanies').click()
+    })
+
+    await waitFor(() => {
+      const companiesRes = screen.getByTestId('companies-result').textContent
+      expect(companiesRes).toContain('"error":"Network error"')
+    })
+  })
+
+  it('handles getAllCompanies non-OK response', async () => {
+    global.fetch = vi.fn((url) => {
+      if (url.includes('/api/company/all')) {
+        return Promise.resolve({
+          ok: false,
+          json: async () => ({ message: 'Failed to fetch companies' })
+        })
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ account_ids: [], all_account_ids: [], top_5: { top_apps_current_month: [] } }) })
+    })
+
+    render(
+      <CostProvider>
+        <Consumer />
+      </CostProvider>
+    )
+
+    await act(async () => {
+      screen.getByTestId('call-getallcompanies').click()
+    })
+
+    await waitFor(() => {
+      const companiesRes = screen.getByTestId('companies-result').textContent
+      expect(companiesRes).toContain('Failed to fetch companies')
+    })
+  })
+
+  it('handles getAllAccounts non-OK response', async () => {
+    localStorage.setItem('company_cid', 'test-company-id')
+    localStorage.setItem('auth_token', 'test-token')
+
+    global.fetch = vi.fn((url) => {
+      if (url.includes('/api/accounts/all/test-company-id')) {
+        return Promise.resolve({
+          ok: false,
+          json: async () => ({ message: 'Failed to fetch accounts' })
+        })
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ account_ids: [], all_account_ids: [], top_5: { top_apps_current_month: [] } }) })
+    })
+
+    render(
+      <CostProvider>
+        <Consumer />
+      </CostProvider>
+    )
+
+    await act(async () => {
+      screen.getByTestId('call-getallaccounts').click()
+    })
+
+    await waitFor(() => {
+      const accountsRes = screen.getByTestId('accounts-result').textContent
+      expect(accountsRes).toContain('Failed to fetch accounts')
+    })
   })
 })

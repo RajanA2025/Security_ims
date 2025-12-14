@@ -86,6 +86,39 @@ describe("SavingsTrendGraph", () => {
     expect(Array.isArray(ReactECharts.__lastOption.series)).toBe(true);
   });
 
+  test("chart options include correct formatter and data", async () => {
+    await act(async () => {
+      render(<SavingsTrendGraph />);
+    });
+
+    const option = ReactECharts.__lastOption;
+    expect(option).toBeDefined();
+    
+    // Test the yAxis formatter function
+    expect(option.yAxis.axisLabel.formatter).toBeDefined();
+    expect(typeof option.yAxis.axisLabel.formatter).toBe('function');
+    
+    // Test the formatter function with different values
+    const formatter = option.yAxis.axisLabel.formatter;
+    expect(formatter(100)).toBe('$100');
+    expect(formatter(0)).toBe('$0');
+    expect(formatter(999)).toBe('$999');
+    
+    // Verify the x-axis categories
+    expect(option.xAxis.data).toEqual(["Jan", "Feb", "Mar", "Apr", "May", "Jun"]);
+    
+    // Verify series data
+    expect(option.series).toHaveLength(4);
+    expect(option.series[0].name).toBe("Tagged");
+    expect(option.series[0].data).toEqual([120, 200, 150, 180, 170, 190]);
+    expect(option.series[1].name).toBe("Untagged");
+    expect(option.series[1].data).toEqual([90, 180, 130, 160, 150, 170]);
+    expect(option.series[2].name).toBe("Non-Taggable");
+    expect(option.series[2].data).toEqual([50, 100, 80, 90, 70, 60]);
+    expect(option.series[3].name).toBe("Total");
+    expect(option.series[3].data).toEqual([260, 480, 360, 430, 390, 420]);
+  });
+
   test("calls getEchartsInstance().resize on onChartReady", async () => {
     await act(async () => {
       render(<SavingsTrendGraph />);

@@ -180,4 +180,333 @@ describe("BarChart component", () => {
 
     expect(screen.getByTestId("antd-modal")).toBeInTheDocument();
   });
+
+  test("shows error message when error is present", async () => {
+    const contextValue = { costData: null, loading: false, error: "API Error" };
+
+    render(
+      <CostContext.Provider value={contextValue}>
+        <BarChart />
+      </CostContext.Provider>
+    );
+
+    expect(screen.getByText(/Error: API Error/)).toBeInTheDocument();
+    expect(screen.queryByTestId("antd-card")).toBeNull();
+  });
+
+  test("handles different range selections", async () => {
+    const today = new Date();
+    const iso = (d) => d.toISOString().slice(0, 10);
+    const costData = {
+      daily_service_costs: [
+        { usage_date: iso(today), service_name: "S1", total_cost: 10 },
+      ],
+    };
+
+    const contextValue = { costData, loading: false, error: null };
+
+    await act(async () => {
+      render(
+        <CostContext.Provider value={contextValue}>
+          <BarChart />
+        </CostContext.Provider>
+      );
+    });
+
+    // Find the select element and test different ranges
+    const select = screen.getByTestId("antd-select");
+    
+    // Test 6M range
+    await act(async () => {
+      fireEvent.change(select, { target: { value: "6M" } });
+    });
+    expect(select.value).toBe("6M");
+
+    // Test YTD range
+    await act(async () => {
+      fireEvent.change(select, { target: { value: "YTD" } });
+    });
+    expect(select.value).toBe("YTD");
+
+    // Test 3M range (default)
+    await act(async () => {
+      fireEvent.change(select, { target: { value: "3M" } });
+    });
+    expect(select.value).toBe("3M");
+  });
+
+  test("handles null or undefined costData gracefully", async () => {
+    // Test with null costData - the component should still render the card
+    // but the chart update should handle the null case gracefully
+    const contextValue1 = { costData: null, loading: false, error: null };
+
+    await act(async () => {
+      render(
+        <CostContext.Provider value={contextValue1}>
+          <BarChart />
+        </CostContext.Provider>
+      );
+    });
+
+    // The card should still be rendered even with null costData
+    const cards = screen.getAllByTestId("antd-card");
+    expect(cards.length).toBeGreaterThan(0);
+
+    // Test with undefined costData
+    const contextValue2 = { costData: undefined, loading: false, error: null };
+
+    await act(async () => {
+      render(
+        <CostContext.Provider value={contextValue2}>
+          <BarChart />
+        </CostContext.Provider>
+      );
+    });
+
+    // Should still render the card
+    const cards2 = screen.getAllByTestId("antd-card");
+    expect(cards2.length).toBeGreaterThan(0);
+  });
+
+  test("handles costData without daily_service_costs", async () => {
+    const costData = { someOtherData: "test" }; // Missing daily_service_costs
+    const contextValue = { costData, loading: false, error: null };
+
+    await act(async () => {
+      render(
+        <CostContext.Provider value={contextValue}>
+          <BarChart />
+        </CostContext.Provider>
+      );
+    });
+
+    // Should still render the card even without daily_service_costs
+    const cards = screen.getAllByTestId("antd-card");
+    expect(cards.length).toBeGreaterThan(0);
+  });
+
+  test("modal range selector works independently", async () => {
+    const today = new Date();
+    const iso = (d) => d.toISOString().slice(0, 10);
+    const costData = {
+      daily_service_costs: [
+        { usage_date: iso(today), service_name: "S1", total_cost: 10 },
+      ],
+    };
+
+    const contextValue = { costData, loading: false, error: null };
+
+    await act(async () => {
+      render(
+        <CostContext.Provider value={contextValue}>
+          <BarChart />
+        </CostContext.Provider>
+      );
+    });
+
+    // Open modal
+    const expandBtn = screen.getByRole("button");
+    await act(async () => {
+      fireEvent.click(expandBtn);
+    });
+
+    expect(screen.getByTestId("antd-modal")).toBeInTheDocument();
+
+    // Find modal select (should be second select in the document)
+    const allSelects = screen.getAllByTestId("antd-select");
+    const modalSelect = allSelects[1]; // Modal select is the second one
+
+    // Test range change in modal
+    await act(async () => {
+      fireEvent.change(modalSelect, { target: { value: "6M" } });
+    });
+    expect(modalSelect.value).toBe("6M");
+  });
+
+  test("modal close functionality works", async () => {
+    const today = new Date();
+    const iso = (d) => d.toISOString().slice(0, 10);
+    const costData = {
+      daily_service_costs: [
+        { usage_date: iso(today), service_name: "S1", total_cost: 10 },
+      ],
+    };
+
+    const contextValue = { costData, loading: false, error: null };
+
+    await act(async () => {
+      render(
+        <CostContext.Provider value={contextValue}>
+          <BarChart />
+        </CostContext.Provider>
+      );
+    });
+
+    // Open modal
+    const expandBtn = screen.getByRole("button");
+    await act(async () => {
+      fireEvent.click(expandBtn);
+    });
+
+    expect(screen.getByTestId("antd-modal")).toBeInTheDocument();
+
+    // Test modal close by clicking outside or cancel
+    // Since our mock doesn't have a cancel button, we'll test by setting showModal to false
+    // This would typically be triggered by clicking the modal's close button
+    await act(async () => {
+      fireEvent.keyDown(document, { key: "Escape" });
+    });
+
+    // Modal should still be there since our mock doesn't handle escape
+    // But the important thing is that the component doesn't crash
+    expect(screen.getByTestId("antd-modal")).toBeInTheDocument();
+  });
+
+  test("window resize handler is properly set up", async () => {
+    const today = new Date();
+    const iso = (d) => d.toISOString().slice(0, 10);
+    const costData = {
+      daily_service_costs: [
+        { usage_date: iso(today), service_name: "S1", total_cost: 10 },
+      ],
+    };
+
+    const contextValue = { costData, loading: false, error: null };
+
+    await act(async () => {
+      render(
+        <CostContext.Provider value={contextValue}>
+          <BarChart />
+        </CostContext.Provider>
+      );
+    });
+
+    // Simulate window resize
+    await act(async () => {
+      window.dispatchEvent(new Event("resize"));
+    });
+
+    // Component should still render without errors
+    expect(screen.getByTestId("antd-card")).toBeInTheDocument();
+  });
+
+  test("processes multiple services and dates correctly", async () => {
+    const today = new Date();
+    const iso = (d) => d.toISOString().slice(0, 10);
+    const costData = {
+      daily_service_costs: [
+        { usage_date: iso(today), service_name: "Service A", total_cost: 100 },
+        { usage_date: iso(today), service_name: "Service B", total_cost: 50 },
+        { usage_date: iso(new Date(today.getTime() - 24 * 60 * 60 * 1000)), service_name: "Service A", total_cost: 80 },
+        { usage_date: iso(new Date(today.getTime() - 24 * 60 * 60 * 1000)), service_name: "Service C", total_cost: 30 },
+        { usage_date: iso(new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000)), service_name: "Service B", total_cost: 60 },
+      ],
+    };
+
+    const contextValue = { costData, loading: false, error: null };
+
+    await act(async () => {
+      render(
+        <CostContext.Provider value={contextValue}>
+          <BarChart />
+        </CostContext.Provider>
+      );
+    });
+
+    expect(screen.getByTestId("antd-card")).toBeInTheDocument();
+    expect(screen.getByRole("button")).toBeInTheDocument();
+  });
+
+  test("tests the default range fallback in getDays function", async () => {
+    // This test covers the "return 30" fallback in getDays function
+    const today = new Date();
+    const iso = (d) => d.toISOString().slice(0, 10);
+    const costData = {
+      daily_service_costs: [
+        { usage_date: iso(today), service_name: "S1", total_cost: 10 },
+      ],
+    };
+
+    const contextValue = { costData, loading: false, error: null };
+
+    await act(async () => {
+      render(
+        <CostContext.Provider value={contextValue}>
+          <BarChart />
+        </CostContext.Provider>
+      );
+    });
+
+    // The component should render with default range (which uses the fallback)
+    expect(screen.getByTestId("antd-card")).toBeInTheDocument();
+    
+    // Verify the default range is selected
+    const select = screen.getByTestId("antd-select");
+    expect(select.value).toBe("3M");
+  });
+
+  test("tests modal cancel and chart formatter functions", async () => {
+    // Create a custom Modal mock that has a cancel button
+    const ModalWithCancel = ({ open, children, onCancel, afterOpenChange, ...props }) => {
+      React.useEffect(() => {
+        if (typeof afterOpenChange === "function") {
+          afterOpenChange(open);
+        }
+      }, [open, afterOpenChange]);
+
+      return open ? (
+        <div data-testid="antd-modal">
+          {children}
+          {onCancel && (
+            <button data-testid="modal-cancel" onClick={onCancel}>
+              Cancel
+            </button>
+          )}
+        </div>
+      ) : null;
+    };
+
+    // Override the Modal mock temporarily
+    const originalModal = require("antd").Modal;
+    require("antd").Modal = ModalWithCancel;
+
+    const today = new Date();
+    const iso = (d) => d.toISOString().slice(0, 10);
+    const costData = {
+      daily_service_costs: [
+        { usage_date: iso(today), service_name: "S1", total_cost: 10 },
+        { usage_date: iso(new Date(today.getTime() - 24 * 60 * 60 * 1000)), service_name: "S2", total_cost: 5 },
+      ],
+    };
+
+    const contextValue = { costData, loading: false, error: null };
+
+    await act(async () => {
+      render(
+        <CostContext.Provider value={contextValue}>
+          <BarChart />
+        </CostContext.Provider>
+      );
+    });
+
+    // Open modal
+    const expandBtn = screen.getByRole("button");
+    await act(async () => {
+      fireEvent.click(expandBtn);
+    });
+
+    expect(screen.getByTestId("antd-modal")).toBeInTheDocument();
+
+    // Test modal cancel functionality
+    const cancelBtn = screen.getByTestId("modal-cancel");
+    await act(async () => {
+      fireEvent.click(cancelBtn);
+    });
+
+    // Modal should be closed after cancel
+    expect(screen.queryByTestId("antd-modal")).toBeNull();
+
+    // Restore original mock
+    require("antd").Modal = originalModal;
+  });
 });

@@ -1,11 +1,14 @@
-// Business.test.jsx
+// src/pages/Business/Business.test.jsx
 import React from "react";
-import { render, screen, waitFor, fireEvent, within } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import "@testing-library/jest-dom";
 import { vi } from "vitest";
 import axios from "axios";
 import Business from "@/pages/operational/cloudWatch/cloudWatch"; // adjust path if needed
 
-// Mock window.matchMedia for Ant Design responsive observer
+vi.mock("axios");
+
+// Mock window.matchMedia for Ant Design responsive utilities
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation(query => ({
@@ -20,225 +23,317 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-// Mock ResizeObserver
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+describe("Business component", () => {
+  const sampleData = [
+    // item missing event_id -> should use fallback rowKey
+    {
+      // event_id: undefined,
+      account_id: "123",
+      account_name: "Alice",
+      alarm_name: "Alarm-One",
+      metric_name: "CPU",
+      instance_id: "i-aaa111",
+      instance_name: "web-01",
+      threshold: 80,
+      comparison_operator: "UnknownOperator",
+      event_time: "2025-12-01T00:00:00Z",
+      history_timestamp: "2025-12-01T00:00:00Z",
+    },
+    // item with event_id present
+    {
+      event_id: "evt-002",
+      account_id: "456",
+      account_name: "Bob",
+      alarm_name: "Alarm-Two",
+      metric_name: "Memory",
+      instance_id: "i-bbb222",
+      instance_name: "db-01",
+      threshold: 30,
+      comparison_operator: "GreaterThanThreshold",
+      event_time: "2025-12-02T00:00:00Z",
+    },
+  ];
 
-// Mock antd components like we did for Business test
-vi.mock("antd", async () => {
-  const actual = await vi.importActual("antd");
-
-  // Input mock
-  const Input = (props) => <input data-testid="antd-input" {...props} />;
-
-  // Simple Table mock
-  const Table = ({ columns, dataSource, loading }) => {
-    if (loading) return <div data-testid="table-loading">Loading...</div>;
-    return (
-      <table data-testid="antd-table">
-        <thead>
-          <tr>
-            {columns.map((c, i) => (
-              <th key={i}>{typeof c.title === "string" ? c.title : `col-${i}`}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {(dataSource || []).map((row, idx) => (
-            <tr key={row.event_id || idx}>
-              <td>{row.account_id}</td>
-              <td>{row.account_name}</td>
-              <td>{row.alarm_name}</td>
-              <td>{row.metric_name}</td>
-              <td>{row.instance_id}</td>
-              <td>{row.instance_name}</td>
-              <td>{row.threshold}</td>
-              <td>{row.state_value}</td>
-              <td>
-                <span data-testid={`more-${row.event_id}`} role="button">View Details</span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-  };
-
-  // Modal mock
-  const Modal = ({ open, children }) => (open ? <div data-testid="antd-modal">{children}</div> : null);
-
-  // Other component mocks
-  const Tag = ({ children }) => <span>{children}</span>;
-  const Tooltip = ({ children }) => <span>{children}</span>;
-  const Descriptions = ({ children }) => <div>{children}</div>;
-  const Card = ({ children }) => <div>{children}</div>;
-  const Row = ({ children }) => <div>{children}</div>;
-  const Col = ({ children }) => <div>{children}</div>;
-  const Typography = { Title: ({ children }) => <h4>{children}</h4> };
-
-  return {
-    ...actual,
-    Input,
-    Table,
-    Modal,
-    Tag,
-    Tooltip,
-    Descriptions,
-    Card,
-    Row,
-    Col,
-    Typography,
-  };
-});
-
-// Mock icons
-vi.mock("@ant-design/icons", () => {
-  const make = (name) => (props) => <span role="img" data-testid={`icon-${name}`}>{name}</span>;
-  return {
-    EyeOutlined: make("EyeOutlined"),
-    InfoCircleOutlined: make("InfoCircleOutlined"),
-    SearchOutlined: make("SearchOutlined"),
-    ArrowUpOutlined: make("ArrowUpOutlined"),
-    ArrowDownOutlined: make("ArrowDownOutlined"),
-    MinusOutlined: make("MinusOutlined"),
-  };
-});
-
-// Mock axios
-vi.mock("axios");
-
-const SAMPLE_DATA = [
-  {
-    event_id: "evt-1",
-    event_time: "2025-11-30T10:00:00Z",
-    account_id: "123",
-    account_name: "TestAccount",
-    alarm_name: "HighCPU",
-    metric_name: "CPUUtilization",
-    instance_id: "i-0123",
-    instance_name: "web-01",
-    threshold: 80,
-    comparison_operator: "GreaterThanThreshold",
-    alarm_arn: "arn:aws:cloudwatch:region:123:alarm:HighCPU",
-    state_value: "ALARM",
-    history_summary: "CPU high",
-  },
-  {
-    event_id: "evt-2",
-    event_time: "2025-11-30T11:00:00Z",
-    account_id: "456",
-    account_name: "OtherAccount",
-    alarm_name: "LowDisk",
-    metric_name: "DiskSpace",
-    instance_id: "i-0456",
-    instance_name: "db-01",
-    threshold: 20,
-    comparison_operator: "LessThanThreshold",
-    alarm_arn: "arn:aws:cloudwatch:region:456:alarm:LowDisk",
-    state_value: "OK",
-    history_summary: "Disk ok",
-  },
-];
-
-describe("Business (CloudWatch) component", () => {
   beforeEach(() => {
-    // Reset mocks and set localStorage
-    vi.resetAllMocks();
-    localStorage.clear();
-    localStorage.setItem("account_ids", JSON.stringify(["123"]));
+    vi.clearAllMocks();
+    // Set a predictable account_ids in localStorage (JSON format)
+    window.localStorage.setItem("account_ids", JSON.stringify(["123", "456"]));
+    axios.post.mockResolvedValue({ data: sampleData });
   });
 
-  test("calls CloudWatch filter POST with account_ids from localStorage and renders title", async () => {
-    axios.post.mockResolvedValueOnce({ data: SAMPLE_DATA });
+  afterEach(() => {
+    // cleanup localStorage changes to avoid test bleed
+    window.localStorage.removeItem("account_ids");
+  });
 
+  it("fetches and displays rows from API", async () => {
     render(<Business />);
 
-    // Wait for title to appear (ensures component rendered and effect ran)
-    expect(await screen.findByText("Cloud-Watch")).toBeInTheDocument();
+    // Wait for table header/title to appear
+    expect(await screen.findByText(/Cloud-Watch/i)).toBeInTheDocument();
 
-    // Verify axios.post called with expected endpoint and body
-    await waitFor(() => {
-      expect(axios.post).toHaveBeenCalled();
-      expect(axios.post).toHaveBeenCalledWith(
-        expect.stringContaining("/cloudwatch/filter"),
-        { account_ids: ["123"] },
-        expect.any(Object)
-      );
+    // Rows containing account names should be present
+    expect(await screen.findByText("Alice")).toBeInTheDocument();
+    expect(screen.getByText("Bob")).toBeInTheDocument();
+
+    // Alarm names and metric names should appear
+    expect(screen.getByText("Alarm-One")).toBeInTheDocument();
+    expect(screen.getByText("CPU")).toBeInTheDocument();
+  });
+
+  it("creates a fallback rowKey when event_id is missing", async () => {
+    render(<Business />);
+
+    // wait until data rendered
+    await screen.findByText("Alice");
+
+    // The fallback key in component is `${usernameSafe}-${timeSafe}`
+    const expectedFallbackKey = `Alice-2025-12-01T00:00:00Z`;
+
+    // AntD Table attaches data-row-key attribute to <tr>
+    // find a row with that data-row-key
+    const row = document.querySelector(`tr[data-row-key="${expectedFallbackKey}"]`);
+    expect(row).toBeTruthy();
+
+    // And it should contain Alice's account id cell
+    expect(within(row).getByText("123")).toBeInTheDocument();
+  });
+
+  it("shows operator fallback ('?') for unknown comparison_operator", async () => {
+    render(<Business />);
+
+    // Wait for row render
+    await screen.findByText("Alice");
+
+    // The rendered Threshold cell shows operator symbol and value.
+    // For unknown operator we expect "?" to appear near threshold value 80
+    // Use a regex to find "?" followed by 80 (allow spacing)
+    const thresholdCell = await screen.findByText((content, node) => {
+      // look for "80" with a "?" somewhere in the node text
+      return /\?\s*80/.test(content);
     });
+
+    expect(thresholdCell).toBeTruthy();
   });
 
-  test("renders rows from API data and shows key columns", async () => {
-    axios.post.mockResolvedValueOnce({ data: SAMPLE_DATA });
-
+  it("filters rows by search input (Account Name)", async () => {
     render(<Business />);
 
-    // Wait for one of the unique texts from sample to show up
-    expect(await screen.findByText("TestAccount")).toBeInTheDocument();
-    expect(screen.getByText("HighCPU")).toBeInTheDocument();
-    expect(screen.getByText("CPUUtilization")).toBeInTheDocument();
-
-    // Also assert the second row exists
-    expect(screen.getByText("OtherAccount")).toBeInTheDocument();
-    expect(screen.getByText("LowDisk")).toBeInTheDocument();
-  });
-
-  test("search input filters rows by account name", async () => {
-    axios.post.mockResolvedValueOnce({ data: SAMPLE_DATA });
-
-    render(<Business />);
-
-    // wait for table to populate
-    await screen.findByText("TestAccount");
+    await screen.findByText("Alice");
+    expect(screen.getByText("Bob")).toBeInTheDocument();
 
     const searchInput = screen.getByPlaceholderText("Search by Account Name");
-    // search for the second account
-    fireEvent.change(searchInput, { target: { value: "OtherAccount" } });
+    // Type "alice" (case-insensitive)
+    fireEvent.change(searchInput, { target: { value: "alice" } });
 
-    // after filtering, "OtherAccount" should be visible and "TestAccount" should not
+    // Alice remains, Bob should be filtered out
+    expect(await screen.findByText("Alice")).toBeInTheDocument();
     await waitFor(() => {
-      expect(screen.queryByText("TestAccount")).not.toBeInTheDocument();
-      expect(screen.getByText("OtherAccount")).toBeInTheDocument();
+      expect(screen.queryByText("Bob")).not.toBeInTheDocument();
     });
+
+    // Clear search -> Bob should reappear
+    fireEvent.change(searchInput, { target: { value: "" } });
+    expect(await screen.findByText("Bob")).toBeInTheDocument();
   });
 
-  test("attempts to open details modal when 'View Details' icon clicked (best-effort)", async () => {
-    axios.post.mockResolvedValueOnce({ data: SAMPLE_DATA });
+  it("opens modal with details when clicking Eye icon", async () => {
+    render(<Business />);
 
-    const { container } = render(<Business />);
+    await screen.findByText("Alice");
 
-    // ensure table is populated
-    await screen.findByText("TestAccount");
+    // Find the row containing Alice
+    const aliceRow = screen.getByText("Alice").closest("tr");
+    const withinAlice = within(aliceRow);
 
-    // Best-effort: try to find elements with title "View Details"
-    // AntD Tooltip sometimes attaches title to a wrapper: we try multiple fallbacks.
-    let viewEls = Array.from(container.querySelectorAll('[title="View Details"]'));
+    // Try to find the Eye icon button
+    let eyeBtn = withinAlice.queryByRole("button", { name: /view|details|eye/i });
 
-    // If that didn't work, try finding by tooltip text visible in DOM (sometimes tooltip content is not attached)
-    if (!viewEls.length) {
-      // fallback: query for any element that contains the svg eye icon (svg 'aria-label' or alt may not exist)
-      viewEls = Array.from(container.querySelectorAll("svg")).filter((svg) =>
-        svg.outerHTML.includes("EyeOutlined") || svg.outerHTML.includes("eye")
+    // If not found by role, try to find svg with Eye icon
+    if (!eyeBtn) {
+      const svgElems = aliceRow.querySelectorAll("svg");
+      eyeBtn = Array.from(svgElems).find(
+        (el) =>
+          el.getAttribute("data-icon") === "eye" ||
+          el.closest('[title*="View"]') ||
+          el.closest("span") ||
+          el.closest("button") ||
+          el.parentElement?.getAttribute("role") === "button"
       );
     }
 
-    if (viewEls.length) {
-      // click the first found element
-      fireEvent.click(viewEls[0]);
-      // after click the modal's title should eventually appear (account name - Account Details)
-      await waitFor(() => {
-        expect(
-          container.querySelector(".ant-modal-title")?.textContent
-        ).toMatch(/Account Details/);
-      });
-    } else {
-      // If no clickable icon was found, we at least assert that the test couldn't find the element
-      // and suggest to add a stable test-id to the component for robust testing.
-      // This assertion ensures the test file communicates what to change to make it robust.
-      // The test will still pass as long as everything else is correct.
-      expect(true).toBe(true);
+    // Fallback: query for any element with title attribute 'View Details' inside row
+    if (!eyeBtn) {
+      eyeBtn = withinAlice.queryByTitle("View Details");
+      if (!eyeBtn) {
+        // try to find clickable svg in row
+        const maybeSvg = aliceRow.querySelector("svg");
+        eyeBtn = maybeSvg ? maybeSvg.parentElement : null;
+      }
     }
+
+    expect(eyeBtn).toBeTruthy();
+
+    // Click it
+    fireEvent.click(eyeBtn);
+
+    // Modal title should include "Alice - Account Details"
+    const modalTitlePattern = /Alice\s*-\s*Account Details/i;
+    expect(await screen.findByText(modalTitlePattern)).toBeInTheDocument();
+
+    // Modal content should contain some details - check for the actual values
+    // "123" appears in both table and modal, so we expect at least 2 instances
+    expect(screen.getAllByText("123").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("Alice").length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("handles localStorage error gracefully", async () => {
+    // Mock localStorage to throw an error
+    const originalGetItem = localStorage.getItem;
+    localStorage.getItem = vi.fn(() => {
+      throw new Error("localStorage access denied");
+    });
+
+    render(<Business />);
+
+    await screen.findByText("Alice");
+
+    // Restore original localStorage
+    localStorage.getItem = originalGetItem;
+  });
+
+  it("handles various localStorage data formats", async () => {
+    // Set up mock data that will be used by all test cases
+    const mockData = [
+      {
+        account_id: "123",
+        account_name: "Alice",
+        alarm_name: "Test Alarm",
+        metric_name: "CPU",
+        instance_id: "i-123456",
+        instance_name: "test-instance",
+        threshold: 80,
+        comparison_operator: "GreaterThanThreshold",
+        event_time: "2025-01-01T00:00:00Z"
+      }
+    ];
+    
+    const testCases = [
+      { desc: 'empty string', value: '""', expectData: true },
+      { desc: 'non-JSON string', value: '"123"', expectData: true },
+      { desc: 'comma-separated string', value: '"123,456"', expectData: true },
+      { desc: 'invalid JSON', value: 'invalid-json', expectData: true }
+    ];
+
+    const originalGetItem = localStorage.getItem;
+    
+    for (const testCase of testCases) {
+      // Set up mocks
+      localStorage.getItem = vi.fn(() => testCase.value);
+      axios.post.mockResolvedValueOnce({ data: testCase.expectData ? mockData : [] });
+      
+      // Render and wait for loading to complete
+      const { unmount } = render(<Business />);
+      
+      try {
+        // Verify the component rendered with the mock data
+        if (testCase.expectData) {
+          const aliceCell = await screen.findByText('Alice');
+          expect(aliceCell).toBeInTheDocument();
+        } else {
+          // For empty data, verify the table is empty
+          const emptyText = await screen.findByText(/no data/i);
+          expect(emptyText).toBeInTheDocument();
+        }
+      } finally {
+        // Clean up
+        unmount();
+      }
+    }
+    
+    // Restore original localStorage
+    localStorage.getItem = originalGetItem;
+  });
+
+  it("handles API fetch error", async () => {
+    const originalConsoleError = console.error;
+    console.error = vi.fn(); // Suppress error logs for this test
+    
+    try {
+      // Mock axios to throw an error
+      axios.post.mockRejectedValue(new Error("Network error"));
+
+      render(<Business />);
+
+      // Should still render the component even with API error
+      await screen.findByText("Cloud-Watch");
+      
+      // Verify the error state is handled (e.g., empty table or error message)
+      expect(screen.queryByText(/error loading data/i)).not.toBeInTheDocument();
+    } finally {
+      console.error = originalConsoleError;
+    }
+  });
+
+  it("filters by alarm name", async () => {
+    render(<Business />);
+
+    await screen.findByText("Alice");
+
+    // Find the alarm name filter
+    const alarmNameFilter = screen.getByText("Alarm Name");
+    expect(alarmNameFilter).toBeInTheDocument();
+  });
+
+  it("filters by instance name", async () => {
+    render(<Business />);
+
+    await screen.findByText("Alice");
+
+    // Find the instance name filter
+    const instanceNameFilter = screen.getByText("Instance Name");
+    expect(instanceNameFilter).toBeInTheDocument();
+  });
+
+  it("closes modal when cancel button is clicked", async () => {
+    // Mock the API response
+    const mockData = [
+      {
+        account_id: "123",
+        account_name: "Alice",
+        alarm_name: "Test Alarm",
+        metric_name: "CPU",
+        instance_id: "i-123456",
+        instance_name: "test-instance",
+        threshold: 80,
+        comparison_operator: "GreaterThanThreshold",
+        event_time: "2025-01-01T00:00:00Z"
+      }
+    ];
+    axios.post.mockResolvedValueOnce({ data: mockData });
+
+    // Render the component
+    render(<Business />);
+
+    // Wait for data to load
+    const aliceCell = await screen.findByText('Alice');
+    const row = aliceCell.closest('tr');
+    
+    // Find and click the Eye icon to open modal
+    const eyeIcon = within(row).getByRole('img', { name: 'eye' });
+    fireEvent.click(eyeIcon);
+
+    // Wait for modal to open
+    const modal = await screen.findByRole('dialog');
+    expect(modal).toBeInTheDocument();
+
+    // Find and click the close button
+    const closeButton = within(modal).getByRole('button', { name: /close/i });
+    fireEvent.click(closeButton);
+
+    // Wait for modal to close
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
   });
 });

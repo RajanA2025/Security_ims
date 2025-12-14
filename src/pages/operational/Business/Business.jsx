@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Table,
   Tag,
@@ -20,37 +20,99 @@ import axios from "axios";
 
 const header = { backgroundColor: "#4f46e5", color: "white" };
 
+// ----- Helpers & constants -----
+
+// centralised label/color map for orphaned volume status
+const VOLUME_STATUS_MAP = {
+  attached: { color: "blue", label: "Attached" },
+  deleted: { color: "red", label: "Deleted" },
+  available: { color: "green", label: "Available" }
+};
+
+const getOrphanedVolumeTagConfig = (rawValue) => {
+  const normalized = String(rawValue ?? "").toLowerCase();
+  const mapped = VOLUME_STATUS_MAP[normalized];
+
+  if (mapped) {
+    return mapped;
+  }
+
+  return {
+    color: "default",
+    label: rawValue
+  };
+};
+
+// snapshot age → color + blink flag
+const getSnapshotAgeVisual = (age) => {
+  let color = "#52c41a";
+  let blink = false;
+
+  if (age > 90) {
+    color = "#ff4d4f";
+    blink = true;
+  } else if (age > 60) {
+    color = "#fa8c16";
+  } else if (age > 30) {
+    color = "#faad14";
+  }
+
+  return { color, blink };
+};
+
+// safe username extraction
+const getRecordUsername = (record) => {
+  const value =
+    record?.account_name ||
+    record?.accountName ||
+    record?.user_identity?.accountName ||
+    record?.user?.username ||
+    record?.user?.name ||
+    "";
+
+  return (value ?? "").toString();
+};
+
+// safe row key generator (no UI impact)
+const getRowKey = (record) => {
+  if (record?.snapshot_id) return record.snapshot_id;
+
+  const accountId = record?.account_id ?? "no-account";
+  const region = record?.region ?? "no-region";
+  const snapshotName = record?.snapshot_name ?? "no-snapshot";
+  const username = getRecordUsername(record) || "unknown-user";
+
+  return `${accountId}-${region}-${username}-${snapshotName}`;
+};
+
 const Business = () => {
-  const [originalData, setOriginalData] = useState([]); // full dataset
+  const [originalData, setOriginalData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedData, setSelectedData] = useState(null);
   const [searchText, setSearchText] = useState("");
 
-  // const API_URL = "http://47.130.218.97:8012/snapshots";
-
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Get stored IDs (string OR array)
         let storedIds = localStorage.getItem("account_ids");
 
-        try {
-          storedIds = JSON.parse(storedIds);
-        } catch {
-          storedIds = [storedIds]; // wrap single ID inside array
+        if (storedIds) {
+          try {
+            const parsed = JSON.parse(storedIds);
+            storedIds = Array.isArray(parsed) ? parsed : [parsed];
+          } catch {
+            storedIds = [storedIds];
+          }
+        } else {
+          storedIds = [];
         }
 
-        // Ensure array + string format
-        storedIds = Array.isArray(storedIds) ? storedIds : [storedIds];
-
-        // --- POST BODY ---
         const postBody = { account_ids: storedIds };
 
         console.log("➡️ Sending POST:", postBody);
 
-        // --- API CALL ---
         const response = await axios.post(
           "http://47.130.218.97:8012/snapshots/filter",
           postBody,
@@ -58,10 +120,7 @@ const Business = () => {
         );
 
         console.log("📌 API Response:", response.data);
-
-        // Save API result
-        setOriginalData(response.data);
-
+        setOriginalData(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error("❌ Error fetching Snapshots:", error);
       } finally {
@@ -72,45 +131,53 @@ const Business = () => {
     fetchData();
   }, []);
 
-
-  // Handle search input
   const handleSearch = (e) => {
     setSearchText(e.target.value);
   };
 
-  // Get Username Helper
-  const getRecordUsername = (record) => {
-    return (
-      record?.account_name ||
-      record?.accountName ||
-      record?.user_identity?.accountName ||
-      record?.user?.username ||
-      record?.user?.name ||
-      ""
-    ).toString();
-  };
-
-  // Unique filter values
-  const accountIds = [...new Set(originalData.map(item => item.account_id))];
-  const regions = [...new Set(originalData.map(item => item.region))];
-  const events = [...new Set(originalData.map(item => item.snapshot_name))];
-
-  // Open Modal
-  const handleOpenModal = (record) => {
+  const handleOpenModal = useCallback((record) => {
+    if (!record) return;
     setSelectedData(record);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  // Search filters entire dataset
-  const filteredData = searchText
-    ? originalData.filter(item =>
-      getRecordUsername(item)
-        .toLowerCase()
-        .includes(searchText.toLowerCase())
-    )
-    : originalData;
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+  }, []);
 
-  // Table columns
+  // unique filter values (memoised)
+  const accountIds = useMemo(
+    () => [...new Set(originalData.map((item) => item.account_id))].filter(
+      (v) => v !== undefined && v !== null
+    ),
+    [originalData]
+  );
+
+  const regions = useMemo(
+    () => [...new Set(originalData.map((item) => item.region))].filter(
+      (v) => v !== undefined && v !== null
+    ),
+    [originalData]
+  );
+
+  const events = useMemo(
+    () =>
+      [...new Set(originalData.map((item) => item.snapshot_name))].filter(
+        (v) => v !== undefined && v !== null
+      ),
+    [originalData]
+  );
+
+  // filtered data by search
+  const filteredData = useMemo(() => {
+    if (!searchText) return originalData;
+    const lower = searchText.toLowerCase();
+
+    return originalData.filter((item) =>
+      getRecordUsername(item).toLowerCase().includes(lower)
+    );
+  }, [originalData, searchText]);
+
   const columns = [
     {
       title: (
@@ -123,8 +190,9 @@ const Business = () => {
       ),
       dataIndex: "account_id",
       key: "account_id",
-      filters: accountIds.map(id => ({ text: id, value: id })),
-      onFilter: (value, record) => record.account_id === value
+      filters: accountIds.map((id) => ({ text: id, value: id })),
+      onFilter: (value, record) =>
+        String(record.account_id ?? "") === String(value ?? "")
     },
     {
       title: (
@@ -150,8 +218,9 @@ const Business = () => {
       dataIndex: "snapshot_name",
       key: "snapshot_name",
       width: 200,
-      filters: events.map(event => ({ text: event, value: event })),
-      onFilter: (value, record) => record.snapshot_name === value
+      filters: events.map((event) => ({ text: event, value: event })),
+      onFilter: (value, record) =>
+        String(record.snapshot_name ?? "") === String(value ?? "")
     },
     {
       title: "Snapshot Age",
@@ -160,17 +229,8 @@ const Business = () => {
       width: 120,
       render: (value) => {
         if (value == null) return "-";
-        let color = "#52c41a";
-        let blink = false;
 
-        if (value > 90) {
-          color = "#ff4d4f";
-          blink = true;
-        } else if (value > 60) {
-          color = "#fa8c16";
-        } else if (value > 30) {
-          color = "#faad14";
-        }
+        const { color, blink } = getSnapshotAgeVisual(value);
 
         return (
           <span
@@ -190,21 +250,7 @@ const Business = () => {
       dataIndex: "orphaned_volume_or_attached",
       key: "orphaned_volume_or_attached",
       render: (value) => {
-        const text = String(value || "").toLowerCase();
-        let color = "default";
-        let label = value;
-
-        if (text === "attached") {
-          color = "blue";
-          label = "Attached";
-        } else if (text === "deleted") {
-          color = "red";
-          label = "Deleted";
-        } else if (text === "available") {
-          color = "green";
-          label = "Available";
-        }
-
+        const { color, label } = getOrphanedVolumeTagConfig(value);
         return <Tag color={color}>{label}</Tag>;
       }
     },
@@ -219,8 +265,9 @@ const Business = () => {
       ),
       dataIndex: "region",
       key: "region",
-      filters: regions.map(r => ({ text: r, value: r })),
-      onFilter: (value, record) => record.region === value
+      filters: regions.map((r) => ({ text: r, value: r })),
+      onFilter: (value, record) =>
+        String(record.region ?? "") === String(value ?? "")
     },
     {
       title: "More Details",
@@ -270,9 +317,7 @@ const Business = () => {
         columns={columns}
         dataSource={filteredData}
         loading={loading}
-        rowKey={(record) =>
-          record.snapshot_id || `${getRecordUsername(record)}-${record.snapshot_name}`
-        }
+        rowKey={getRowKey}
         pagination={{ pageSize: 8 }}
       />
 
@@ -280,25 +325,54 @@ const Business = () => {
       <Modal
         title={`${selectedData?.account_name || ""} - Account Details`}
         open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
+        onCancel={handleCloseModal}
         footer={null}
         width={900}
       >
         {selectedData && (
-          <Card size="small" title="Information" style={{ marginBottom: 16 }} headStyle={header}>
+          <Card
+            size="small"
+            title="Information"
+            style={{ marginBottom: 16 }}
+            headStyle={header}
+          >
             <Descriptions bordered column={2} size="small">
-              <Descriptions.Item label="Account ID">{selectedData.account_id}</Descriptions.Item>
-              <Descriptions.Item label="Account Name">{getRecordUsername(selectedData)}</Descriptions.Item>
-              <Descriptions.Item label="Instance ID">{selectedData.instance_id || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Instance Name">{selectedData.instance_name || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Volume ID">{selectedData.volume_id || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Volume Name">{selectedData.volume_name || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Orphaned">{selectedData.orphaned || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Region">{selectedData.region}</Descriptions.Item>
-              <Descriptions.Item label="Snapshot ID">{selectedData.snapshot_id}</Descriptions.Item>
-              <Descriptions.Item label="Snapshot Name">{selectedData.snapshot_name || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Snapshot Description">{selectedData.snapshot_description || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Snapshot Created On">{selectedData.snapshot_creation_date || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Account ID">
+                {selectedData.account_id}
+              </Descriptions.Item>
+              <Descriptions.Item label="Account Name">
+                {getRecordUsername(selectedData)}
+              </Descriptions.Item>
+              <Descriptions.Item label="Instance ID">
+                {selectedData.instance_id || "-"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Instance Name">
+                {selectedData.instance_name || "-"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Volume ID">
+                {selectedData.volume_id || "-"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Volume Name">
+                {selectedData.volume_name || "-"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Orphaned">
+                {selectedData.orphaned || "-"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Region">
+                {selectedData.region}
+              </Descriptions.Item>
+              <Descriptions.Item label="Snapshot ID">
+                {selectedData.snapshot_id}
+              </Descriptions.Item>
+              <Descriptions.Item label="Snapshot Name">
+                {selectedData.snapshot_name || "-"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Snapshot Description">
+                {selectedData.snapshot_description || "-"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Snapshot Created On">
+                {selectedData.snapshot_creation_date || "-"}
+              </Descriptions.Item>
             </Descriptions>
           </Card>
         )}

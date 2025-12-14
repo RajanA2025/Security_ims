@@ -3,6 +3,50 @@ import api from "../lib/api";
 
 export const CostContext = createContext();
 
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL1;
+
+// ---------- Helpers ----------
+
+const logError = (scope, error, extra = {}) => {
+  // Centralized, structured error logging
+  // eslint-disable-next-line no-console
+  console.error(`[${scope}]`, {
+    message: error?.message,
+    name: error?.name,
+    stack: error?.stack,
+    ...extra,
+  });
+};
+
+const getErrorMessage = (fallbackMessage, error) => {
+  if (!error) return fallbackMessage;
+  if (typeof error === "string") return error || fallbackMessage;
+  return error.message || fallbackMessage;
+};
+
+const getAuthToken = () => {
+  try {
+    return localStorage.getItem("auth_token") || null;
+  } catch (err) {
+    logError("getAuthToken", err);
+    return null;
+  }
+};
+
+const getAuthHeaders = () => {
+  const token = getAuthToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+const parseJsonSafe = async (response) => {
+  try {
+    return await response.json();
+  } catch (err) {
+    logError("parseJsonSafe", err, { url: response?.url, status: response?.status });
+    return null;
+  }
+};
+
 export const CostProvider = ({ children }) => {
   const [costData, setCostData] = useState(null);
   const [resourcesData, setResourcesData] = useState(null);
@@ -27,10 +71,7 @@ export const CostProvider = ({ children }) => {
   const [accounts, setAccounts] = useState([]); // full list for dropdown
   const [apps, setApps] = useState([]);
   const [Current_acc, setCurrent_acc] = useState();
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL1;
-
-  // 🔥 FIX ADDED → TreeSelect ONLY using POST returned accounts
-  const [treeData, setTreeData] = useState([]);
+  const [treeData, setTreeData] = useState([]); // TreeSelect options
 
   const hasFetchedCompanies = useRef(false);
 
@@ -39,23 +80,25 @@ export const CostProvider = ({ children }) => {
     setCurrent_acc(account);
   }, []);
 
-  // Register Company
+  // ---------- Company Registration ----------
   const registerCompany = async (companyData) => {
     try {
       setLoading(true);
       setError(null);
+
       const response = await api.post(`/api/company/register`, companyData);
       return response.data;
     } catch (err) {
-      console.error("Register Error:", err);
-      setError(err.message);
-      return { error: "Network Error" };
+      logError("registerCompany", err);
+      const message = getErrorMessage("Unable to register company. Please try again.", err);
+      setError(message);
+      return { error: message };
     } finally {
       setLoading(false);
     }
   };
 
-  // Login
+  // ---------- Login ----------
   const loginCompany = async (loginData) => {
     try {
       setLoading(true);
@@ -63,59 +106,79 @@ export const CostProvider = ({ children }) => {
 
       const response = await fetch(`${apiBaseUrl}/api/company/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(loginData),
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Login failed");
+      const result = await parseJsonSafe(response);
 
-      const authValue = result.token ? result.token : "true";
-      localStorage.setItem("auth_token", authValue);
-      localStorage.setItem("jwt_token", authValue);
-      if (result.cid) localStorage.setItem("company_cid", result.cid);
+      if (!response.ok) {
+        const message = getErrorMessage("Login failed. Please check your credentials.", result);
+        setError(message);
+        return { error: message };
+      }
+
+      const authValue = result?.token || "true";
+      try {
+        localStorage.setItem("auth_token", authValue);
+        localStorage.setItem("jwt_token", authValue);
+        if (result?.cid) {
+          localStorage.setItem("company_cid", result.cid);
+        }
+      } catch (err) {
+        logError("loginCompany/localStorage", err);
+      }
 
       return result;
     } catch (err) {
-      console.error("Login Error:", err);
-      setError(err.message);
-      return { error: err.message || "Network Error" };
+      logError("loginCompany", err);
+      const message = getErrorMessage("Unable to login. Please try again.", err);
+      setError(message);
+      return { error: message };
     } finally {
       setLoading(false);
     }
   };
 
-  // Add Account
+  // ---------- Add Account ----------
   const addAccount = async (accountData) => {
     try {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("auth_token");
+      const headers = {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      };
 
       const response = await fetch(`http://47.130.218.97:8016/api/account/add`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
+        headers,
         body: JSON.stringify(accountData),
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Account creation failed");
+      const result = await parseJsonSafe(response);
+
+      if (!response.ok) {
+        const message = getErrorMessage("Account creation failed.", result);
+        setError(message);
+        return { error: message };
+      }
 
       return result;
     } catch (err) {
-      console.error("Add Account Error:", err);
-      setError(err.message);
-      return { error: err.message || "Network Error" };
+      logError("addAccount", err);
+      const message = getErrorMessage("Unable to add account. Please try again.", err);
+      setError(message);
+      return { error: message };
     } finally {
       setLoading(false);
     }
   };
 
-  // All Companies
+  // ---------- Get All Companies ----------
   const getAllCompanies = async (forceRefresh = false) => {
     if (hasFetchedCompanies.current && !forceRefresh) {
       return companies;
@@ -125,99 +188,125 @@ export const CostProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("auth_token");
+      const headers = {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      };
 
       const response = await fetch(`${apiBaseUrl}/api/company/all`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
+        headers,
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Failed to fetch companies");
+      const result = await parseJsonSafe(response);
 
-      setCompanies(result);
+      if (!response.ok) {
+        const message = getErrorMessage("Failed to fetch companies.", result);
+        setError(message);
+        return { error: message };
+      }
+
+      setCompanies(result || []);
       hasFetchedCompanies.current = true;
 
       return result;
     } catch (err) {
-      console.error("Get All Companies Error:", err);
-      setError(err.message);
-      return { error: err.message || "Network Error" };
+      logError("getAllCompanies", err);
+      const message = getErrorMessage("Unable to load companies. Please try again.", err);
+      setError(message);
+      return { error: message };
     } finally {
       setLoading(false);
     }
   };
 
-  // All Accounts for a Company
+  // ---------- Get All Accounts for a Company ----------
   const getAllAccounts = async () => {
     try {
       setLoading(true);
       setError(null);
 
       const cid = localStorage.getItem("company_cid");
-      if (!cid) throw new Error("Company ID missing");
+      if (!cid) {
+        const message = "Company ID missing. Please login again.";
+        setError(message);
+        return { error: message };
+      }
+
+      const headers = {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      };
 
       const response = await fetch(`${apiBaseUrl}/api/accounts/all/${cid}`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-        },
+        headers,
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Failed to fetch accounts");
+      const result = await parseJsonSafe(response);
+
+      if (!response.ok) {
+        const message = getErrorMessage("Failed to fetch accounts.", result);
+        setError(message);
+        return { error: message };
+      }
 
       return result;
     } catch (err) {
-      console.error("Fetch Accounts Error:", err);
-      setError(err.message);
-      return { error: err.message || "Network Error" };
+      logError("getAllAccounts", err);
+      const message = getErrorMessage("Unable to load accounts. Please try again.", err);
+      setError(message);
+      return { error: message };
     } finally {
       setLoading(false);
     }
   };
 
-  // Main Data Fetch
+  // ---------- Main Data Fetch (Cost / Resources / Tags) ----------
   useEffect(() => {
     const fetchAllData = async () => {
       try {
         setLoading(true);
+        setError(null);
 
-        // ---------------------------
         // 1️⃣ Get stored + selected IDs
-        // ---------------------------
-        const storedIds = JSON.parse(localStorage.getItem("account_ids")) || [];
+        const storedAccountIdsRaw = localStorage.getItem("account_ids");
+        let storedIds = [];
+
+        try {
+          storedIds = storedAccountIdsRaw
+            ? JSON.parse(storedAccountIdsRaw)
+            : [];
+        } catch (err) {
+          logError("fetchAllData/account_ids/parse", err);
+          storedIds = [];
+        }
+
         const { account_id } = filters;
 
         const postBody = {
-          account_ids: account_id && account_id !== "ALL" ? [account_id] : storedIds,
+          account_ids:
+            account_id && account_id !== "ALL"
+              ? [account_id]
+              : Array.isArray(storedIds)
+              ? storedIds
+              : [],
         };
 
         console.log("➡️ POST Body:", postBody);
 
-        // ---------------------------
         // 2️⃣ API Calls (ALL POST)
-        // ---------------------------
         const [costRes, resourcesRes, tagRes] = await Promise.all([
-          // COST SUMMARY
           fetch("http://47.130.218.97:8021/cost-summary", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(postBody),
           }),
-
-          // RESOURCES FILTER
           fetch("http://47.130.218.97:8003/resources/filter", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(postBody),
           }),
-
-          // TAGS FILTER
           fetch("http://47.130.218.97:8007/tags/filter", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -225,18 +314,15 @@ export const CostProvider = ({ children }) => {
           }),
         ]);
 
-        // ---------------------------
-        // 3️⃣ Parse JSON
-        // ---------------------------
-        const costJson = await costRes.json();
-        const resourcesJson = await resourcesRes.json();
-        const tagsJson = await tagRes.json();
+        // 3️⃣ Parse JSON safely
+        const [costJson, resourcesJson, tagsJson] = await Promise.all([
+          parseJsonSafe(costRes),
+          parseJsonSafe(resourcesRes),
+          parseJsonSafe(tagRes),
+        ]);
 
-        // ---------------------------
-        // 4️⃣ Build TreeSelect
-        // ---------------------------
+        // 4️⃣ Build TreeSelect from POST accounts
         const apiAccountIds = costJson?.account_ids || [];
-
         setTreeData(
           apiAccountIds.map((id) => ({
             title: id,
@@ -244,9 +330,7 @@ export const CostProvider = ({ children }) => {
           }))
         );
 
-        // ---------------------------
         // 5️⃣ Build Accounts Dropdown
-        // ---------------------------
         const allIds = costJson?.all_account_ids || [];
         const orderedAccounts = allIds.includes("ALL")
           ? allIds
@@ -254,31 +338,26 @@ export const CostProvider = ({ children }) => {
 
         setAccounts(orderedAccounts);
 
-        // ---------------------------
         // 6️⃣ Tag Data (Already filtered from backend)
-        // ---------------------------
         const processedTagData = Array.isArray(tagsJson)
           ? tagsJson.map((res, i) => ({
-            id: res.id || i + 1,
-            account_name: res.account_name,
-            account_id: res.account_id,
-            region: res.region,
-            service: res.service,
-            resource: res.resource,
-            tags: res.tags || {},
-          }))
+              id: res.id || i + 1,
+              account_name: res.account_name,
+              account_id: res.account_id,
+              region: res.region,
+              service: res.service,
+              resource: res.resource,
+              tags: res.tags || {},
+            }))
           : [];
 
-        // ---------------------------
         // 7️⃣ Apps
-        // ---------------------------
         const appList =
-          costJson?.top_5?.top_apps_current_month?.map((a) => a.app_name) || [];
+          costJson?.top_5?.top_apps_current_month?.map((a) => a.app_name) ||
+          [];
         setApps(appList);
 
-        // ---------------------------
         // 8️⃣ Tag Summary
-        // ---------------------------
         const requiredTags = ["Name", "Owner", "Project", "Environment"];
         const summary = {
           fully_tagged: 0,
@@ -294,16 +373,15 @@ export const CostProvider = ({ children }) => {
           else summary.not_tagged++;
         });
 
-        // ---------------------------
         // 9️⃣ Set All Final Data
-        // ---------------------------
         setTagData(processedTagData);
         setTagSummary(summary);
         setCostData(costJson);
         setResourcesData(resourcesJson);
       } catch (err) {
-        console.error("Fetch error:", err);
-        setError(err.message);
+        logError("fetchAllData", err);
+        const message = getErrorMessage("Unable to load cost data.", err);
+        setError(message);
       } finally {
         setLoading(false);
       }
@@ -311,7 +389,6 @@ export const CostProvider = ({ children }) => {
 
     fetchAllData();
   }, [filters]);
-
 
   return (
     <CostContext.Provider
@@ -326,8 +403,8 @@ export const CostProvider = ({ children }) => {
         setFilters,
         accounts,
         apps,
-        treeData,          // 🔥 FIX ADDED
-        setTreeData,       // 🔥 FIX ADDED
+        treeData,
+        setTreeData,
         registerCompany,
         loginCompany,
         addAccount,

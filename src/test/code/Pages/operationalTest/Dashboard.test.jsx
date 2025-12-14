@@ -235,4 +235,153 @@ describe("Dashboard component", () => {
     // totalInstances should be 0
     expect(screen.getAllByText("0")).toHaveLength(4); // Four zeros are rendered for different stats
   });
+
+  test("handles localStorage unavailable error", async () => {
+    // Mock localStorage.getItem to throw an error
+    const originalGetItem = localStorage.getItem;
+    localStorage.getItem = vi.fn(() => {
+      throw new Error("localStorage unavailable");
+    });
+
+    axios.post.mockResolvedValueOnce({ data: { data: [] } });
+
+    render(<Dashboard />);
+
+    await waitFor(() => expect(screen.getByText(/Total Instances/i)).toBeInTheDocument());
+
+    // Restore original localStorage.getItem
+    localStorage.getItem = originalGetItem;
+  });
+
+  test("handles localStorage with null string", async () => {
+    localStorage.setItem("account_ids", "null");
+    axios.post.mockResolvedValueOnce({ data: { data: [] } });
+
+    render(<Dashboard />);
+
+    await waitFor(() => expect(screen.getByText(/Total Instances/i)).toBeInTheDocument());
+  });
+
+  test("handles localStorage with empty string", async () => {
+    localStorage.setItem("account_ids", "");
+    axios.post.mockResolvedValueOnce({ data: { data: [] } });
+
+    render(<Dashboard />);
+
+    await waitFor(() => expect(screen.getByText(/Total Instances/i)).toBeInTheDocument());
+  });
+
+  test("handles localStorage with JSON array containing null values", async () => {
+    localStorage.setItem("account_ids", JSON.stringify([null, "123", "", "456"]));
+    axios.post.mockResolvedValueOnce({ data: { data: [] } });
+
+    render(<Dashboard />);
+
+    await waitFor(() => expect(screen.getByText(/Total Instances/i)).toBeInTheDocument());
+
+    // Check that axios was called with filtered account_ids
+    expect(axios.post).toHaveBeenCalled();
+    const calledWith = axios.post.mock.calls[0];
+    expect(calledWith[1].account_ids).toEqual(["123", "456"]);
+  });
+
+  test("handles localStorage with JSON string value", async () => {
+    localStorage.setItem("account_ids", JSON.stringify("12345"));
+    axios.post.mockResolvedValueOnce({ data: { data: [] } });
+
+    render(<Dashboard />);
+
+    await waitFor(() => expect(screen.getByText(/Total Instances/i)).toBeInTheDocument());
+
+    // Check that axios was called with single account_id
+    expect(axios.post).toHaveBeenCalled();
+    const calledWith = axios.post.mock.calls[0];
+    expect(calledWith[1].account_ids).toEqual(["12345"]);
+  });
+
+  test("handles localStorage with JSON number value", async () => {
+    localStorage.setItem("account_ids", JSON.stringify(12345));
+    axios.post.mockResolvedValueOnce({ data: { data: [] } });
+
+    render(<Dashboard />);
+
+    await waitFor(() => expect(screen.getByText(/Total Instances/i)).toBeInTheDocument());
+
+    // Check that axios was called with single account_id as string
+    expect(axios.post).toHaveBeenCalled();
+    const calledWith = axios.post.mock.calls[0];
+    expect(calledWith[1].account_ids).toEqual(["12345"]);
+  });
+
+  test("handles localStorage with CSV values", async () => {
+    localStorage.setItem("account_ids", "123,456,789");
+    axios.post.mockResolvedValueOnce({ data: { data: [] } });
+
+    render(<Dashboard />);
+
+    await waitFor(() => expect(screen.getByText(/Total Instances/i)).toBeInTheDocument());
+
+    // Check that axios was called with split account_ids
+    expect(axios.post).toHaveBeenCalled();
+    const calledWith = axios.post.mock.calls[0];
+    expect(calledWith[1].account_ids).toEqual(["123", "456", "789"]);
+  });
+
+  test("handles localStorage with malformed JSON", async () => {
+    localStorage.setItem("account_ids", "{invalid json}");
+    axios.post.mockResolvedValueOnce({ data: { data: [] } });
+
+    render(<Dashboard />);
+
+    await waitFor(() => expect(screen.getByText(/Total Instances/i)).toBeInTheDocument());
+
+    // Should treat as single string value
+    expect(axios.post).toHaveBeenCalled();
+    const calledWith = axios.post.mock.calls[0];
+    expect(calledWith[1].account_ids).toEqual(["{invalid json}"]);
+  });
+
+  test("handles API error gracefully", async () => {
+    // Mock axios.post to reject
+    axios.post.mockRejectedValueOnce(new Error("Network error"));
+
+    render(<Dashboard />);
+
+    // Should still render the dashboard with empty data
+    await waitFor(() => expect(screen.getByText(/Total Instances/i)).toBeInTheDocument());
+
+    // Should show 0 instances due to error handling
+    expect(screen.getAllByText("0")).toHaveLength(4);
+  });
+
+  test("handles API response with different data structures", async () => {
+    // Test with direct array response
+    axios.post.mockResolvedValueOnce({ data: [makeApiItem()] });
+
+    localStorage.setItem("account_ids", JSON.stringify(["123"]));
+
+    render(<Dashboard />);
+
+    await waitFor(() => expect(screen.getByText(/Total Instances/i)).toBeInTheDocument());
+
+    // Should show 1 instance - look for specific context
+    const instanceCounts = screen.getAllByText("1");
+    expect(instanceCounts.length).toBeGreaterThan(0);
+  });
+
+  test("handles API response with missing fields", async () => {
+    // Test with item missing some utilization fields
+    const incompleteItem = { id: "incomplete", account_id: "123" };
+    axios.post.mockResolvedValueOnce({ data: { data: [incompleteItem] } });
+
+    localStorage.setItem("account_ids", JSON.stringify(["123"]));
+
+    render(<Dashboard />);
+
+    await waitFor(() => expect(screen.getByText(/Total Instances/i)).toBeInTheDocument());
+
+    // Should show 1 instance with 0 values for missing fields - look for specific context
+    const instanceCounts = screen.getAllByText("1");
+    expect(instanceCounts.length).toBeGreaterThan(0);
+  });
 });

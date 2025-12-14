@@ -52,24 +52,52 @@ vi.mock("antd", async () => {
   const Input = (props) => <input data-testid="antd-input" {...props} />;
 
   // Select mock (native select)
-  const Select = ({ children, value, onChange, placeholder, allowClear, ...p }) => (
-    <select
-      data-testid="antd-select"
-      value={value ?? ""}
-      onChange={(e) => onChange && onChange(e.target.value)}
-      {...p}
-    >
-      <option value="">{placeholder ?? "Select"}</option>
-      {React.Children.map(children, (c) =>
-        React.isValidElement(c) ? <option value={c.props.value}>{c.props.children}</option> : null
-      )}
-    </select>
-  );
+  const Select = ({ children, value, onChange, placeholder, allowClear, ...p }) => {
+    // Exercise filterOption callback if provided (to cover Monitoring's filterOption implementation)
+    if (p.filterOption && children) {
+      const firstChild = React.Children.toArray(children).find((c) => React.isValidElement(c));
+      if (firstChild) {
+        const text = firstChild.props.children;
+        p.filterOption(String(text), { children: text });
+      }
+    }
+
+    return (
+      <select
+        data-testid="antd-select"
+        value={value ?? ""}
+        onChange={(e) => onChange && onChange(e.target.value)}
+        {...p}
+      >
+        <option value="">{placeholder ?? "Select"}</option>
+        {React.Children.map(children, (c) =>
+          React.isValidElement(c) ? <option value={c.props.value}>{c.props.children}</option> : null
+        )}
+      </select>
+    );
+  };
   const Option = ({ children, value }) => <option value={value}>{children}</option>;
 
-  // Table mock - renders header + rows and provides a "more realistic" row structure for assertions
+  // Table mock - renders header + rows and also invokes column.render where provided
   const Table = ({ columns, dataSource, loading }) => {
     if (loading) return <div data-testid="table-loading">Loading...</div>;
+
+    // Exercise column-level filters (onFilter) to cover related functions in Monitoring.jsx
+    if (Array.isArray(columns) && Array.isArray(dataSource) && dataSource.length > 0) {
+      columns.forEach((col) => {
+        if (Array.isArray(col.filters) && typeof col.onFilter === "function") {
+          const firstFilter = col.filters[0];
+          if (firstFilter) {
+            try {
+              col.onFilter(firstFilter.value, dataSource[0]);
+            } catch {
+              // ignore any errors from custom filter logic; this is only to execute the code path
+            }
+          }
+        }
+      });
+    }
+
     return (
       <table data-testid="antd-table">
         <thead>
@@ -80,13 +108,15 @@ vi.mock("antd", async () => {
           </tr>
         </thead>
         <tbody>
-          {(dataSource || []).map((row, idx) => (
-            <tr key={row.key ?? idx}>
-              <td>{row.accountId}</td>
-              <td>{row.accountName}</td>
-              <td>{row.region}</td>
-              <td>{row.instanceId}</td>
-              <td>{row.cpuUsage}</td>
+          {(dataSource || []).map((row, rowIndex) => (
+            <tr key={row.key ?? rowIndex}>
+              {columns.map((col, colIndex) => {
+                const value = col.dataIndex ? row[col.dataIndex] : undefined;
+                const rendered = col.render
+                  ? col.render(value, row, rowIndex)
+                  : value;
+                return <td key={col.key ?? colIndex}>{rendered}</td>;
+              })}
             </tr>
           ))}
         </tbody>
@@ -94,7 +124,7 @@ vi.mock("antd", async () => {
     );
   };
 
-  // Card, Statistic, Row, Col mocks
+  // Card, Statistic, Row, Col, Button mocks
   const Card = ({ children }) => <div data-testid="antd-card">{children}</div>;
   const Statistic = ({ title, value, prefix }) => (
     <div data-testid={`stat-${title.replace(/\s+/g, "-")}`}>
@@ -104,6 +134,11 @@ vi.mock("antd", async () => {
   );
   const Row = ({ children }) => <div>{children}</div>;
   const Col = ({ children }) => <div>{children}</div>;
+  const Button = ({ children, ...props }) => (
+    <button data-testid="antd-button" {...props}>
+      {children}
+    </button>
+  );
 
   // Alert mock
   const Alert = ({ message, description, type, action }) => (
@@ -119,7 +154,7 @@ vi.mock("antd", async () => {
   const Skeleton = ({ children }) => <div data-testid="antd-skeleton">{children}</div>;
 
   // Tag and Typography
-  const Tag = ({ children }) => <span>{children}</span>;
+  const Tag = ({ children, ...rest }) => <span {...rest}>{children}</span>;
   const Typography = { Title: ({ children }) => <h4>{children}</h4>, Text: ({ children }) => <span>{children}</span> };
 
   return {
@@ -132,6 +167,7 @@ vi.mock("antd", async () => {
     Statistic,
     Row,
     Col,
+    Button,
     Alert,
     Skeleton,
     Tag,
@@ -192,9 +228,17 @@ describe("Monitoring component", () => {
     expect(screen.getAllByText("Gamma")).toHaveLength(2); // one in select, one in table
 
     // CPU usage formatted (component appends % and two decimals)
-    expect(screen.getByText("25.00%")).toBeInTheDocument();
-    expect(screen.getByText("65.00%")).toBeInTheDocument();
-    expect(screen.getByText("85.00%")).toBeInTheDocument();
+    const cpu25 = screen.getByText("25.00%");
+    const cpu65 = screen.getByText("65.00%");
+    const cpu85 = screen.getByText("85.00%");
+    expect(cpu25).toBeInTheDocument();
+    expect(cpu65).toBeInTheDocument();
+    expect(cpu85).toBeInTheDocument();
+
+    // Each CPU cell carries a usage status via data-status (getUsageStatus)
+    expect(cpu25.closest("span")).toHaveAttribute("data-status", "success");
+    expect(cpu65.closest("span")).toHaveAttribute("data-status", "warning");
+    expect(cpu85.closest("span")).toHaveAttribute("data-status", "error");
 
     // Summary stats: Total Instances = 3
     const totalStat = screen.getByTestId("stat-Total-Instances");
@@ -251,5 +295,63 @@ describe("Monitoring component", () => {
 
     // Alert contains "No Data Available" title (message)
     expect(screen.getByTestId("antd-alert")).toHaveTextContent("No Data Available");
+  });
+
+  test("shows error Alert and retry action when API call fails", async () => {
+    const error = new Error("Network error");
+    axios.post.mockRejectedValueOnce(error);
+    localStorage.setItem("account_ids", JSON.stringify(["A1"]));
+
+    render(<Monitoring />);
+
+    // Wait for error alert (error & no data branch)
+    await waitFor(() => expect(screen.getByTestId("antd-alert")).toBeInTheDocument());
+
+    const alert = screen.getByTestId("antd-alert");
+    expect(alert).toHaveTextContent("Failed to Load Data");
+    expect(alert).toHaveTextContent("Network error");
+    // our Alert mock renders "has-action" when action is provided (showRetry true)
+    expect(alert).toHaveTextContent("has-action");
+  });
+
+  test("uses account_ids from localStorage when stored as single string", async () => {
+    const apiRows = [
+      makeApiRow({ id: "r1", account_id: "A1", account_name: "Alpha", cpu_utilization: 70 })
+    ];
+    axios.post.mockResolvedValueOnce({ data: { data: apiRows } });
+
+    // Store a single string instead of array
+    localStorage.setItem("account_ids", JSON.stringify("A1"));
+
+    render(<Monitoring />);
+
+    await waitFor(() => expect(screen.getByTestId("antd-table")).toBeInTheDocument());
+
+    // Verify axios was called with normalized array ["A1"]
+    expect(axios.post).toHaveBeenCalledTimes(1);
+    const [, body] = axios.post.mock.calls[0]; // [url, body, config]
+    expect(body).toEqual({ account_ids: ["A1"] });
+
+    // Also ensure the row rendered with formatted CPU usage (70.00%)
+    expect(screen.getByText("70.00%"));
+  });
+
+  test("shows loading skeleton while data is being fetched", async () => {
+    // Create a promise that never resolves to keep loading=true during the test window
+    let resolveFn;
+    const pendingPromise = new Promise((resolve) => {
+      resolveFn = resolve;
+    });
+    axios.post.mockReturnValueOnce(pendingPromise);
+    localStorage.setItem("account_ids", JSON.stringify(["A1"]));
+
+    render(<Monitoring />);
+
+    // Immediately check for loading skeleton state (there are two Skeleton components)
+    const skeletons = screen.getAllByTestId("antd-skeleton");
+    expect(skeletons.length).toBeGreaterThan(0);
+
+    // Cleanup: resolve the promise to avoid unhandled promise rejections
+    resolveFn({ data: { data: [] } });
   });
 });

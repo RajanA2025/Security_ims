@@ -1,3 +1,4 @@
+// src/pages/Admin/Admin.jsx
 import React, { useState, useMemo, useEffect, useContext } from "react";
 import { Plus, Edit, Trash2, Check, X, Search, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -12,111 +13,135 @@ const Admin = () => {
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState(null);
   const [visiblePasswords, setVisiblePasswords] = useState({});
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL1;
-  // ✅ Fetch data from API
+
+  // safe env fallback and warning
+  const apiBaseUrl =
+    import.meta.env.VITE_API_BASE_URL1 ||
+    import.meta.env.VITE_API_BASE_URL ||
+    "";
+  if (!apiBaseUrl) {
+    // Only warn in development
+    if (process.env.NODE_ENV !== "production") {
+      // eslint-disable-next-line no-console
+      console.warn("apiBaseUrl is empty — check environment variables (VITE_API_BASE_URL1/VITE_API_BASE_URL)");
+    }
+  }
+
+  // ✅ Fetch data from API (uses getAllCompanies from context)
   useEffect(() => {
+    let mounted = true;
+
     const fetchCompanies = async () => {
-      const result = await getAllCompanies();
+      try {
+        const result = await getAllCompanies();
 
-      // ✅ Handle API format correctly
-      const companyList = result?.companies || [];
+        // Handle API format correctly
+        const companyList = result?.companies || [];
 
-      if (Array.isArray(companyList)) {
-        const formatted = companyList.map((item, index) => ({
-          cid: item.cid || index + 1,
-          company_id: `C${item.cid || index + 1}`,
-          company_name: item.company_name || "N/A",
-          admin_name: item.admin_name || "N/A", // ✅ ADD THIS LINE
-          mail_id: item.email || "N/A",
-          password: "Test@1234", // 🔐 password shouldn't come from backend
-          features: {
-            cost: !!item.cost,
-            security: !!item.security,
-            operational_excellence: !!item.operational_excellence,
-            // performance: !!item.performance,
-          },
-          status: "active",
-        }));
+        if (Array.isArray(companyList) && mounted) {
+          const formatted = companyList.map((item, index) => ({
+            cid: item.cid || index + 1,
+            company_id: `C${item.cid || index + 1}`,
+            company_name: item.company_name || "N/A",
+            admin_name: item.admin_name || "N/A",
+            mail_id: item.email || "N/A",
+            password: "Test@1234", // password shouldn't come from backend in plain text; placeholder
+            features: {
+              cost: !!item.cost,
+              security: !!item.security,
+              operational_excellence: !!item.operational_excellence,
+            },
+            status: "active",
+          }));
 
-
-        setAccounts(formatted);
+          setAccounts(formatted);
+        }
+      } catch (err) {
+        // safe logging
+        // eslint-disable-next-line no-console
+        console.error("Failed to fetch companies:", err);
       }
     };
 
     fetchCompanies();
-    // setTimeout((
 
-    // ) => { fetchCompanies() }, 2000);
-
+    return () => {
+      mounted = false;
+    };
   }, [getAllCompanies]);
 
-
-
-
-  // 🔍 Filtered Accounts
+  // Filtered Accounts
   const filteredAccounts = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return accounts;
     return accounts.filter((acc) => {
-      const q = searchQuery.toLowerCase();
       return (
-        acc.company_id.toLowerCase().includes(q) ||
-        acc.company_name.toLowerCase().includes(q) ||
-        acc.mail_id.toLowerCase().includes(q)
+        (acc.company_id || "").toLowerCase().includes(q) ||
+        (acc.company_name || "").toLowerCase().includes(q) ||
+        (acc.mail_id || "").toLowerCase().includes(q)
       );
     });
   }, [accounts, searchQuery]);
 
-  // ✏️ Edit Handlers
+  // Edit Handlers
   const handleEdit = (acc) => {
+    // initialize editData defensively
     setEditingId(acc.cid);
     setEditData({ ...acc });
   };
 
   const handleSave = () => {
-    setAccounts(accounts.map((acc) => (acc.cid === editingId ? editData : acc)));
+    // guard
+    if (!editData) {
+      setEditingId(null);
+      return;
+    }
+    setAccounts((prev) => prev.map((acc) => (acc.cid === editingId ? editData : acc)));
     setEditingId(null);
+    setEditData(null);
   };
 
   const handleDelete = async (cid) => {
+    // Using built-in confirm per original UI
     if (!window.confirm("Are you sure you want to delete this company?")) return;
 
     try {
+      // omit JSON header since no body is sent
       const response = await fetch(`${apiBaseUrl}/api/company/delete/${cid}`, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
       });
 
       if (!response.ok) {
         throw new Error(`Failed to delete (status: ${response.status})`);
       }
 
-      // ✅ Remove locally after successful deletion
+      // Remove locally after successful deletion
       setAccounts((prev) => prev.filter((acc) => acc.cid !== cid));
-
-      // alert("✅ Company deleted successfully!");
-    } catch (error) {
-      console.error("Delete error:", error);
+    } catch (err) {
+      // keep the variable name distinct from context 'error'
+      // eslint-disable-next-line no-console
+      console.error("Delete error:", err);
       alert("❌ Failed to delete company. Please try again.");
     }
   };
 
-
   const handleStatusToggle = (cid) => {
-    setAccounts(
-      accounts.map((acc) =>
-        acc.cid === cid
-          ? { ...acc, status: acc.status === "active" ? "inactive" : "active" }
-          : acc
+    setAccounts((prev) =>
+      prev.map((acc) =>
+        acc.cid === cid ? { ...acc, status: acc.status === "active" ? "inactive" : "active" } : acc
       )
     );
   };
 
   const handleFeatureToggle = (feature) => {
-    setEditData((prev) => ({
-      ...prev,
-      features: { ...prev.features, [feature]: !prev.features[feature] },
-    }));
+    // only allow toggling when editData exists
+    setEditData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        features: { ...prev.features, [feature]: !prev.features[feature] },
+      };
+    });
   };
 
   const togglePasswordVisibility = (cid) => {
@@ -126,6 +151,12 @@ const Admin = () => {
     }));
   };
 
+  // status class map - small refactor but doesn't change UI
+  const statusClassMap = {
+    active: "bg-green-100 text-green-700",
+    inactive: "bg-red-100 text-red-700",
+  };
+
   // ---------- UI ----------
   return (
     <div className="min-h-screen bg-gray-100 p-0">
@@ -133,24 +164,19 @@ const Admin = () => {
       <div className="px-0 py-4 mb-2">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 ">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">
-              Company Management
-            </h1>
+            <h1 className="text-2xl font-bold text-gray-800">Company Management</h1>
           </div>
 
           {/* Search Bar */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="relative w-full md:w-[250px]">
-              <Search
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
+              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
                 placeholder="Search by ID, name, or email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg pl-8 pr-3 py-1.5 text-sm font-normal focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
@@ -164,21 +190,12 @@ const Admin = () => {
               </button>
             </div>
           </div>
-
         </div>
       </div>
 
-
-
       {/* Loading / Error */}
-      {loading && (
-        <div className="text-center text-gray-500 py-8">Loading companies...</div>
-      )}
-      {error && (
-        <div className="text-center text-red-500 py-8">
-          Failed to load companies: {error}
-        </div>
-      )}
+      {loading && <div className="text-center text-gray-500 py-8">Loading companies...</div>}
+      {error && <div className="text-center text-red-500 py-8">Failed to load companies: {error}</div>}
 
       {/* Accounts Table */}
       {!loading && !error && (
@@ -186,28 +203,21 @@ const Admin = () => {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                {[
-                  "Company ID",
-                  "Company Name",
-                  "Mail ID",
-                  "Password",
-                  "Features",
-                  "Status",
-                  "Actions",
-                ].map((header) => (
-                  <th
-                    key={header}
-                    className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
-                  >
-                    {header}
-                  </th>
-                ))}
+                {["Company ID", "Company Name", "Mail ID", "Password", "Features", "Status", "Actions"].map(
+                  (header) => (
+                    <th
+                      key={header}
+                      className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                    >
+                      {header}
+                    </th>
+                  )
+                )}
               </tr>
             </thead>
 
             <tbody className="divide-y divide-gray-200">
               {filteredAccounts.map((acc) => (
-
                 <tr key={acc.cid} className="hover:bg-gray-50">
                   {/* Company ID */}
                   <td className="px-4 py-3">{acc.company_id}</td>
@@ -217,10 +227,8 @@ const Admin = () => {
                     {editingId === acc.cid ? (
                       <input
                         type="text"
-                        value={editData.company_name}
-                        onChange={(e) =>
-                          setEditData({ ...editData, company_name: e.target.value })
-                        }
+                        value={editData?.company_name ?? ""}
+                        onChange={(e) => setEditData({ ...editData, company_name: e.target.value })}
                         className="border rounded px-2 py-1 w-full"
                       />
                     ) : (
@@ -233,11 +241,10 @@ const Admin = () => {
                     {editingId === acc.cid ? (
                       <input
                         type="email"
-                        value={editData.mail_id}
-                        onChange={(e) =>
-                          setEditData({ ...editData, mail_id: e.target.value })
-                        }
-                        className="border rounded px-2 py-1 w-full !text-green-800" />
+                        value={editData?.mail_id ?? ""}
+                        onChange={(e) => setEditData({ ...editData, mail_id: e.target.value })}
+                        className="border rounded px-2 py-1 w-full !text-green-800"
+                      />
                     ) : (
                       acc.mail_id
                     )}
@@ -249,28 +256,15 @@ const Admin = () => {
                       {editingId === acc.cid ? (
                         <input
                           type={visiblePasswords[acc.cid] ? "text" : "password"}
-                          value={editData.password}
-                          onChange={(e) =>
-                            setEditData({ ...editData, password: e.target.value })
-                          }
+                          value={editData?.password ?? ""}
+                          onChange={(e) => setEditData({ ...editData, password: e.target.value })}
                           className="border rounded px-2 py-1 w-full"
                         />
                       ) : (
-                        <span>
-                          {visiblePasswords[acc.cid]
-                            ? acc.password
-                            : "••••••••"}
-                        </span>
+                        <span>{visiblePasswords[acc.cid] ? acc.password : "••••••••"}</span>
                       )}
-                      <button
-                        onClick={() => togglePasswordVisibility(acc.cid)}
-                        className="text-gray-600 hover:text-gray-800"
-                      >
-                        {visiblePasswords[acc.cid] ? (
-                          <EyeOff size={18} />
-                        ) : (
-                          <Eye size={18} />
-                        )}
+                      <button onClick={() => togglePasswordVisibility(acc.cid)} className="text-gray-600 hover:text-gray-800">
+                        {visiblePasswords[acc.cid] ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
                   </td>
@@ -278,24 +272,17 @@ const Admin = () => {
                   {/* Features */}
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
-                      {Object.entries(
-                        editingId === acc.cid ? editData.features : acc.features
-                      ).map(([feature, value]) => (
-                        <button
-                          key={feature}
-                          onClick={
-                            editingId === acc.cid
-                              ? () => handleFeatureToggle(feature)
-                              : undefined
-                          }
-                          className={`px-2 py-1 rounded text-xs font-medium ${value
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-gray-200 text-gray-600"
-                            }`}
-                        >
-                          {feature}
-                        </button>
-                      ))}
+                      {Object.entries(editingId === acc.cid ? editData?.features ?? {} : acc.features ?? {}).map(
+                        ([feature, value]) => (
+                          <button
+                            key={feature}
+                            onClick={editingId === acc.cid ? () => handleFeatureToggle(feature) : undefined}
+                            className={`px-2 py-1 rounded text-xs font-medium ${value ? "bg-blue-100 text-blue-700" : "bg-gray-200 text-gray-600"}`}
+                          >
+                            {feature}
+                          </button>
+                        )
+                      )}
                     </div>
                   </td>
 
@@ -303,10 +290,7 @@ const Admin = () => {
                   <td className="px-4 py-3">
                     <button
                       onClick={() => handleStatusToggle(acc.cid)}
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${acc.status === "active"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                        }`}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${statusClassMap[acc.status] ?? "bg-gray-100 text-gray-700"}`}
                     >
                       {acc.status === "active" ? "Active" : "Inactive"}
                     </button>
@@ -326,14 +310,14 @@ const Admin = () => {
                   >
                     {editingId === acc.cid ? (
                       <>
-                        <button
-                          onClick={handleSave}
-                          className="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
-                        >
+                        <button onClick={handleSave} className="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200">
                           <Check size={16} />
                         </button>
                         <button
-                          onClick={() => setEditingId(null)}
+                          onClick={() => {
+                            setEditingId(null);
+                            setEditData(null);
+                          }}
                           className="p-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"
                         >
                           <X size={16} />
@@ -348,10 +332,7 @@ const Admin = () => {
                           <Edit size={16} />
                         </button>
 
-                        <button
-                          onClick={() => handleDelete(acc.cid)}
-                          className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
-                        >
+                        <button onClick={() => handleDelete(acc.cid)} className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
                           <Trash2 size={16} />
                         </button>
                       </>
@@ -362,11 +343,7 @@ const Admin = () => {
             </tbody>
           </table>
 
-          {filteredAccounts.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              No accounts match your search.
-            </div>
-          )}
+          {filteredAccounts.length === 0 && <div className="text-center py-8 text-gray-500">No accounts match your search.</div>}
         </div>
       )}
     </div>

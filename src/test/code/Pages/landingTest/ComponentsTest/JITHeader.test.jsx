@@ -1,8 +1,3 @@
-// Mock the logo import (image) - must match exact path in component
-vi.mock("c:/project/jit_ms1/Security_ims/src/assets/jitlogo.png", () => ({
-  default: "mock-logo.png"
-}));
-
 // Mock react-icons to avoid any icon-related issues
 vi.mock("react-icons/fi", () => ({
   FiChevronDown: () => <span data-testid="chevron-down">▼</span>,
@@ -117,6 +112,24 @@ describe("JitHeader", () => {
 
     // Also the mobile button should reflect open state
     expect(mobileBtn).toHaveAttribute("aria-expanded", "true");
+  });
+
+  test("mobile menu closes when clicking non-dropdown items", () => {
+    const { container } = render(<JitHeader />);
+
+    // Find the mobile menu button
+    const mobileBtn = screen.getByRole("button", { name: /Open menu|Close menu/i });
+    
+    // Click to open mobile menu
+    fireEvent.click(mobileBtn);
+    expect(mobileBtn).toHaveAttribute("aria-expanded", "true");
+
+    // Find a non-dropdown item (About Us) in mobile menu and click it
+    const aboutUsMobile = screen.getAllByText("About Us")[1]; // Mobile version
+    fireEvent.click(aboutUsMobile);
+
+    // Menu should close after clicking non-dropdown item
+    expect(mobileBtn).toHaveAttribute("aria-expanded", "false");
   });
 
   test("non-dropdown nav item navigates by href (anchor present)", () => {

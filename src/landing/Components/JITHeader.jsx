@@ -1,14 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { FiChevronDown, FiChevronUp, FiMenu, FiX } from 'react-icons/fi';
-import jitLogo from 'c:/project/jit_ms1/Security_ims/src/assets/jitlogo.png';
+
+// Handle logo import with fallback for test environment
+let jitLogo;
+try {
+  jitLogo = require('../../../assets/jitlogo.png');
+} catch (e) {
+  // Fallback for test environment or when file is not available
+  jitLogo = 'mock-logo.png';
+}
 
 const JitHeader = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
-
-  const toggleDropdown = (dropdown) => {
-    setActiveDropdown(activeDropdown === dropdown ? null : dropdown);
-  };
 
   const navItems = [
     { name: 'Home', href: 'https://jitglobalinfosystems.com/' },
@@ -39,6 +43,26 @@ const JitHeader = () => {
     { name: 'Contact Us', href: 'https://jitglobalinfosystems.com/contact/' }
   ];
 
+  // === Handlers (no inline arrows in JSX) ===
+
+  const handleDropdownToggle = (event) => {
+    const dropdownName = event.currentTarget.dataset.dropdown;
+    if (!dropdownName) return;
+    setActiveDropdown((prev) => (prev === dropdownName ? null : dropdownName));
+  };
+
+  const handleMobileMenuToggle = () => {
+    setMobileMenuOpen((prev) => !prev);
+  };
+
+  const handleCloseMobileMenu = () => {
+    setMobileMenuOpen(false);
+  };
+
+  const handleMobileSubItemClick = () => {
+    setMobileMenuOpen(false);
+  };
+
   return (
     <header className="w-full bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -61,7 +85,8 @@ const JitHeader = () => {
                 {item.items ? (
                   <>
                     <button
-                      onClick={() => toggleDropdown(item.name)}
+                      data-dropdown={item.name}
+                      onClick={handleDropdownToggle}
                       className={`flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 ${
                         activeDropdown === item.name 
                           ? 'text-blue-700 bg-blue-50' 
@@ -115,7 +140,7 @@ const JitHeader = () => {
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={handleMobileMenuToggle}
               className="inline-flex items-center justify-center p-2.5 rounded-xl text-gray-700 hover:text-blue-600 hover:bg-blue-50 focus:outline-none transition-all duration-300"
               aria-expanded={mobileMenuOpen}
               aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
@@ -142,7 +167,8 @@ const JitHeader = () => {
               {item.items ? (
                 <>
                   <button
-                    onClick={() => toggleDropdown(item.name)}
+                    data-dropdown={item.name}
+                    onClick={handleDropdownToggle}
                     className={`w-full flex justify-between items-center px-4 py-3.5 text-base font-medium rounded-lg transition-colors duration-200 ${
                       activeDropdown === item.name 
                         ? 'text-blue-700 bg-blue-50' 
@@ -169,7 +195,7 @@ const JitHeader = () => {
                           key={subItem.name}
                           href={subItem.href}
                           className="block px-4 py-2.5 text-sm font-medium text-gray-800 hover:bg-blue-100 hover:text-blue-700 rounded-lg transition-all duration-200 hover:pl-5"
-                          onClick={() => setMobileMenuOpen(false)}
+                          onClick={handleMobileSubItemClick}
                         >
                           {subItem.name}
                         </a>
@@ -181,7 +207,7 @@ const JitHeader = () => {
                 <a
                   href={item.href}
                   className="block px-4 py-3.5 text-base font-medium text-gray-700 hover:bg-blue-50/50 hover:text-blue-600 rounded-lg transition-colors duration-200"
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={handleCloseMobileMenu}
                 >
                   {item.name}
                 </a>
@@ -195,3 +221,7 @@ const JitHeader = () => {
 };
 
 export default JitHeader;
+
+
+
+

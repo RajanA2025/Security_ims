@@ -2,6 +2,13 @@ import "@testing-library/jest-dom";
 import { vi } from "vitest";
 import React from "react";
 
+// Mock all image imports
+vi.mock(".png", () => "mock-image.png");
+vi.mock(".jpg", () => "mock-image.jpg");
+vi.mock(".jpeg", () => "mock-image.jpeg");
+vi.mock(".svg", () => "mock-image.svg");
+vi.mock(".avif", () => "mock-image.avif");
+
 // Mock MUI components
 vi.mock("@mui/material", () => ({
   ...vi.importActual("@mui/material"),
