@@ -30,6 +30,8 @@ import axios from 'axios';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
+// get jwt_token from localStorage
+const jwt_token = localStorage.getItem("jwt_token");
 
 const Monitoring = () => {
   const [performanceData, setPerformanceData] = useState([]);
@@ -94,6 +96,7 @@ const Monitoring = () => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
+            Authorization: `Bearer ${jwt_token}`
           },
           timeout: 10000,
         }

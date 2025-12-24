@@ -29,7 +29,7 @@ const { RangePicker } = DatePicker;
 const Dashboard = () => {
   const { costData, loading, error, filters, setFilters, accounts } = useContext(CostContext);
 
-  const [context, setContext] = useState([]);
+  const [context, setContext] = useState(null);
   const [dates, setDates] = useState([]);
   const [currentMonthCost, setCurrentMonthCost] = useState(0);
   const [forecastAmount, setForecastAmount] = useState(0);
@@ -39,15 +39,16 @@ const Dashboard = () => {
   const [expandedKeys, setExpandedKeys] = useState([]);
 
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      handleReset();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     handleReset();
+  //   }, 500);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
   // Calculate dashboard metrics
   useEffect(() => {
+    console.log("Filters sent to API:", filters);
     if (!costData) return;
 
     const current = costData.monthly_summary?.current_month_cost || 0;
@@ -83,11 +84,21 @@ const Dashboard = () => {
     }
   };
 
-  const handleReset = () => {
-    setContext([]);
-    setDates([]);
-    setFilters({ account_id: null, app: null, start_date: null, end_date: null });
-  };
+  // const handleReset = () => {
+  //   setContext([]);
+  //   setDates([]);
+  //   setFilters({ account_id: null, app: null, start_date: null, end_date: null });
+  // };
+const handleReset = () => {
+  setContext(null);
+  setDates([]);
+  setFilters({
+    account_id: null,
+    app: null,
+    start_date: null,
+    end_date: null,
+  });
+};
 
   /** ================== TreeSelect Data ================== */
 

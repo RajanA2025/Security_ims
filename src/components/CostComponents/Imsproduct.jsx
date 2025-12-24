@@ -27,7 +27,7 @@ export default function Imsproduct() {
   const [showAddModal, setShowAddModal] = useState(false); // ✅ New modal state
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL1;
 
-  const cId = JSON.parse(localStorage.getItem('company_cid'));
+  const cId = JSON.parse(localStorage.getItem('cid'));
 
   useEffect(() => {
     const storedPillars = JSON.parse(localStorage.getItem('pillars'));
@@ -37,22 +37,22 @@ export default function Imsproduct() {
       try {
         const response = await fetch(`${apiBaseUrl}/api/accounts/all/${cId}`, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+            Authorization: `Bearer ${localStorage.getItem("jwt_token")}`,
           },
         });
         const data = await response.json();
 
         if (data && Array.isArray(data.accounts) && data.accounts.length > 0) {
           setHasAccount(true);
-          setIsModalVisible(false);
+          // setIsModalVisible(false);
         } else {
           setHasAccount(false);
-          setIsModalVisible(true);
+          // setIsModalVisible(true);
         }
       } catch (error) {
         console.error("❌ Error fetching accounts:", error);
         setHasAccount(false);
-        setIsModalVisible(true);
+        // setIsModalVisible(true);
       }
     };
 
@@ -67,17 +67,22 @@ export default function Imsproduct() {
 
   // ✅ Handle card click with "Add Account" modal if empty
   const handleCardClick = async (pillar) => {
-    const cid = localStorage.getItem("company_cid");
+    const cid = localStorage.getItem("cid");
     if (!cid) return;
-
+const jwt_token = localStorage.getItem("jwt_token");
     try {
+      console.log("Fetching accounts for pillar:", pillar);
       const url = `http://47.130.218.97:8016/api/accounts/${cid}/${pillar}`;
-      const response = await axios.get(url);
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${jwt_token}`,
+        },
+      });
       const accountsArray =
         response.data?.accounts ||
         response.data?.[`${pillar}_accounts`] ||
         response.data?.results ||
-        [];
+        []
 
       if (Array.isArray(accountsArray) && accountsArray.length > 0) {
         const accountIds = accountsArray.map((acc) => acc.account_id);

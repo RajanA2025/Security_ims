@@ -28,6 +28,8 @@ export const CostProvider = ({ children }) => {
   const [apps, setApps] = useState([]);
   const [Current_acc, setCurrent_acc] = useState();
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL1;
+//
+  const jwt_token = localStorage.getItem("jwt_token");
 
   // 🔥 FIX ADDED → TreeSelect ONLY using POST returned accounts
   const [treeData, setTreeData] = useState([]);
@@ -73,7 +75,7 @@ export const CostProvider = ({ children }) => {
       const authValue = result.token ? result.token : "true";
       localStorage.setItem("auth_token", authValue);
       localStorage.setItem("jwt_token", authValue);
-      if (result.cid) localStorage.setItem("company_cid", result.cid);
+      if (result.cid) localStorage.setItem("cid", result.cid);
 
       return result;
     } catch (err) {
@@ -97,7 +99,7 @@ export const CostProvider = ({ children }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
+          Authorization: `Bearer ${jwt_token}`,
         },
         body: JSON.stringify(accountData),
       });
@@ -127,11 +129,11 @@ export const CostProvider = ({ children }) => {
 
       const token = localStorage.getItem("auth_token");
 
-      const response = await fetch(`${apiBaseUrl}/api/company/all`, {
+      const response = await fetch(`http://47.130.218.97:8015/api/company/all`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
+          Authorization: `Bearer ${jwt_token}`,
         },
       });
 
@@ -157,7 +159,7 @@ export const CostProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      const cid = localStorage.getItem("company_cid");
+      const cid = localStorage.getItem("cid");
       if (!cid) throw new Error("Company ID missing");
 
       const response = await fetch(`${apiBaseUrl}/api/accounts/all/${cid}`, {
@@ -206,21 +208,26 @@ export const CostProvider = ({ children }) => {
           // COST SUMMARY
           fetch("http://47.130.218.97:8021/cost-summary", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json" ,
+              Authorization: `Bearer ${jwt_token}`
+            },
             body: JSON.stringify(postBody),
           }),
 
           // RESOURCES FILTER
           fetch("http://47.130.218.97:8003/resources/filter", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json",
+              Authorization: `Bearer ${jwt_token}`
+             },
             body: JSON.stringify(postBody),
           }),
 
           // TAGS FILTER
           fetch("http://47.130.218.97:8007/tags/filter", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json",
+             Authorization: `Bearer ${jwt_token}` },
             body: JSON.stringify(postBody),
           }),
         ]);
@@ -229,21 +236,37 @@ export const CostProvider = ({ children }) => {
         // 3️⃣ Parse JSON
         // ---------------------------
         const costJson = await costRes.json();
+        console.log("costJson",costJson)
         const resourcesJson = await resourcesRes.json();
         const tagsJson = await tagRes.json();
 
         // ---------------------------
         // 4️⃣ Build TreeSelect
         // ---------------------------
-        const apiAccountIds = costJson?.account_ids || [];
+//         const apiAccountIds = costJson?.account_ids || [];
+// console.log("apiAccountIds",apiAccountIds)
+//         setTreeData(
+//           apiAccountIds.map((id) => ({
+//             title: id,
+//             value: id,
+//           }))
+//         );
 
-        setTreeData(
-          apiAccountIds.map((id) => ({
-            title: id,
-            value: id,
-          }))
-        );
 
+const apiAccountIds = [
+  ...new Set(
+    costJson?.results?.map(item => item.account_id)
+  )
+];
+
+console.log("apiAccountIds", apiAccountIds);
+
+setTreeData(
+  apiAccountIds.map(id => ({
+    title: id,
+    value: id,
+  }))
+);
         // ---------------------------
         // 5️⃣ Build Accounts Dropdown
         // ---------------------------

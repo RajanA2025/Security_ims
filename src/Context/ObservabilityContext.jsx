@@ -5,14 +5,14 @@ const ObservabilityContext = createContext();
 
 export const ObservabilityProvider = ({ children }) => {
   const API_BASE_URL = "http://47.130.218.97:8012";
-
+  
   const [loading, setLoading] = useState(false);
   const [securityData, setSecurityData] = useState([]);
   const [eipData, setEipData] = useState([]);
   const [volumeData, setVolumeData] = useState([]);
   const [s3Data, setS3Data] = useState([]);
   const [ec2Data, setEc2Data] = useState([]);
-
+let jwt_token = localStorage.getItem("jwt_token");
   // ---------------------------------------------------
   // ✅ Load account IDs safely from localStorage
   // ---------------------------------------------------
@@ -37,7 +37,7 @@ export const ObservabilityProvider = ({ children }) => {
 
     try {
       const res = await axios.post(url, POST_BODY, {
-        headers: { "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${jwt_token}` },
       });
 
       console.log(`📌 ${url} →`, res.data);
@@ -55,19 +55,38 @@ export const ObservabilityProvider = ({ children }) => {
   // 🔥 API functions (POST only, NO FILTERING)
   // ---------------------------------------------------
   const fetchKeyPairs = () =>
-    postRequest(`${API_BASE_URL}/keypairs2/filter`, setSecurityData);
+    postRequest(`${API_BASE_URL}/keypairs2/filter`, setSecurityData,  {
+        headers: {
+          Authorization: `Bearer ${jwt_token}`,
+        },
+      });
 
   const fetchEIP = () =>
-    postRequest(`${API_BASE_URL}/orphaned-eip/filter`, setEipData);
+    postRequest(`${API_BASE_URL}/orphaned-eip/filter`, setEipData ,  {
+        headers: {
+          Authorization: `Bearer ${jwt_token}`,
+        },
+      });
 
   const fetchVolumes = () =>
-    postRequest(`${API_BASE_URL}/orphaned-volumes/filter`, setVolumeData);
-
+    postRequest(`${API_BASE_URL}/orphaned-volumes/filter`, setVolumeData,  {
+        headers: {
+          Authorization: `Bearer ${jwt_token}`,
+        },
+      });
   const fetchS3 = () =>
-    postRequest(`${API_BASE_URL}/s3/filter`, setS3Data);
+    postRequest(`${API_BASE_URL}/s3/filter`, setS3Data ,  {
+        headers: {
+          Authorization: `Bearer ${jwt_token}`,
+        },
+      });
 
   const fetchEC2 = () =>
-    postRequest(`${API_BASE_URL}/ec2/filter`, setEc2Data);
+    postRequest(`${API_BASE_URL}/ec2/filter`, setEc2Data,  {
+        headers: {
+          Authorization: `Bearer ${jwt_token}`,
+        },
+      });
 
   // ---------------------------------------------------
   // 🔥 Auto-fetch on mount

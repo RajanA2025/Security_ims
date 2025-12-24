@@ -318,6 +318,7 @@ const Insights = () => {
 
 
   useEffect(() => {
+    const jwt_token = localStorage.getItem("jwt_token");
     const fetchAllData = async () => {
       setLoading(true);
 
@@ -339,13 +340,26 @@ const Insights = () => {
 
         // API calls
         const [iamRes, sgRes] = await Promise.all([
-          axios.post("http://47.130.218.97:8012/iam/filter", {
-            account_ids: storedAccountIds,
-          }),
-          axios.post("http://47.130.218.97:8012/security-groups/filter", {
-            account_ids: storedAccountIds,
-          }),
-        ]);
+  axios.post(
+    "http://47.130.218.97:8012/iam/filter",
+    { account_ids: storedAccountIds }, // body
+    {
+      headers: {
+        Authorization: `Bearer ${jwt_token}`,
+      },
+    }
+  ),
+  axios.post(
+    "http://47.130.218.97:8012/security-groups/filter",
+    { account_ids: storedAccountIds }, // body
+    {
+      headers: {
+        Authorization: `Bearer ${jwt_token}`,
+      },
+    }
+  ),
+]);
+
 
         console.log("IAM Response:", iamRes.data);
         console.log("SG Response:", sgRes.data);

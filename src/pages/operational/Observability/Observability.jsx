@@ -65,6 +65,7 @@ const Observability = () => {
   
   // Fetch data
   useEffect(() => {
+    const jwt_token = localStorage.getItem("jwt_token");
     const fetchData = async () => {
       setLoading(true);
       try {
@@ -74,27 +75,47 @@ const Observability = () => {
         switch(tabKey) {
           case "1":
             endpoint = `${API_BASE_URL}/keypairs2`;
-            response = await api.get(endpoint);
+            response = await api.get(endpoint,  {
+        headers: {
+          Authorization: `Bearer ${jwt_token}`,
+        },
+      });
             setSecurityData(response.data);
             break;
           case "2":
             endpoint = `${API_BASE_URL}/orphaned-eip`;
-            response = await api.get(endpoint);
+            response = await api.get(endpoint,  {
+        headers: {
+          Authorization: `Bearer ${jwt_token}`,
+        },
+      });
             seteipData(response.data);
             break;
           case "3":
             endpoint = `${API_BASE_URL}/orphaned-volumes`;
-            response = await api.get(endpoint);
+            response = await api.get(endpoint,  {
+        headers: {
+          Authorization: `Bearer ${jwt_token}`,
+        },
+      });
             setVolumeData(response.data);
             break;
           case "4":
             endpoint = `${API_BASE_URL}/s3`;
-            response = await api.get(endpoint);
+            response = await api.get(endpoint,  {
+        headers: {
+          Authorization: `Bearer ${jwt_token}`,
+        },
+      });
             setS3Data(response.data);
             break;
           case "5":
             endpoint = `${API_BASE_URL}/ec2`;
-            response = await api.get(endpoint);
+            response = await api.get(endpoint, {
+        headers: {
+          Authorization: `Bearer ${jwt_token}`,
+        },
+      });
             setEC2Data(response.data);
             break;
           default:

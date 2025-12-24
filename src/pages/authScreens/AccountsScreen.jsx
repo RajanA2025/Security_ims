@@ -226,7 +226,7 @@ export default function AccountsScreen() {
   // ---------------- Load edit data ----------------
   useEffect(() => {
     const editData = JSON.parse(localStorage.getItem("edit_account"));
-    const storedCid = localStorage.getItem("company_cid") || "";
+    const storedCid = localStorage.getItem("cid") || "";
     const storedPillars = JSON.parse(localStorage.getItem("pillars")) || {};
 
     if (editData) setIsEditMode(true);
@@ -263,7 +263,7 @@ export default function AccountsScreen() {
 
   // ---------------- Add / Remove account ----------------
   const handleAddAccount = useCallback(() => {
-    const storedCid = localStorage.getItem("company_cid") || "";
+    const storedCid = localStorage.getItem("cid") || "";
 
     const storedPillars = JSON.parse(localStorage.getItem("pillars")) || {};
     setFormData((prev) => ({
@@ -375,6 +375,7 @@ export default function AccountsScreen() {
   //   }
   // }, [formData, validateForm, navigate]);
   const handleSubmit = useCallback(async () => {
+    let jwt_token = localStorage.getItem("jwt_token");
     localStorage.removeItem("timeModal");
     if (!validateForm()) {
       setToast({ type: "error", message: "Please fill all required fields." });
@@ -406,7 +407,9 @@ export default function AccountsScreen() {
             : "http://47.130.218.97:8016/api/account/add",
           {
             method: isEdit ? "PUT" : "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json",
+                Authorization: `Bearer ${jwt_token}`
+             },
             body: JSON.stringify(payload),
           }
         );

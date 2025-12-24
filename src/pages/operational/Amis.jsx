@@ -20,7 +20,7 @@ import api from "../../lib/api";
 import axios from "axios";
 
 const header = { backgroundColor: "#4f46e5", color: "white" };
-
+const jwt_token = localStorage.getItem("jwt_token");
 const Amis = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -58,7 +58,8 @@ const Amis = () => {
         const response = await axios.post(
           "http://47.130.218.97:8012/amis/filter",
           postBody,
-          { headers: { "Content-Type": "application/json" } }
+          { headers: { "Content-Type": "application/json",Authorization: `Bearer ${jwt_token}`}},
+             
         );
 
         console.log("📌 API Response:", response.data);

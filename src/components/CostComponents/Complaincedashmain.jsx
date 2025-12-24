@@ -30,6 +30,8 @@ export const Complaincedashmain = () => {
     const filtered = tagSummary.details.filter((t) =>
       normalizedIds.includes(String(t.account_id))
     );
+  // get jwt_token from localStorage
+
 
     // ✅ Aggregate totals across filtered accounts
     const aggregated = filtered.reduce(
@@ -65,7 +67,7 @@ export const Complaincedashmain = () => {
 
   useEffect(() => {
     const fetchInstances = async () => {
-
+const jwt_token = localStorage.getItem("jwt_token");
       try {
         // Read account_ids from localStorage
         let stored = localStorage.getItem("account_ids");
@@ -94,15 +96,32 @@ export const Complaincedashmain = () => {
 
         // Call new POST API
         const response = await fetch(
-          "http://47.130.218.97:8009/instances/filter",
+          "http://47.130.218.97:8002/instances/filter",
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json",
+               Authorization: `Bearer ${jwt_token}`,
+            },
             body: JSON.stringify(postBody),
           }
         );
+// Check if response is OK
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        `API request failed with status ${response.status}: ${JSON.stringify(errorData)}`
+      );
+    }
+ const responseData = await response.json();
 
-        const filteredData = await response.json();
+        // const filteredData = await response.json();
+
+        // Handle different response formats
+    const filteredData = Array.isArray(responseData) 
+      ? responseData 
+      : Array.isArray(responseData.results) 
+        ? responseData.results 
+        : [];
 
         console.log("📌 API Response:", filteredData);
 
@@ -134,6 +153,7 @@ export const Complaincedashmain = () => {
 
       } catch (err) {
         console.error("❌ Instance API Error:", err);
+        setAutoStartStopData({ total: 0, enabled: 0 });
       }
     };
 

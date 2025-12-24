@@ -17,9 +17,21 @@ const ResourceBarChart = () => {
         setError(null);
         
         const [keyPairRes, eipRes, volumeRes] = await Promise.all([
-          fetch("http://47.130.218.97:8012/keypairs2"),
-          fetch("http://47.130.218.97:8012/orphaned-eip"),
-          fetch("http://47.130.218.97:8012/orphaned-volumes")
+          fetch("http://47.130.218.97:8012/keypairs2", {
+        headers: {
+          Authorization: `Bearer ${jwt_token}`,
+        },
+      }),
+          fetch("http://47.130.218.97:8012/orphaned-eip", {
+        headers: {
+          Authorization: `Bearer ${jwt_token}`,
+        },
+      }),
+          fetch("http://47.130.218.97:8012/orphaned-volumes", {
+        headers: {
+          Authorization: `Bearer ${jwt_token}`,
+        },
+      })
         ]);
 
         if (!keyPairRes.ok) throw new Error("Failed to fetch key pairs");

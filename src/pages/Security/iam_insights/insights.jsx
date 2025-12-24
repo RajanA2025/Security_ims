@@ -123,6 +123,7 @@ const Insights = () => {
 
 
   useEffect(() => {
+    const jwt_token = localStorage.getItem("jwt_token");
     const fetchData = async () => {
       setLoading(true);
 
@@ -155,7 +156,7 @@ const Insights = () => {
           "http://47.130.218.97:8012/iam/filter",
           postBody,
           {
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json" , Authorization: `Bearer ${jwt_token}`},
           }
         );
 

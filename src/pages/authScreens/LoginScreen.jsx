@@ -33,7 +33,7 @@ export default function LoginScreen() {
         formData.password === "Test@1234"
       ) {
         setAuthLogin("admin-auth");
-        localStorage.setItem("company_cid", "admin");
+        localStorage.setItem("cid", "admin");
 
         setToast({ type: "success", message: "Welcome Admin!" });
         setTimeout(() => {
@@ -51,7 +51,8 @@ export default function LoginScreen() {
         else if (localStorage.getItem("auth_token"))
           setAuthLogin(localStorage.getItem("auth_token"));
 
-        localStorage.setItem("company_cid", result.cid);
+        localStorage.setItem("cid", result.cid);
+        localStorage.setItem("role", result.role || "admin");
 
         const pillars = {
           cost: result.cost,
@@ -59,6 +60,7 @@ export default function LoginScreen() {
           operational_excellence: result.operational_excellence,
           performance: result.performance,
         };
+         console.log("Pillarsaaaaaaaaaaaaaaaaaaaa:", pillars);
         localStorage.setItem("pillars", JSON.stringify(pillars));
 
         setToast({

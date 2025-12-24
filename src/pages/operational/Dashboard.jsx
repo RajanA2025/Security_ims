@@ -31,6 +31,8 @@ const getTooltipText = (title) => {
   };
   return tooltips[title] || "Performance monitoring metric";
 };
+// get jwt_token from localStorage
+const jwt_token = localStorage.getItem("jwt_token");
 
 // Animation variants
 const cardVariants = {
@@ -215,7 +217,9 @@ function Dashboard() {
         "http://47.130.218.97:8005/performance/filter",
         postBody,
         {
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json",
+            Authorization: `Bearer ${jwt_token}`
+           },
         }
       );
 

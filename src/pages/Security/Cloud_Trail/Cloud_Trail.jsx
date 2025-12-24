@@ -32,6 +32,7 @@ const Cloud_Trail = () => {
 
   // Fetch data on load
   useEffect(() => {
+    const jwt_token = localStorage.getItem("jwt_token");
     const fetchData = async () => {
       setLoading(true);
 
@@ -56,7 +57,9 @@ const Cloud_Trail = () => {
         const response = await axios.post(
           "http://47.130.218.97:8012/cloudtrail/filter",
           { account_ids: accountIds },
-          { headers: { "Content-Type": "application/json" } }
+          { headers: { "Content-Type": "application/json",
+                Authorization: `Bearer ${jwt_token}`,
+           } }
         );
 
         console.log("📌 API Response:", response.data);

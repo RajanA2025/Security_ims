@@ -77,6 +77,8 @@ const SavingsChild = () => {
 
   const [filter, setFilter] = useState("All");
   const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
+// get jwt_token from localStorage
+const jwt_token = localStorage.getItem("jwt_token");
 
   const filterByAccounts = (data) => {
   if (!storedAccountIds.length) return data;
@@ -126,7 +128,10 @@ useEffect(() => {
       const res = await axios.post(
         "http://47.130.218.97:8003/resources/filter",
         postBody,
-        { headers: { "Content-Type": "application/json" } }
+        { headers: { "Content-Type": "application/json",
+           Authorization: `Bearer ${jwt_token}`,
+          
+         } }
       );
 
       const data = res.data;

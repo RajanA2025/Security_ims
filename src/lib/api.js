@@ -1,12 +1,13 @@
 import axios from "axios";
 
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL6;
-
+const BASE_URL = import.meta.env.VITE_API_BASE_URL1;
+const jwt_token = localStorage.getItem("jwt_token");
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
     "Content-Type": "application/json",
+    Authorization: `Bearer ${jwt_token}`,
   },
 });
 

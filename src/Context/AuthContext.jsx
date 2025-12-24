@@ -16,9 +16,11 @@ export const AuthProvider = ({ children }) => {
     const onAuthLogout = () => {
       setIsAuthenticated(false);
       localStorage.removeItem("auth_token");
-      localStorage.removeItem("company_cid");
+      localStorage.removeItem("jwt_token");
+      localStorage.removeItem("cid");
       localStorage.removeItem("pillars");
       localStorage.removeItem("account_ids");
+      localStorage.removeItem("role");
     };
     window.addEventListener("auth:logout", onAuthLogout);
     return () => {
@@ -37,7 +39,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     // remove auth and other session data
     localStorage.removeItem("auth_token");
-    localStorage.removeItem("company_cid");
+    localStorage.removeItem("cid");
     localStorage.removeItem("pillars");
     localStorage.removeItem("account_ids");
     localStorage.removeItem("timeModal");

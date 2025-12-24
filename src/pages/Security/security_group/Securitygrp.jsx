@@ -123,7 +123,7 @@ const Securitygrp = () => {
   // Fetch data on mountyyyy
   const API_URL = "http://47.130.218.97:8012/security-groups/filter";
   let storedAccountId = localStorage.getItem("account_ids");
-
+  const jwt_token = localStorage.getItem("jwt_token");
     useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -153,9 +153,9 @@ const Securitygrp = () => {
         console.log("➡️ POST Body:", postBody);
 
         // --- API CALL (POST) ---
-        const response = await axios.post(API_URL, postBody, {
-          headers: { "Content-Type": "application/json" },
-        });
+        const response = await axios.post(API_URL,  {
+          headers: { Authorization: `Bearer ${jwt_token}` },
+        } ,postBody);
 
         console.log("📌 API Response:", response.data);
 

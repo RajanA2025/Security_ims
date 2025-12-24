@@ -13,6 +13,8 @@ const Admin = () => {
   const [editData, setEditData] = useState(null);
   const [visiblePasswords, setVisiblePasswords] = useState({});
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL1;
+      let jwt_token = localStorage.getItem("jwt_token");
+
   // ✅ Fetch data from API
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -84,6 +86,7 @@ const Admin = () => {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt_token}`,
         },
       });
 

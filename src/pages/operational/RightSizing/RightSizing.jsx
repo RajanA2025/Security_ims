@@ -34,6 +34,8 @@ const RightSizing = () => {
   const [uniqueRegions, setUniqueRegions] = useState([]);
   const [uniqueAccountIds, setUniqueAccountIds] = useState([]);
   const [uniqueAccountNames, setUniqueAccountNames] = useState([]);
+// get jwt_token from localStorage
+const jwt_token = localStorage.getItem("jwt_token");
 
   // Format usage values to ensure they're properly formatted with 2 decimal places
   const formatUsageValue = (value) => {
@@ -104,7 +106,9 @@ const fetchPerformanceData = async () => {
 
     // --- POST REQUEST ---
     const response = await axios.post(apiUrl, requestBody, {
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json",
+        Authorization: `Bearer ${jwt_token}`
+       },
       timeout: 15000,
     });
 

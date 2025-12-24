@@ -40,11 +40,14 @@ export const Costdeepdrive = () => {
           "http://47.130.218.97:8002/instances/filter",
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json",
+               Authorization: `Bearer ${jwt_token}`,
+             },
             body: JSON.stringify(body),
           }
         );
-
+// get jwt_token from localStorage
+const jwt_token = localStorage.getItem("jwt_token");
         const json = await response.json();
         console.log("📌 API Response:", json);
 

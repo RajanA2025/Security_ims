@@ -58,6 +58,7 @@ const Business = () => {
     // 🔹 Fetch data
     // 🔹 Fetch CloudWatch data using POST filter API
     useEffect(() => {
+        const jwt_token = localStorage.getItem("jwt_token");
         const fetchData = async () => {
             setLoading(true);
             try {
@@ -87,7 +88,9 @@ const Business = () => {
                     "http://47.130.218.97:8012/cloudwatch/filter",
                     postBody,
                     {
-                        headers: { "Content-Type": "application/json" }
+                        headers: { "Content-Type": "application/json",
+                            Authorization: `Bearer ${jwt_token}`,
+                         }
                     }
                 );
 
