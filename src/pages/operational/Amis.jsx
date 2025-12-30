@@ -16,9 +16,9 @@ import {
   InfoCircleOutlined,
   SearchOutlined
 } from "@ant-design/icons";
-import api from "../../lib/api";
 import axios from "axios";
 
+const { Title } = Typography;
 const header = { backgroundColor: "#4f46e5", color: "white" };
 const jwt_token = localStorage.getItem("jwt_token");
 const Amis = () => {
@@ -28,33 +28,62 @@ const Amis = () => {
   const [selectedData, setSelectedData] = useState(null);
   const [searchText, setSearchText] = useState("");
 
-  const API_ENDPOINT = "/amis";
+  // Robust helper to parse account_ids from localStorage
+  const parseStoredAccountIds = () => {
+    let raw = null;
+    try {
+      raw = localStorage.getItem("account_ids");
+    } catch (err) {
+      // localStorage not available (SSR or restricted), return empty
+      // eslint-disable-next-line no-console
+      console.warn("localStorage unavailable:", err);
+      return [];
+    }
+
+    if (raw == null) return [];
+
+    // Attempt JSON parse
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map((v) => String(v ?? "").trim()).filter(Boolean);
+      }
+      if (typeof parsed === "string" || typeof parsed === "number") {
+        const s = String(parsed).trim();
+        if (s === "") return [];
+        // If comma-separated string inside JSON, split
+        if (s.includes(",")) return s.split(",").map((v) => v.trim()).filter(Boolean);
+        return [s];
+      }
+      // Fallback: try to coerce to string
+      return [String(parsed ?? "").trim()].filter(Boolean);
+    } catch {
+      // Not JSON — treat as CSV or single string
+      const s = String(raw);
+      if (s.includes(",")) return s.split(",").map((v) => v.trim()).filter(Boolean);
+      if (s.trim() === "") return [];
+      return [s.trim()];
+    }
+  };
 
   // Fetch data on load
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Read stored account IDs
-        let stored = localStorage.getItem("account_ids");
+        const storedIds = parseStoredAccountIds();
 
-        // Convert safely into array
-        try {
-          stored = JSON.parse(stored);
-        } catch {
-          stored = [stored];
+        // If no account ids — short-circuit
+        if (storedIds.length === 0) {
+          setData([]);
+          return;
         }
 
-        const storedIds = Array.isArray(stored) ? stored : [stored];
-
-        // POST body
         const postBody = {
           account_ids: storedIds,
         };
 
-        console.log("➡️ POST Body:", postBody);
-
-        // POST request
+        // POST request with response normalization
         const response = await axios.post(
           "http://47.130.218.97:8012/amis/filter",
           postBody,
@@ -62,12 +91,33 @@ const Amis = () => {
              
         );
 
-        console.log("📌 API Response:", response.data);
+        // Normalize response shapes:
+        // Accept: response.data (array) OR response.data.results OR response.data.data
+        const resp = response?.data;
+        let normalized = [];
+        if (Array.isArray(resp)) {
+          normalized = resp;
+        } else if (Array.isArray(resp?.results)) {
+          normalized = resp.results;
+        } else if (Array.isArray(resp?.data)) {
+          normalized = resp.data;
+        } else if (resp && typeof resp === "object") {
+          // maybe backend returned single object -> wrap into array
+          // or it returned { items: [...] } style -> attempt to find first array
+          const maybeArray = Object.values(resp).find((v) => Array.isArray(v));
+          normalized = maybeArray || [];
+        } else {
+          normalized = [];
+        }
 
-        // Backend already filters by account_ids
-        setData(response.data);
+        // Ensure each item is an object
+        normalized = normalized.map((it) => (it && typeof it === "object" ? it : {}));
+
+        setData(normalized);
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error("❌ Error fetching AMI data:", error);
+        setData([]);
       } finally {
         setLoading(false);
       }
@@ -76,37 +126,97 @@ const Amis = () => {
     fetchData();
   }, []);
 
-
-  // Extract username safely
+  // Extract readable name from a record (safe)
   const getRecordUsername = (record) => {
-    return (
-      record?.ami_name ||
-      record?.amiName ||
-      record?.aminame ||
-
-      ""
-    ).toString();
+    const name =
+      record?.ami_name ??
+      record?.amiName ??
+      record?.aminame ??
+      record?.name ??
+      "";
+    return String(name).trim();
   };
 
-  // Unique values for filters
-  const accountIds = [...new Set(data.map(item => item.owner_id))];
-  const regions = [...new Set(data.map(item => item.region))];
-  const platform = [...new Set(data.map(item => item.platform))];
-  const Image = [...new Set(data.map(item => item.image_state))];
-  const events = [...new Set(data.map(item => item.ami_name
-
-
-  ))];
+  // Unique values for filters (safe, trimmed)
+  const accountIds = [...new Set(data.map((item) => String(item?.owner_id ?? "").trim()).filter(Boolean))];
+  const regions = [...new Set(data.map((item) => String(item?.region ?? "").trim()).filter(Boolean))];
+  const platform = [...new Set(data.map((item) => String(item?.platform ?? "").trim()).filter(Boolean))];
+  const Image = [...new Set(data.map((item) => String(item?.image_state ?? "").trim()).filter(Boolean))];
+  const events = [...new Set(data.map((item) => String(item?.ami_name ?? "").trim()).filter(Boolean))];
 
   // Modal open
   const handleOpenModal = (record) => {
-    setSelectedData(record);
+    setSelectedData(record ?? null);
     setIsModalOpen(true);
+  };
+
+  // Safe close
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedData(null);
   };
 
   // Search handler
   const handleSearch = (e) => {
-    setSearchText(e.target.value);
+    setSearchText(e?.target?.value ?? "");
+  };
+
+  // Age rendering with blink keyframes (blink CSS added below)
+  const renderAge = (value) => {
+    if (value == null || value === "" || Number.isNaN(Number(value))) {
+      return "-";
+    }
+    const num = Number(value);
+    let color = "#52c41a";
+    let doBlink = false;
+
+    if (num > 90) {
+      color = "#ff4d4f";
+      doBlink = true;
+    } else if (num > 60) {
+      color = "#fa8c16";
+    } else if (num > 30) {
+      color = "#faad14";
+    }
+
+    return (
+      <span
+        style={{
+          color,
+          fontWeight: "bold",
+          animation: doBlink ? "blink 1s infinite" : "none",
+        }}
+      >
+        {num} days
+      </span>
+    );
+  };
+
+  // Image state renderer (supports boolean and strings)
+  const renderImageStateTag = (value) => {
+    const v = (value === true || value === false) ? (value ? "available" : "deleted") : String(value ?? "").trim().toLowerCase();
+    let color = "default";
+    let label = String(value ?? "");
+
+    if (v === "attached") {
+      color = "blue";
+      label = "Attached";
+    } else if (v === "deleted" || v === "deregistered") {
+      color = "red";
+      label = "Deleted";
+    } else if (v === "available" || v === "true") {
+      color = "green";
+      label = "Available";
+    } else if (v === "") {
+      color = "default";
+      label = "Unknown";
+    } else {
+      // any other custom state
+      color = "default";
+      label = String(value);
+    }
+
+    return <Tag color={color}>{label}</Tag>;
   };
 
   // Table Columns
@@ -115,163 +225,79 @@ const Amis = () => {
       title: (
         <span>
           Account ID{" "}
-          <Tooltip title="AWS account ID associated with the event.">
+          <Tooltip title="AWS account ID associated with this AMI.">
             <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
           </Tooltip>
         </span>
       ),
       dataIndex: "owner_id",
       key: "owner_id",
-      filters: accountIds.map(id => ({ text: id, value: id })),
-      onFilter: (value, record) => record.owner_id === value
+      filters: accountIds.map((id) => ({ text: id, value: id })),
+      onFilter: (value, record) => String(record?.owner_id ?? "") === String(value),
     },
-    // {
-    //   title: (
-    //     <span>
-    //       Account Name{" "}
-    //       <Tooltip title="AWS user or role that performed the action.">
-    //         <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
-    //       </Tooltip>
-    //     </span>
-    //   ),
-
-    //   key: "account_name",
-    //   render: (_, record) => getRecordUsername(record)
-    // },
     {
       title: (
         <span>
           AMI Name{" "}
-          <Tooltip title="The API call made in AWS (e.g., RunInstances).">
+          <Tooltip title="AMI name from AWS resources">
             <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
           </Tooltip>
         </span>
       ),
       dataIndex: "ami_name",
       key: "ami_name",
-      filters: events.map(event => ({ text: event, value: event })),
-      onFilter: (value, record) => record.ami_name === value
+      filters: events.map((ev) => ({ text: ev, value: ev })),
+      onFilter: (value, record) => String(record?.ami_name ?? "").trim() === String(value).trim(),
+      render: (_, record) => getRecordUsername(record),
     },
     {
       title: "Age",
       dataIndex: "age_in_days",
       key: "age_in_days",
       width: 100,
-      render: (value) => {
-        if (value == null) {
-          return '-'; // 
-        }
-        let color = "#52c41a";
-        let blink = false;
-
-        if (value > 90) {
-          color = "#ff4d4f";
-          blink = true;
-        } else if (value > 60) {
-          color = "#fa8c16";
-        } else if (value > 30) {
-          color = "#faad14";
-        }
-
-        return (
-          <span
-            style={{
-              color,
-              fontWeight: "bold",
-              animation: blink ? "blink 1s infinite" : "none"
-            }}
-          >
-            {value} days
-          </span>
-        );
-      }
+      render: (value) => renderAge(value),
     },
     {
       title: "Image State",
       dataIndex: "image_state",
       key: "image_state",
-      width: 100,
-      filters: Image.map(event => ({ text: event, value: event })),
-      onFilter: (value, record) => record.image_state === value,
-      render: (value) => {
-        // Support both boolean and string statuses
-        // if (typeof value === "boolean") {
-        //   return (
-        //     <Tag color={value ? "green" : "red"}>{value ? "Available" : "Deleted"}</Tag>
-        //   );
-        // }
-
-        const text = String(value || "").toLowerCase();
-        let color = "default";
-        let label = String(value || "");
-
-        if (text === "attached") {
-          color = "blue";
-          label = "Attached";
-        } else if (text === "deleted") {
-          color = "red";
-          label = "Deleted";
-        } else if (text === "available") {
-          color = "green";
-          label = "Available";
-        }
-
-        return <Tag color={color}>{label}</Tag>;
-      }
+      width: 120,
+      filters: Image.map((ev) => ({ text: ev, value: ev })),
+      onFilter: (value, record) => String(record?.image_state ?? "").trim() === String(value).trim(),
+      render: (value) => renderImageStateTag(value),
     },
-    // {
-    //   title: (
-    //     <span>
-    //       Source IP{" "}
-    //       <Tooltip title="IP address where the event originated.">
-    //         <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
-    //       </Tooltip>
-    //     </span>
-    //   ),
-    //   dataIndex: "source_ip",
-    //   key: "source_ip"
-    // },
     {
       title: (
         <span>
           Region{" "}
-          <Tooltip title="AWS region where the event occurred.">
+          <Tooltip title="AWS region where the AMI is located.">
             <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
           </Tooltip>
         </span>
       ),
       dataIndex: "region",
       key: "region",
-      filters: regions.map(r => ({ text: r, value: r })),
-      onFilter: (value, record) => record.region === value
+      filters: regions.map((r) => ({ text: r, value: r })),
+      onFilter: (value, record) => String(record?.region ?? "") === String(value),
     },
     {
       title: (
         <span>
           Platform{" "}
-          <Tooltip title="AWS region where the event occurred.">
+          <Tooltip title="OS platform of the AMI.">
             <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
           </Tooltip>
         </span>
       ),
       dataIndex: "platform",
       key: "platform",
-      filters: platform.map(r => ({ text: r, value: r })),
-      onFilter: (value, record) => record.platform === value
+      filters: platform.map((r) => ({ text: r, value: r })),
+      onFilter: (value, record) => String(record?.platform ?? "") === String(value),
     },
     {
-      title: (
-        <span>
-          usage_count{" "}
-          <Tooltip title="AWS region where the event occurred.">
-            <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
-          </Tooltip>
-        </span>
-      ),
+      title: "Usage Count",
       dataIndex: "usage_count",
       key: "usage_count",
-      // filters: regions.map(r => ({ text: r, value: r })),
-      // onFilter: (value, record) => record.region === value
     },
     {
       title: "More Details",
@@ -283,25 +309,26 @@ const Amis = () => {
             onClick={() => handleOpenModal(record)}
           />
         </Tooltip>
-      )
-    }
+      ),
+    },
   ];
 
-  // Filter based on stored account IDs from localStorage
-  const filteredData = data.filter(item =>
-    getRecordUsername(item).toLowerCase().includes(searchText.toLowerCase())
-  );
-
-
+  // Filter based on stored account IDs and search text
+  const filteredData = data
+    .filter((item) => {
+      // if search text present, filter by ami name (safe)
+      if (searchText && String(searchText).trim() !== "") {
+        return getRecordUsername(item).toLowerCase().includes(searchText.toLowerCase());
+      }
+      return true;
+    });
 
   return (
-    < div className="p-3">
-
-
+    <div className="p-3">
       {/* Search input */}
       <Row gutter={[16, 16]} style={{ marginBottom: 5, marginTop: 10 }}>
         <Col md={20}>
-          <Typography.Title
+          <Title
             level={4}
             style={{
               fontFamily: "'Roboto', 'Segoe UI', sans-serif",
@@ -312,16 +339,15 @@ const Amis = () => {
             }}
           >
             AMI
-          </Typography.Title>
+          </Title>
         </Col>
         <Col md={4}>
           <Input
-            placeholder="Seadch by AMI Name"
+            placeholder="Search by AMI Name"
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={handleSearch}
             allowClear
-          // style={{ width: 220 }}
           />
         </Col>
       </Row>
@@ -332,338 +358,49 @@ const Amis = () => {
         dataSource={filteredData}
         loading={loading}
         rowKey={(record) =>
-          record.event_id || `${getRecordUsername(record)}-${record.event_time}`
+          record.event_id || `${getRecordUsername(record)}-${record.event_time ?? ""}`
         }
         pagination={{ pageSize: 8 }}
       />
 
       {/* Modal */}
       <Modal
-        title={`${selectedData?.account_name || ""} - Account Details`}
+        title={`${selectedData?.ami_name ? selectedData.ami_name : selectedData?.owner_id ?? "AMI Details"}`}
         open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
+        onCancel={handleCloseModal}
         footer={null}
         width={900}
       >
-        {selectedData && (
+        {selectedData ? (
           <Card size="small" title="Information" style={{ marginBottom: 16 }} headStyle={header}>
             <Descriptions bordered column={2} size="small">
-              <Descriptions.Item label="Account ID">{selectedData.owner_id}</Descriptions.Item>
-              {/* <Descriptions.Item label="AcoountName">{getRecordUsername(selectedData)}</Descriptions.Item> */}
-              <Descriptions.Item label="AMI ID">{selectedData.ami_id || "-"}</Descriptions.Item>
-              <Descriptions.Item label="AMI Ndame">{selectedData.ami_name || "-"}</Descriptions.Item>
-              <Descriptions.Item label="AWS Account ">{selectedData.aws_account || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Platform">{selectedData.platform || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Encrypted">{selectedData.encrypted || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Region">{selectedData.region}</Descriptions.Item>
-              <Descriptions.Item label="Iamge State">{selectedData.image_state}</Descriptions.Item>
-              <Descriptions.Item label="Architecture">{selectedData.architecture || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Usage Count ">{selectedData.usage_count || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Description">{selectedData.description || "-"}</Descriptions.Item>
-
+              <Descriptions.Item label="Account ID">{selectedData.owner_id ?? "-"}</Descriptions.Item>
+              <Descriptions.Item label="AMI ID">{selectedData.ami_id ?? "-"}</Descriptions.Item>
+              <Descriptions.Item label="AMI Name">{selectedData.ami_name ?? "-"}</Descriptions.Item>
+              <Descriptions.Item label="AWS Account">{selectedData.aws_account ?? "-"}</Descriptions.Item>
+              <Descriptions.Item label="Platform">{selectedData.platform ?? "-"}</Descriptions.Item>
+              <Descriptions.Item label="Encrypted">{selectedData.encrypted ?? "-"}</Descriptions.Item>
+              <Descriptions.Item label="Region">{selectedData.region ?? "-"}</Descriptions.Item>
+              <Descriptions.Item label="Image State">{selectedData.image_state ?? "-"}</Descriptions.Item>
+              <Descriptions.Item label="Architecture">{selectedData.architecture ?? "-"}</Descriptions.Item>
+              <Descriptions.Item label="Usage Count">{selectedData.usage_count ?? "-"}</Descriptions.Item>
+              <Descriptions.Item label="Description">{selectedData.description ?? "-"}</Descriptions.Item>
             </Descriptions>
           </Card>
+        ) : (
+          <div> No details available </div>
         )}
       </Modal>
+
+      {/* blink keyframes — required for blinking age */}
+      <style>{`
+        @keyframes blink {
+          0%, 50% { opacity: 1; }
+          51%, 100% { opacity: 0.3; }
+        }
+      `}</style>
     </div>
   );
 };
 
 export default Amis;
-
-
-// import React, { useEffect, useState } from "react";
-// import {
-//   Table,
-//   Tag,
-//   Modal,
-//   Descriptions,
-//   Row,
-//   Col,
-//   Input,
-//   Card,
-//   Tooltip,
-//   Typography
-// } from "antd";
-// import {
-//   EyeOutlined,
-//   InfoCircleOutlined,
-//   SearchOutlined
-// } from "@ant-design/icons";
-// import axios from "axios";
-// import api from "../../lib/api";
-
-// const header = { backgroundColor: "#4f46e5", color: "white" };
-
-// const Amis = () => {
-//   const [data, setData] = useState([]);
-//   const [loading, setLoading] = useState(false);
-//   const [isModalOpen, setIsModalOpen] = useState(false);
-//   const [selectedData, setSelectedData] = useState(null);
-//   const [searchText, setSearchText] = useState("");
-
-//   const API_ENDPOINT = "/amis";
-
-//   // Fetch data on load
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       setLoading(true);
-//       try {
-//         let stored = localStorage.getItem("account_ids");
-
-//         try {
-//           stored = JSON.parse(stored);
-//         } catch {
-//           stored = [stored];
-//         }
-
-//         const storedIds = Array.isArray(stored) ? stored : [stored];
-
-//         const postBody = {
-//           account_ids: storedIds,
-//         };
-
-//         const response = await axios.post(
-//           "http://47.130.218.97:8012/amis/filter",
-//           postBody,
-//           { headers: { "Content-Type": "application/json" } }
-//         );
-
-//         setData(response.data);
-//       } catch (error) {
-//         console.error("❌ Error fetching AMI data:", error);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchData();
-//   }, []);
-
-//   const getRecordUsername = (record) => {
-//     return (
-//       record?.ami_name ||
-//       record?.amiName ||
-//       record?.aminame ||
-//       ""
-//     ).toString();
-//   };
-
-//   // Unique values for filters
-//   const accountIds = [...new Set(data.map(item => item.owner_id))];
-//   const regions = [...new Set(data.map(item => item.region))];
-//   const platform = [...new Set(data.map(item => item.platform))];
-//   const Image = [...new Set(data.map(item => item.image_state))];
-
-//   // 🔥 FIXED — Proper filter extraction
-//   const events = [...new Set(data.map(item => item.ami_name))];
-
-//   const handleOpenModal = (record) => {
-//     setSelectedData(record);
-//     setIsModalOpen(true);
-//   };
-
-//   const handleSearch = (e) => {
-//     setSearchText(e.target.value);
-//   };
-
-//   const columns = [
-//     {
-//       title: (
-//         <span>
-//           Account ID{" "}
-//           <Tooltip title="AWS account ID associated with the event.">
-//             <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
-//           </Tooltip>
-//         </span>
-//       ),
-//       dataIndex: "owner_id",
-//       key: "owner_id",
-//       filters: accountIds.map(id => ({ text: id, value: id })),
-//       onFilter: (value, record) => record.owner_id === value
-//     },
-
-//     {
-//       title: (
-//         <span>
-//           AMI Name{" "}
-//           <Tooltip title="AMI Name from AWS resources">
-//             <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
-//           </Tooltip>
-//         </span>
-//       ),
-//       dataIndex: "ami_name",
-//       key: "ami_name",
-//       filters: events.map(event => ({ text: event, value: event })),
-//       onFilter: (value, record) => record.ami_name === value
-//     },
-
-//     {
-//       title: "Age",
-//       dataIndex: "age_in_days",
-//       key: "age_in_days",
-//       width: 100,
-//       render: (value) => {
-//         if (value == null) return "-";
-
-//         let color = "#52c41a";
-//         let blink = false;
-
-//         if (value > 90) {
-//           color = "#ff4d4f";
-//           blink = true;
-//         } else if (value > 60) {
-//           color = "#fa8c16";
-//         } else if (value > 30) {
-//           color = "#faad14";
-//         }
-
-//         return (
-//           <span
-//             style={{
-//               color,
-//               fontWeight: "bold",
-//               animation: blink ? "blink 1s infinite" : "none"
-//             }}
-//           >
-//             {value} days
-//           </span>
-//         );
-//       }
-//     },
-
-//     {
-//       title: "Image State",
-//       dataIndex: "image_state",
-//       key: "image_state",
-//       width: 100,
-//       filters: Image.map(event => ({ text: event, value: event })),
-//       onFilter: (value, record) => record.image_state === value,
-//       render: (value) => {
-//         const text = String(value || "").toLowerCase();
-//         let color = "default";
-//         let label = String(value || "");
-
-//         if (text === "attached") color = "blue";
-//         if (text === "deleted") color = "red";
-//         if (text === "available") color = "green";
-
-//         return <Tag color={color}>{label}</Tag>;
-//       }
-//     },
-
-//     {
-//       title: (
-//         <span>
-//           Region{" "}
-//           <Tooltip title="AWS Region">
-//             <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
-//           </Tooltip>
-//         </span>
-//       ),
-//       dataIndex: "region",
-//       key: "region",
-//       filters: regions.map(r => ({ text: r, value: r })),
-//       onFilter: (value, record) => record.region === value
-//     },
-
-//     {
-//       title: (
-//         <span>
-//           Platform{" "}
-//           <Tooltip title="OS Platform of AMI">
-//             <InfoCircleOutlined style={{ color: "#1890ff", cursor: "pointer" }} />
-//           </Tooltip>
-//         </span>
-//       ),
-//       dataIndex: "platform",
-//       key: "platform",
-//       filters: platform.map(r => ({ text: r, value: r })),
-//       onFilter: (value, record) => record.platform === value
-//     },
-
-//     {
-//       title: "Usage Count",
-//       dataIndex: "usage_count",
-//       key: "usage_count"
-//     },
-
-//     {
-//       title: "More Details",
-//       key: "action",
-//       render: (_, record) => (
-//         <Tooltip title="View Details">
-//           <EyeOutlined
-//             style={{ fontSize: 18, color: "#1890ff", cursor: "pointer" }}
-//             onClick={() => handleOpenModal(record)}
-//           />
-//         </Tooltip>
-//       )
-//     }
-//   ];
-
-//   const filteredData = data.filter(item =>
-//     getRecordUsername(item).toLowerCase().includes(searchText.toLowerCase())
-//   );
-
-//   return (
-//     <div className="p-3">
-
-//       <Row gutter={[16, 16]} style={{ marginBottom: 5, marginTop: 10 }}>
-//         <Col md={20}>
-//           <Typography.Title level={4} style={{ margin: 0 }}>
-//             AMI
-//           </Typography.Title>
-//         </Col>
-//         <Col md={4}>
-//           <Input
-//             placeholder="Search by AMI Name"
-//             prefix={<SearchOutlined />}
-//             value={searchText}
-//             onChange={handleSearch}
-//             allowClear
-//           />
-//         </Col>
-//       </Row>
-
-//       <Table
-//         columns={columns}
-//         dataSource={filteredData}
-//         loading={loading}
-//         rowKey={(record) =>
-//           record.event_id || `${getRecordUsername(record)}-${record.event_time}`
-//         }
-//         pagination={{ pageSize: 8 }}
-//       />
-
-//       <Modal
-//         title={`${selectedData?.ami_name || ""} - AMI Details`}
-//         open={isModalOpen}
-//         onCancel={() => setIsModalOpen(false)}
-//         footer={null}
-//         width={900}
-//       >
-//         {selectedData && (
-//           <Card size="small" title="Information" headStyle={header}>
-//             <Descriptions bordered column={2} size="small">
-//               <Descriptions.Item label="Account ID">{selectedData.owner_id}</Descriptions.Item>
-//               <Descriptions.Item label="AMI ID">{selectedData.ami_id || "-"}</Descriptions.Item>
-//               <Descriptions.Item label="AMI Name">{selectedData.ami_name || "-"}</Descriptions.Item>
-//               <Descriptions.Item label="AWS Account">{selectedData.aws_account || "-"}</Descriptions.Item>
-//               <Descriptions.Item label="Platform">{selectedData.platform || "-"}</Descriptions.Item>
-//               <Descriptions.Item label="Encrypted">{selectedData.encrypted || "-"}</Descriptions.Item>
-//               <Descriptions.Item label="Region">{selectedData.region}</Descriptions.Item>
-//               <Descriptions.Item label="Image State">{selectedData.image_state}</Descriptions.Item>
-//               <Descriptions.Item label="Architecture">{selectedData.architecture || "-"}</Descriptions.Item>
-//               <Descriptions.Item label="Usage Count">{selectedData.usage_count || "-"}</Descriptions.Item>
-//               <Descriptions.Item label="Description">{selectedData.description || "-"}</Descriptions.Item>
-//             </Descriptions>
-//           </Card>
-//         )}
-//       </Modal>
-
-//     </div>
-//   );
-// };
-
-// export default Amis;

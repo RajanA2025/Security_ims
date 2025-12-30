@@ -77,7 +77,6 @@ const SectionTitle = ({ children, delay = 0 }) => (
         backgroundColor: "#0284c7",
         borderRadius: "2px",
         margin: "5px 0px 10px 0px",
-
       }}
     />
   </motion.div>
@@ -93,7 +92,7 @@ const AnimatedStatCard = ({ icon, title, value, color, index = 0 }) => (
         background: "#fff",
         boxShadow: "0px 2px 6px rgba(0,0,0,0.1)",
         height: "100%",
-        borderTop: `4px solid ${color}`,  // <-- Add this line
+        borderTop: `4px solid ${color}`,
       }}
       bodyStyle={{ padding: "20px" }}
     >
@@ -185,35 +184,66 @@ const LoadingState = () => (
 function Dashboard() {
   const [performanceData, setPerformanceData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { securityData, eipData, volumeData, s3Data, ec2Data } = useObservability();
-  const storedAccountIds = JSON.parse(localStorage.getItem("account_ids")) || [];
 
+  // Defensive defaults: useObservability might return undefined keys
+  const {
+    securityData = [],
+    eipData = [],
+    volumeData = [],
+    s3Data = [],
+    ec2Data = [],
+  } = useObservability() || {};
+
+  // Robust fetch + parsing
   const fetchPerformanceData = async () => {
     try {
       setLoading(true);
 
-      // Read stored account IDs
-      let stored = localStorage.getItem("account_ids");
-
+      // Read raw value from localStorage safely
+      let raw = null;
       try {
-        stored = JSON.parse(stored);
-      } catch {
-        stored = [stored];
+        raw = localStorage.getItem("account_ids");
+      } catch (err) {
+        console.error("localStorage unavailable:", err);
+        raw = null;
       }
 
-      const storedAccountIds = Array.isArray(stored)
-        ? stored.map(String)
-        : [String(stored)];
+      // Normalize to string, then try to parse JSON, CSV or single value
+      let storedAccountIds = [];
+      if (raw == null) {
+        storedAccountIds = [];
+      } else {
+        const s = String(raw).trim();
 
-      // --- POST BODY ---
-      const postBody = {
-        account_ids: storedAccountIds,
-      };
+        if (s === "" || s.toLowerCase() === "null") {
+          storedAccountIds = [];
+        } else {
+          try {
+            const parsed = JSON.parse(s);
+            if (Array.isArray(parsed)) {
+              storedAccountIds = parsed.map((v) => String(v ?? "").trim()).filter(Boolean);
+            } else if (typeof parsed === "string" || typeof parsed === "number") {
+              storedAccountIds = [String(parsed).trim()].filter(Boolean);
+            } else {
+              storedAccountIds = [];
+            }
+          } catch {
+            // not JSON
+            if (s.includes(",")) {
+              storedAccountIds = s.split(",").map((v) => v.trim()).filter(Boolean);
+            } else {
+              storedAccountIds = [s];
+            }
+          }
+        }
+      }
 
+      if (!Array.isArray(storedAccountIds)) storedAccountIds = [];
+
+      const postBody = { account_ids: storedAccountIds };
       console.log("➡️ POST Body:", postBody);
 
-      // --- NEW API POST CALL ---
-      const { data } = await axios.post(
+      const resp = await axios.post(
         "http://47.130.218.97:8005/performance/filter",
         postBody,
         {
@@ -223,30 +253,39 @@ function Dashboard() {
         }
       );
 
-      console.log("📌 Filtered Performance Response:", data);
+      const payload = resp?.data ?? {};
+      const rows = Array.isArray(payload.data) ? payload.data : Array.isArray(payload) ? payload : [];
 
-      // Backend already filters → no frontend filter required
-      const result = (data.data || []).map((item) => ({
-        id: item.id,
-        accountId: String(item.account_id).trim(),
-        cpuUsage: Number(item.cpu_utilization).toFixed(2),
-        memoryUsage: Number(item.memory_utilization).toFixed(2),
-        diskUsage: Number(item.disk_utilization).toFixed(2),
-      }));
+      // map safely to numeric fields (keep numbers)
+      const result = rows.map((item = {}) => {
+        const cpuRaw = Number(item.cpu_utilization ?? item.cpu ?? 0);
+        const memRaw = Number(item.memory_utilization ?? item.memory ?? 0);
+        const diskRaw = Number(item.disk_utilization ?? item.disk ?? 0);
+
+        return {
+          id: item.id ?? String(Math.random()).slice(2),
+          accountId: String(item.account_id ?? item.accountId ?? "").trim(),
+          cpuUsage: Number.isFinite(cpuRaw) ? cpuRaw : 0,
+          memoryUsage: Number.isFinite(memRaw) ? memRaw : 0,
+          diskUsage: Number.isFinite(diskRaw) ? diskRaw : 0,
+        };
+      });
 
       setPerformanceData(result);
     } catch (err) {
       console.error("❌ Error fetching performance data:", err);
+      setPerformanceData([]); // fail-safe
     } finally {
       setLoading(false);
     }
   };
 
-
   useEffect(() => {
     fetchPerformanceData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Counts now operate on numbers (safe)
   const totalInstances = performanceData.length;
   const healthyInstances = performanceData.filter(
     (d) => d.cpuUsage < 60 && d.memoryUsage < 60 && d.diskUsage < 60
@@ -261,18 +300,19 @@ function Dashboard() {
     (d) => d.cpuUsage >= 80 || d.memoryUsage >= 80 || d.diskUsage >= 80
   ).length;
 
-  const orphaned = securityData.filter((inst) => inst.status === "Orphaned").length;
+  // Observability counts: use defaults above to avoid crashes
+  const orphaned = (securityData || []).filter((inst) => String(inst?.status) === "Orphaned").length;
   const data = [
     orphaned,
-    eipData?.length || 0,
-    volumeData?.length || 0,
-    s3Data?.length || 0,
-    ec2Data?.length || 0,
+    (eipData && eipData.length) || 0,
+    (volumeData && volumeData.length) || 0,
+    (s3Data && s3Data.length) || 0,
+    (ec2Data && ec2Data.length) || 0,
   ];
   const labels = ["Orphaned KeyPair", "Orphaned EIP", "Volume", "S3", "EC2"];
 
-  const runningCount = ec2Data.filter((inst) => inst.state === "running").length;
-  const stoppedCount = ec2Data.filter((inst) => inst.state === "stopped").length;
+  const runningCount = (ec2Data || []).filter((inst) => inst?.state === "running").length;
+  const stoppedCount = (ec2Data || []).filter((inst) => inst?.state === "stopped").length;
   const labels1 = ["Running", "Stopped"];
   const data1 = [runningCount, stoppedCount];
 
@@ -361,16 +401,10 @@ function Dashboard() {
               </Col>
             </Row>
 
-
             <br />
             <SectionTitle delay={0.6}>Snapshot</SectionTitle>
             <Row gutter={[16, 16]}>
-              <Col
-                xs={24}   // Mobile: full width
-                sm={24}   // Small tablets: full width
-                md={12}   // Medium screens: half width
-                lg={9}    // Large screens: 9 columns
-              >
+              <Col xs={24} sm={24} md={12} lg={9}>
                 <Card
                   bodyStyle={{ padding: 0 }}
                   style={{
@@ -383,7 +417,6 @@ function Dashboard() {
                 </Card>
               </Col>
             </Row>
-
           </motion.div>
         )}
       </AnimatePresence>

@@ -137,4 +137,4 @@ const ResourceBarChart = () => {
   );
 };
 
-// export default ResourceBarChart;
+export default ResourceBarChart;

@@ -4,17 +4,6 @@ import { ArrowRight, Users, Building, BarChart3, Clock, Shield, Zap, Star } from
 import { useNavigate } from 'react-router-dom';
 import Header from '../Components/Header';
 
-// Function to generate random user image with consistent hashing
-const getRandomImage = (name) => {
-  // Simple hash function to generate consistent random number for each name
-  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const maxAvatarId = 70; // pravatar currently supports IDs 1-70
-  const randomSeed = (hash % maxAvatarId) + 1; // Ensure we have a number between 1-70
-  
-  // Return URL with random seed for consistent but random avatar per name
-  return `https://i.pravatar.cc/150?img=${randomSeed}`;
-};
-
 const testimonials = [
   {
     name: 'Mr John',
@@ -55,7 +44,6 @@ const features = [
     description: 'Real-time insights and performance metrics',
     image: 'https://via.placeholder.com/120x80?text=Analytics',
   },
-  
 ];
 
 const Home = () => {
@@ -136,21 +124,19 @@ Your complete solution for smarter, faster, and more efficient IT infrastructure
           </motion.div>
           <div className="w-full">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {/* Use high-quality, royalty-free Unsplash images for each feature */}
               {[
                 {
                   ...features[0],
-                  image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=400&q=80', // Teamwork/HR
+                  image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=400&q=80',
                 },
                 {
                   ...features[1],
-                  image: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=400&q=80', // Office/Company
+                  image: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=400&q=80',
                 },
                 {
                   ...features[2],
-                  image: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=400&q=80', // Analytics/Charts
+                  image: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=400&q=80',
                 }
-               
               ].map((feature, index) => (
                 <motion.div
                   key={index}

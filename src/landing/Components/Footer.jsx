@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, Globe, MapPin } from 'lucide-react';
-import Logo from '../../../components/Logo';
+import Logo from 'c:/project/jit_ms1/Security_ims/src/components/Logo.jsx';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();

@@ -288,7 +288,11 @@ const Monitoring = () => {
       key: 'cpuUsage',
       width: 120,
       render: (text) => (
-        <Tag color={getUsageColor(text)} style={{ minWidth: '60px', textAlign: 'center' }}>
+        <Tag
+          color={getUsageColor(text)}
+          data-status={getUsageStatus(text)}
+          style={{ minWidth: '60px', textAlign: 'center' }}
+        >
           {text}
         </Tag>
       ),

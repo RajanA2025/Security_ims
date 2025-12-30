@@ -7,18 +7,20 @@ module.exports = defineConfig({
   plugins: [
     react()
   ],
+
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
   },
+
   server: {
-    host: true, // Listen on all network interfaces
-    open: true, // Open the browser on server start
+    host: true,
+    open: true,
     port: 5173,
     strictPort: true,
     hmr: {
-      clientPort: 5173, // Force WebSocket port to match the server port
+      clientPort: 5173,
       protocol: 'ws',
       host: 'localhost',
       port: 5173
@@ -27,13 +29,29 @@ module.exports = defineConfig({
       usePolling: true
     },
     cors: true,
-    // Serve static files from the public directory
     fs: {
       strict: false,
     }
   },
+
   preview: {
     port: 5173,
     strictPort: true,
+  },
+
+  // ------------------------------------------------------
+  // ✅ Vitest Configuration + Coverage Report
+  // ------------------------------------------------------
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: "./src/test/setup.jsx",
+    css: false,
+
+    coverage: {
+      provider: "v8",                // or "istanbul"
+      reporter: ["text", "html","lcov"],    // show text + generate HTML report
+      reportsDirectory: "./coverage" // output folder
+    }
   }
 });

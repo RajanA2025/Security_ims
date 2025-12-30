@@ -14,21 +14,58 @@ export const Costdeepdrive = () => {
       setLoading(true);
 
       try {
-        // ✅ Read accounts from localStorage
-        let storedAccounts = localStorage.getItem("account_ids");
-
+        // --- Robust parsing of account_ids from localStorage ---
+        let raw = null;
         try {
-          storedAccounts = JSON.parse(storedAccounts);
-        } catch {
-          storedAccounts = [storedAccounts]; // wrap if single string
+          raw = localStorage.getItem("account_ids");
+        } catch (err) {
+          // localStorage unavailable (e.g. SSR, strict environments) -> fallback to empty
+          // eslint-disable-next-line no-console
+          console.warn("localStorage unavailable:", err);
+          raw = null;
         }
 
-        // Ensure array format
-        if (!Array.isArray(storedAccounts)) {
-          storedAccounts = [storedAccounts];
+        let storedAccounts = [];
+
+        if (raw == null) {
+          storedAccounts = [];
+        } else {
+          // Try JSON parse first (handles '["A","B"]' and '"A"')
+          try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+              storedAccounts = parsed;
+            } else if (parsed === null || parsed === undefined) {
+              storedAccounts = [];
+            } else {
+              // single value (number/string) parsed
+              storedAccounts = [String(parsed)];
+            }
+          } catch {
+            // Not valid JSON — handle CSV or single string
+            const s = String(raw);
+            if (s.includes(",")) {
+              storedAccounts = s.split(",").map((x) => x.trim()).filter(Boolean);
+            } else if (s.trim() === "") {
+              storedAccounts = [];
+            } else {
+              storedAccounts = [s.trim()];
+            }
+          }
         }
 
-        console.log("📌 POST account_ids:", storedAccounts);
+        // Normalize and filter falsy values
+        storedAccounts = Array.from(
+          new Set(storedAccounts.map((id) => String(id ?? "").trim()).filter(Boolean))
+        );
+
+        // If no account ids available, short-circuit with empty UI
+        if (storedAccounts.length === 0) {
+          setFilteredAccounts([]);
+          setAccounts([]);
+          setLoading(false);
+          return;
+        }
 
         // --- POST BODY ---
         const body = {
@@ -51,20 +88,44 @@ const jwt_token = localStorage.getItem("jwt_token");
         const json = await response.json();
         console.log("📌 API Response:", json);
 
-        const results = json.results || [];
+        const json = await response.json().catch(() => null);
 
-        // Backend already filters → NO frontend filter needed
+        // Normalize results: prefer json.results array, else accept json array, else empty
+        let results = [];
+        if (json == null) {
+          results = [];
+        } else if (Array.isArray(json.results)) {
+          results = json.results;
+        } else if (Array.isArray(json)) {
+          results = json;
+        } else if (Array.isArray(json.data)) {
+          results = json.data;
+        } else {
+          // try to safely coerce to an array if backend returned single object with items property
+          results = [];
+        }
+
+        // Ensure results is an array of objects
+        if (!Array.isArray(results)) results = [];
+
+        // Backend already filters → use results directly
         setFilteredAccounts(results);
 
-        // Extract unique account list for dropdown
+        // Extract unique account list for dropdown (filter out falsy ids)
         const uniqueAccounts = [
-          ...new Set(results.map((inst) => inst.account_id)),
+          ...new Set(results.map((inst) => String(inst.account_id ?? "").trim()).filter(Boolean)),
         ];
 
         setAccounts(uniqueAccounts);
-        setLoading(false);
       } catch (err) {
-        console.error("❌ Error fetching instances:", err);
+        // Clear data on error so UI shows empty state
+        setFilteredAccounts([]);
+        setAccounts([]);
+
+        // Better error log for debugging
+        // eslint-disable-next-line no-console
+        console.error("Costdeepdrive: failed to fetch instances:", err);
+      } finally {
         setLoading(false);
       }
     };
@@ -72,12 +133,11 @@ const jwt_token = localStorage.getItem("jwt_token");
     fetchData();
   }, []);
 
-
   const handleReset = () => setSelectedAccount(null);
 
-  // ✅ Filter by selected account dynamically
+  // Filter by selected account dynamically
   const displayedData = selectedAccount
-    ? filteredAccounts.filter((i) => i.account_id === selectedAccount)
+    ? filteredAccounts.filter((i) => String(i.account_id ?? "") === String(selectedAccount))
     : filteredAccounts;
 
   return (
@@ -104,7 +164,7 @@ const jwt_token = localStorage.getItem("jwt_token");
         </Space>
       </Row>
 
-      {/* ✅ Show table or "No Data Found" */}
+      {/* Show table or "No Data Found" */}
       {loading ? (
         <p>Loading...</p>
       ) : displayedData.length > 0 ? (
@@ -116,4 +176,4 @@ const jwt_token = localStorage.getItem("jwt_token");
   );
 };
 
-
+export default Costdeepdrive;

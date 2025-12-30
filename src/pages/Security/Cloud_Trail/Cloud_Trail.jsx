@@ -16,7 +16,6 @@ import {
   InfoCircleOutlined,
   SearchOutlined
 } from "@ant-design/icons";
-import api from "../../../lib/api";
 import axios from "axios";
 
 const header = { backgroundColor: "#4f46e5", color: "white" };
@@ -28,32 +27,67 @@ const Cloud_Trail = () => {
   const [selectedData, setSelectedData] = useState(null);
   const [searchText, setSearchText] = useState("");
 
+  // ---------- Helpers ----------
+  const safeParseAccountIds = () => {
+    let raw = null;
+    try {
+      raw = localStorage.getItem("account_ids");
+    } catch (err) {
+      console.error("localStorage unavailable:", err);
+      return [];
+    }
 
+    if (raw == null) return [];
 
-  // Fetch data on load
+    const s = String(raw).trim();
+    if (s === "" || s.toLowerCase() === "null") return [];
+
+    // Try JSON parse
+    try {
+      const parsed = JSON.parse(s);
+      if (Array.isArray(parsed)) return parsed.map((v) => String(v ?? "").trim()).filter(Boolean);
+      if (typeof parsed === "string" || typeof parsed === "number") return [String(parsed).trim()].filter(Boolean);
+      // unexpected shape -> return empty
+      return [];
+    } catch {
+      // not JSON: maybe CSV or single string
+      if (s.includes(",")) return s.split(",").map((v) => v.trim()).filter(Boolean);
+      return [s];
+    }
+  };
+
+  const getRecordUsername = (record) => {
+    // handle many possible shapes, return empty string as fallback
+    const maybe =
+      record?.username ??
+      record?.user_name ??
+      record?.userName ??
+      record?.user_identity?.userName ??
+      record?.user_identity?.username ??
+      record?.user?.username ??
+      record?.user?.name ??
+      record?.principal ??
+      "";
+    try {
+      return String(maybe);
+    } catch {
+      return "";
+    }
+  };
+
+  // ---------- Fetch ----------
   useEffect(() => {
     const jwt_token = localStorage.getItem("jwt_token");
     const fetchData = async () => {
       setLoading(true);
-
       try {
-        // 1️⃣ Load & normalize localStorage account_ids
-        let storedIds = localStorage.getItem("account_ids");
-
-        try {
-          storedIds = JSON.parse(storedIds); // array or string
-        } catch {
-          storedIds = [storedIds]; // wrap single string
-        }
-
-        // Force array + clean IDs
-        const accountIds = (Array.isArray(storedIds) ? storedIds : [storedIds])
-          .map(id => String(id).trim())
-          .filter(Boolean);
-
+        // normalize account ids
+        const accountIds = safeParseAccountIds();
         console.log("➡️ Sending POST account_ids:", accountIds);
 
-        // 2️⃣ POST to backend (backend handles filtering)
+        // safe POST body
+        const postBody = { account_ids: Array.isArray(accountIds) ? accountIds : [] };
+
         const response = await axios.post(
           "http://47.130.218.97:8012/cloudtrail/filter",
           { account_ids: accountIds },
@@ -62,14 +96,27 @@ const Cloud_Trail = () => {
            } }
         );
 
-        console.log("📌 API Response:", response.data);
+        const respData = response?.data;
 
-        // 3️⃣ Set data directly (already filtered)
-        if (Array.isArray(response.data)) {
-          setData(response.data);
-        } else {
-          setData([]);
-        }
+        // Accept either array or object - backend may return array or { data: [...] }
+        const rows = Array.isArray(respData) ? respData : Array.isArray(respData?.data) ? respData.data : [];
+
+        // Ensure rows is an array of objects
+        const normalized = Array.isArray(rows) ? rows.map((r = {}) => ({
+          // keep original fields but ensure safe fallbacks for fields used in UI
+          event_id: r.event_id ?? r.id ?? null,
+          account_id: String(r.account_id ?? r.owner_id ?? r.aws_account ?? "").trim(),
+          aws_region: r.aws_region ?? r.region ?? "",
+          event_name: r.event_name ?? r.eventName ?? "",
+          resource_type: r.resource_type ?? r.resourceType ?? "",
+          source_ip: r.source_ip ?? r.sourceIp ?? r.sourceIPAddress ?? "",
+          resource_name: r.resource_name ?? r.resourceName ?? "",
+          event_time: r.event_time ?? r.time ?? "",
+          // copy whole record for modal
+          __raw: r
+        })) : [];
+
+        setData(normalized);
       } catch (error) {
         console.error("❌ Error fetching CloudTrail data:", error);
         setData([]);
@@ -81,39 +128,31 @@ const Cloud_Trail = () => {
     fetchData();
   }, []);
 
+  // ---------- Filters (safe unique lists) ----------
+  const makeUniqueList = (arr, mapper = (x) => x) =>
+    [...new Set((Array.isArray(arr) ? arr : []).map(mapper).map((v) => String(v ?? "").trim()).filter(Boolean))];
 
+  const accountIds = makeUniqueList(data, (d) => d.account_id);
+  const regions = makeUniqueList(data, (d) => d.aws_region);
+  const events = makeUniqueList(data, (d) => d.event_name);
 
-  // Extract username safely
-  const getRecordUsername = (record) => {
-    return (
-      record?.username ||
-      record?.user_name ||
-      record?.userName ||
-      record?.user_identity?.userName ||
-      record?.user_identity?.username ||
-      record?.user?.username ||
-      record?.user?.name ||
-      ""
-    ).toString();
-  };
-
-  // Unique values for filters
-  const accountIds = [...new Set(data.map(item => item.account_id))];
-  const regions = [...new Set(data.map(item => item.aws_region))];
-  const events = [...new Set(data.map(item => item.event_name))];
-
-  // Modal open
+  // ---------- Modal handlers ----------
   const handleOpenModal = (record) => {
-    setSelectedData(record);
+    setSelectedData(record && typeof record === "object" ? record : null);
     setIsModalOpen(true);
   };
 
-  // Search handler
-  const handleSearch = (e) => {
-    setSearchText(e.target.value);
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedData(null);
   };
 
-  // Table Columns
+  // ---------- Search ----------
+  const handleSearch = (e) => {
+    setSearchText(String(e?.target?.value ?? ""));
+  };
+
+  // ---------- Table Columns ----------
   const columns = [
     {
       title: (
@@ -126,8 +165,8 @@ const Cloud_Trail = () => {
       ),
       dataIndex: "account_id",
       key: "account_id",
-      filters: accountIds.map(id => ({ text: id, value: id })),
-      onFilter: (value, record) => record.account_id === value
+      filters: accountIds.map((id) => ({ text: id, value: id })),
+      onFilter: (value, record) => String(record?.account_id) === String(value)
     },
     {
       title: (
@@ -139,7 +178,7 @@ const Cloud_Trail = () => {
         </span>
       ),
       key: "username",
-      render: (_, record) => getRecordUsername(record)
+      render: (_, record) => getRecordUsername(record.__raw ?? record)
     },
     {
       title: (
@@ -152,8 +191,8 @@ const Cloud_Trail = () => {
       ),
       dataIndex: "event_name",
       key: "event_name",
-      filters: events.map(event => ({ text: event, value: event })),
-      onFilter: (value, record) => record.event_name === value
+      filters: events.map((ev) => ({ text: ev, value: ev })),
+      onFilter: (value, record) => String(record?.event_name) === String(value)
     },
     {
       title: (
@@ -165,7 +204,8 @@ const Cloud_Trail = () => {
         </span>
       ),
       dataIndex: "resource_type",
-      key: "resource_type"
+      key: "resource_type",
+      render: (v) => String(v ?? "")
     },
     {
       title: (
@@ -177,7 +217,8 @@ const Cloud_Trail = () => {
         </span>
       ),
       dataIndex: "source_ip",
-      key: "source_ip"
+      key: "source_ip",
+      render: (v) => String(v ?? "-")
     },
     {
       title: (
@@ -190,8 +231,8 @@ const Cloud_Trail = () => {
       ),
       dataIndex: "aws_region",
       key: "aws_region",
-      filters: regions.map(r => ({ text: r, value: r })),
-      onFilter: (value, record) => record.aws_region === value
+      filters: regions.map((r) => ({ text: r, value: r })),
+      onFilter: (value, record) => String(record?.aws_region) === String(value)
     },
     {
       title: "More Details",
@@ -207,15 +248,15 @@ const Cloud_Trail = () => {
     }
   ];
 
-  // Filtered data by username search
-  const filteredData = data.filter(item =>
-    getRecordUsername(item).toLowerCase().includes(searchText.toLowerCase())
-  );
+  // ---------- Filtered data by username search ----------
+  const filteredData = Array.isArray(data)
+    ? data.filter((item) =>
+        getRecordUsername(item.__raw ?? item).toLowerCase().includes(searchText.toLowerCase())
+      )
+    : [];
 
   return (
     <div className="p-3">
-
-
       {/* Search input */}
       <Row gutter={[16, 16]} style={{ marginBottom: 10 }}>
         <Col md={19}>
@@ -239,7 +280,6 @@ const Cloud_Trail = () => {
             value={searchText}
             onChange={handleSearch}
             allowClear
-
           />
         </Col>
       </Row>
@@ -250,30 +290,41 @@ const Cloud_Trail = () => {
         dataSource={filteredData}
         loading={loading}
         rowKey={(record) =>
-          record.event_id || `${getRecordUsername(record)}-${record.event_time}`
+          record.event_id || `${getRecordUsername(record.__raw ?? record)}-${record.event_time ?? ""}`
         }
         pagination={{ pageSize: 10 }}
       />
 
       {/* Modal */}
       <Modal
-        title={`${selectedData?.account_name || ""} - Account Details`}
+        title={`${selectedData?.account_id || ""} - Event Details`}
         open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
+        onCancel={handleCloseModal}
         footer={null}
         width={900}
       >
-        {selectedData && (
+        {selectedData ? (
           <Card size="small" title="Information" style={{ marginBottom: 16 }} headStyle={header}>
             <Descriptions bordered column={2} size="small">
-              <Descriptions.Item label="Account ID">{selectedData.account_id}</Descriptions.Item>
-              <Descriptions.Item label="Username">{getRecordUsername(selectedData)}</Descriptions.Item>
-              <Descriptions.Item label="Event ID">{selectedData.event_id}</Descriptions.Item>
-              <Descriptions.Item label="Event Time">{selectedData.event_time}</Descriptions.Item>
-              <Descriptions.Item label="Resource Name">{selectedData.resource_name}</Descriptions.Item>
-              <Descriptions.Item label="Region">{selectedData.aws_region}</Descriptions.Item>
+              <Descriptions.Item label="Account ID">{selectedData.account_id || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Username">{getRecordUsername(selectedData.__raw ?? selectedData) || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Event ID">{selectedData.event_id || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Event Time">{selectedData.event_time || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Resource Name">{selectedData.resource_name || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Region">{selectedData.aws_region || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Event Name">{selectedData.event_name || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Resource Type">{selectedData.resource_type || "-"}</Descriptions.Item>
+              <Descriptions.Item label="Source IP">{selectedData.source_ip || "-"}</Descriptions.Item>
+              {/* raw JSON (collapsible) */}
+              <Descriptions.Item label="Raw Event" span={2}>
+                <pre style={{ maxHeight: 240, overflow: "auto", whiteSpace: "pre-wrap" }}>
+                  {JSON.stringify(selectedData.__raw ?? selectedData, null, 2)}
+                </pre>
+              </Descriptions.Item>
             </Descriptions>
           </Card>
+        ) : (
+          <div style={{ textAlign: "center", padding: 32 }}>No event selected</div>
         )}
       </Modal>
     </div>

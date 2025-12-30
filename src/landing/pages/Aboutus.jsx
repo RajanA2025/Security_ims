@@ -1,24 +1,95 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Award, Globe, Zap, Heart, Target, CheckCircle, Mail, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const AboutUs = () => {
+// ✅ Avoid magic objects / shapes scattered
+const INITIAL_FORM_DATA = {
+  name: '',
+  email: '',
+  company: '',
+  message: '',
+};
+
+// ✅ Avoid magic delays
+const SUCCESS_MESSAGE_DURATION = 2500;
+const MODAL_CLOSE_DELAY = 2600;
+
+// ✅ Simple validation (no UI change, just logic)
+const validateContactForm = (data) => {
+  const name = data.name.trim();
+  const email = data.email.trim();
+  const message = data.message.trim();
+
+  if (!name || !email || !message) {
+    return false;
+  }
+
+  // Basic email format check
+  const emailPattern = /\S+@\S+\.\S+/;
+  if (!emailPattern.test(email)) {
+    return false;
+  }
+
+  return true;
+};
+// Extracted handleContactSubmit function for better testability
+export const handleContactSubmit = (e, formData, setSent, setFormData, setIsContactModalOpen, successTimeoutRef, closeModalTimeoutRef) => {
+  e.preventDefault();
+  
+  const isValid = validateContactForm(formData);
+  if (!isValid) return;
+  
+  setSent(true);
+  setFormData(INITIAL_FORM_DATA);
+  
+  if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
+  if (closeModalTimeoutRef.current) clearTimeout(closeModalTimeoutRef.current);
+  
+  successTimeoutRef.current = setTimeout(() => setSent(false), SUCCESS_MESSAGE_DURATION);
+  closeModalTimeoutRef.current = setTimeout(
+    () => setIsContactModalOpen(false),
+    MODAL_CLOSE_DELAY
+  );
+};
+
+export { validateContactForm };
+
+const AboutUs = ({ initialModalOpen = false } = {}) => {
   const navigate = useNavigate();
-  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', company: '', message: '' });
+  const [isContactModalOpen, setIsContactModalOpen] = useState(initialModalOpen);
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [sent, setSent] = useState(false);
 
-  const handleContactChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  // ✅ Track timeouts to avoid leaks
+  const successTimeoutRef = useRef(null);
+  const closeModalTimeoutRef = useRef(null);
 
-  const handleContactSubmit = (e) => {
-    e.preventDefault();
-    setSent(true);
-    setFormData({ name: '', email: '', company: '', message: '' });
-    setTimeout(() => setSent(false), 2500);
-    setTimeout(() => setIsContactModalOpen(false), 2600);
+  useEffect(() => {
+    // Cleanup on unmount
+    return () => {
+      if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
+      if (closeModalTimeoutRef.current) clearTimeout(closeModalTimeoutRef.current);
+    };
+  }, []);
+
+ // Use the extracted handleContactSubmit function
+  const handleSubmit = (e) => handleContactSubmit(
+    e, 
+    formData, 
+    setSent, 
+    setFormData, 
+    setIsContactModalOpen, 
+    successTimeoutRef, 
+    closeModalTimeoutRef
+  );
+
+  const handleContactChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const values = [
@@ -101,8 +172,10 @@ const AboutUs = () => {
 
   // Compact modal style variables
   const modalPadding = 'p-4 sm:p-6';
-  const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900 placeholder-gray-400';
-  const buttonClass = 'w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:shadow-lg transition-all duration-300 flex items-center justify-center text-base';
+  const inputClass =
+    'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900 placeholder-gray-400';
+  const buttonClass =
+    'w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:shadow-lg transition-all duration-300 flex items-center justify-center text-base';
 
   // Add bounce animation for success message
   const bounceAnim = {
@@ -266,11 +339,11 @@ const AboutUs = () => {
                 transition={{ duration: 0.8, delay: index * 0.1 }}
                 className="bg-[#181ed4] rounded-2xl p-6 text-white text-center hover:shadow-lg transition-all duration-300 transform hover:-translate-y-2"
               >
-                <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center text-[#181ed4] mx-auto mb-2">
+                <div className="bg.white w-16 h-16 rounded-full flex items-center justify-center text-[#181ed4] mx-auto mb-2">
                   {value.icon}
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">{value.title}</h3>
-                <p className="text-white">{value.description}</p>
+                <h3 className="text-xl font-bold text.white mb-2">{value.title}</h3>
+                <p className="text.white">{value.description}</p>
               </motion.div>
             ))}
           </div>
@@ -378,9 +451,6 @@ const AboutUs = () => {
                 <Mail className="mr-2 h-5 w-5" />
                 Contact Us
               </button>
-              {/* <button className="border-2 border-white text-white font-bold py-3 px-8 rounded-xl text-lg hover:bg-white hover:text-[#181ed4] transition-all duration-300 transform hover:scale-105">
-                Learn More
-              </button> */}
             </div>
           </motion.div>
           {/* Animated Contact Modal */}
@@ -422,7 +492,7 @@ const AboutUs = () => {
                   <div className="text-center mb-4 mt-2">
                     <h2 className="text-2xl font-bold text-slate-800 mb-1">Send us a Message</h2>
                   </div>
-                  <form onSubmit={handleContactSubmit} className="space-y-3">
+                  <form onSubmit={handleSubmit} className="space-y-3">
                     <div>
                       <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
                       <input
