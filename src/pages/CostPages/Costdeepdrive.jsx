@@ -8,7 +8,7 @@ export const Costdeepdrive = () => {
   const [accounts, setAccounts] = useState([]);
   const [filteredAccounts, setFilteredAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
-
+const jwt_token = localStorage.getItem("jwt_token");
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -47,12 +47,12 @@ export const Costdeepdrive = () => {
           }
         );
 // get jwt_token from localStorage
-const jwt_token = localStorage.getItem("jwt_token");
+
         const json = await response.json();
         console.log("📌 API Response:", json);
 
         const results = json.results || [];
-
+console.log('resultssss', results)
         // Backend already filters → NO frontend filter needed
         setFilteredAccounts(results);
 

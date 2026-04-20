@@ -270,7 +270,8 @@ setTreeData(
         // ---------------------------
         // 5️⃣ Build Accounts Dropdown
         // ---------------------------
-        const allIds = costJson?.all_account_ids || [];
+        const allIds = costJson?.results[0]?.all_account_ids || [];
+        console.log('allIds', allIds)
         const orderedAccounts = allIds.includes("ALL")
           ? allIds
           : ["ALL", ...allIds];
@@ -322,7 +323,7 @@ setTreeData(
         // ---------------------------
         setTagData(processedTagData);
         setTagSummary(summary);
-        setCostData(costJson);
+        setCostData(costJson.results[0]);
         setResourcesData(resourcesJson);
       } catch (err) {
         console.error("Fetch error:", err);
