@@ -155,11 +155,15 @@ export default function AntdNestedTable({ selectedAccount }) {
         console.log("➡️ POST Body sent:", postBody);
 
         // 3️⃣ API CALL - POST (No GET)
+        const token = localStorage.getItem("auth_token");
         const { data } = await axios.post(
           "http://47.130.218.97:8002/instances/filter",
           postBody,
           {
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              Authorization: token ? `Bearer ${token}` : "",
+            },
           }
         );
 

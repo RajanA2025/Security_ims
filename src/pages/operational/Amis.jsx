@@ -55,10 +55,14 @@ const Amis = () => {
         console.log("➡️ POST Body:", postBody);
 
         // POST request
+        const token = localStorage.getItem("auth_token");
         const response = await axios.post(
           "http://47.130.218.97:8012/amis/filter",
           postBody,
-          { headers: { "Content-Type": "application/json" } }
+          { headers: { 
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          } }
         );
 
         console.log("📌 API Response:", response.data);

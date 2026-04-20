@@ -153,8 +153,12 @@ const Securitygrp = () => {
         console.log("➡️ POST Body:", postBody);
 
         // --- API CALL (POST) ---
+        const token = localStorage.getItem("auth_token");
         const response = await axios.post(API_URL, postBody, {
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
         });
 
         console.log("📌 API Response:", response.data);

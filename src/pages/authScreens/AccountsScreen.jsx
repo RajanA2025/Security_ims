@@ -400,13 +400,17 @@ export default function AccountsScreen() {
           perfops: acc.selectedPillars.includes("operational_performance"),
         };
 
+        const token = localStorage.getItem("auth_token");
         await fetch(
           isEdit
             ? "http://47.130.218.97:8016/api/account/update"
             : "http://47.130.218.97:8016/api/account/add",
           {
             method: isEdit ? "PUT" : "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              Authorization: token ? `Bearer ${token}` : "",
+            },
             body: JSON.stringify(payload),
           }
         );

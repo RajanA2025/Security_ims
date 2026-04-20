@@ -151,11 +151,15 @@ const Insights = () => {
         console.log("➡️ POST Body Sent:", postBody);
 
         // --- POST REQUEST ---
+        const token = localStorage.getItem("auth_token");
         const response = await axios.post(
           "http://47.130.218.97:8012/iam/filter",
           postBody,
           {
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              Authorization: token ? `Bearer ${token}` : "",
+            },
           }
         );
 

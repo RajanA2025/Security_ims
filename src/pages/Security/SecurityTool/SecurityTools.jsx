@@ -71,10 +71,14 @@ const SecurityTools = () => {
 
         // --- TAB 2 (TOOLS) API ---
         if (tabKey === "2") {
+          const token = localStorage.getItem("auth_token");
           response = await axios.post(
             "http://47.130.218.97:8012/tools/filter",
             postBody,
-            { headers: { "Content-Type": "application/json" } }
+            { headers: { 
+              "Content-Type": "application/json",
+              Authorization: token ? `Bearer ${token}` : "",
+            } }
           );
 
           if (Array.isArray(response.data)) {
@@ -92,10 +96,14 @@ const SecurityTools = () => {
 
         // --- TAB 1 (KMS) API ---
         else if (tabKey === "1") {
+          const token = localStorage.getItem("auth_token");
           response = await axios.post(
             "http://47.130.218.97:8012/kms/filter",
             postBody,
-            { headers: { "Content-Type": "application/json" } }
+            { headers: { 
+              "Content-Type": "application/json",
+              Authorization: token ? `Bearer ${token}` : "",
+            } }
           );
 
           if (Array.isArray(response.data)) {

@@ -211,11 +211,15 @@ function Dashboard() {
       console.log("➡️ POST Body:", postBody);
 
       // --- NEW API POST CALL ---
+      const token = localStorage.getItem("auth_token");
       const { data } = await axios.post(
         "http://47.130.218.97:8005/performance/filter",
         postBody,
         {
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
         }
       );
 

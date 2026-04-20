@@ -80,10 +80,12 @@ const Admin = () => {
     if (!window.confirm("Are you sure you want to delete this company?")) return;
 
     try {
+      const token = localStorage.getItem("auth_token");
       const response = await fetch(`${apiBaseUrl}/api/company/delete/${cid}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
         },
       });
 

@@ -36,11 +36,15 @@ export const Costdeepdrive = () => {
         };
 
         // --- API CALL (POST) ---
+        const token = localStorage.getItem("auth_token");
         const response = await fetch(
           "http://47.130.218.97:8002/instances/filter",
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              Authorization: token ? `Bearer ${token}` : "",
+            },
             body: JSON.stringify(body),
           }
         );

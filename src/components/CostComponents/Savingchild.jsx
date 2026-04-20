@@ -86,7 +86,12 @@ const SavingsChild = () => {
 const fetchKeyPairs = async () => {
   setLoading(true);
   try {
-    const res = await axios.get(`${API_BASE_URL}/keypairs2`);
+    const token = localStorage.getItem("auth_token");
+    const res = await axios.get(`${API_BASE_URL}/keypairs2`, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+    });
     setSecurityData(filterByAccounts(res.data));
   } finally {
     setLoading(false);
@@ -123,10 +128,14 @@ useEffect(() => {
       // -----------------------------------------
       // 3️⃣ Call NEW API (POST)
       // -----------------------------------------
+      const token = localStorage.getItem("auth_token");
       const res = await axios.post(
         "http://47.130.218.97:8003/resources/filter",
         postBody,
-        { headers: { "Content-Type": "application/json" } }
+        { headers: { 
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        } }
       );
 
       const data = res.data;

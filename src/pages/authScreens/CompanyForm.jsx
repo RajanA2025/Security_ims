@@ -166,9 +166,13 @@ const handleInputChange = (e) => {
       let res;
       if (isEdit) {
         // ✅ Update existing company
+        const token = localStorage.getItem("auth_token");
         const response = await fetch(`${apiBaseUrl}/api/company/update`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
           body: JSON.stringify(payload),
         });
         res = await response.json();

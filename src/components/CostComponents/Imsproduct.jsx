@@ -35,7 +35,12 @@ export default function Imsproduct() {
 
     const fetchAccounts = async () => {
       try {
-        const response = await fetch(`${apiBaseUrl}/api/accounts/all/${cId}`);
+        const token = localStorage.getItem("auth_token");
+        const response = await fetch(`${apiBaseUrl}/api/accounts/all/${cId}`, {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        });
         const data = await response.json();
 
         if (data && Array.isArray(data.accounts) && data.accounts.length > 0) {
@@ -67,8 +72,13 @@ export default function Imsproduct() {
     if (!cid) return;
 
     try {
+      const token = localStorage.getItem("auth_token");
       const url = `http://47.130.218.97:8016/api/accounts/${cid}/${pillar}`;
-      const response = await axios.get(url);
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      });
       const accountsArray =
         response.data?.accounts ||
         response.data?.[`${pillar}_accounts`] ||

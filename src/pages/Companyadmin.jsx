@@ -30,7 +30,12 @@ const Companyadmin = () => {
         const cid = localStorage.getItem("company_cid");
         if (!cid) throw new Error("Company ID not found. Please log in again.");
 
-        const response = await fetch(`http://47.130.218.97:8016/api/account/all`);
+        const token = localStorage.getItem("auth_token");
+        const response = await fetch(`http://47.130.218.97:8016/api/account/all`, {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        });
         const result = await response.json();
 
         if (!response.ok) throw new Error(result.message || "Failed to fetch accounts");
@@ -114,7 +119,11 @@ const Companyadmin = () => {
 
   const deleteEntireAccount = async () => {
     try {
+      const token = localStorage.getItem("auth_token");
       await axios.delete(`http://47.130.218.97:8016/api/account/delete`, {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+        },
         data: {
           cid: selectedAccount.cid,
           account_id: selectedAccount.account_id,
@@ -141,7 +150,11 @@ const Companyadmin = () => {
 
   const deletePillar = async (pillarType) => {
     try {
+      const token = localStorage.getItem("auth_token");
       await axios.delete(`http://47.130.218.97:8016/api/account/delete`, {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+        },
         data: {
           cid: selectedAccount.cid,
           account_id: selectedAccount.account_id,

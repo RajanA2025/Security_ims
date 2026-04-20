@@ -51,10 +51,14 @@ const Business = () => {
         console.log("➡️ Sending POST:", postBody);
 
         // --- API CALL ---
+        const token = localStorage.getItem("auth_token");
         const response = await axios.post(
           "http://47.130.218.97:8012/snapshots/filter",
           postBody,
-          { headers: { "Content-Type": "application/json" } }
+          { headers: { 
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          } }
         );
 
         console.log("📌 API Response:", response.data);

@@ -93,11 +93,15 @@ export const Complaincedashmain = () => {
         console.log("➡️ POST Body:", postBody);
 
         // Call new POST API
+        const token = localStorage.getItem("auth_token");
         const response = await fetch(
           "http://47.130.218.97:8009/instances/filter",
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              Authorization: token ? `Bearer ${token}` : "",
+            },
             body: JSON.stringify(postBody),
           }
         );

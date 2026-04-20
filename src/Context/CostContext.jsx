@@ -61,9 +61,13 @@ export const CostProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
+      const token = localStorage.getItem("auth_token");
       const response = await fetch(`${apiBaseUrl}/api/company/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
         body: JSON.stringify(loginData),
       });
 
@@ -202,25 +206,35 @@ export const CostProvider = ({ children }) => {
         // ---------------------------
         // 2️⃣ API Calls (ALL POST)
         // ---------------------------
+        const token = localStorage.getItem("auth_token");
         const [costRes, resourcesRes, tagRes] = await Promise.all([
           // COST SUMMARY
           fetch("http://47.130.218.97:8021/cost-summary", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              Authorization: token ? `Bearer ${token}` : "",
+            },
             body: JSON.stringify(postBody),
           }),
 
           // RESOURCES FILTER
           fetch("http://47.130.218.97:8003/resources/filter", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              Authorization: token ? `Bearer ${token}` : "",
+            },
             body: JSON.stringify(postBody),
           }),
 
           // TAGS FILTER
           fetch("http://47.130.218.97:8007/tags/filter", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              Authorization: token ? `Bearer ${token}` : "",
+            },
             body: JSON.stringify(postBody),
           }),
         ]);

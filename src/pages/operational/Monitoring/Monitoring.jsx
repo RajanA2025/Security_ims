@@ -87,6 +87,7 @@ const Monitoring = () => {
       console.log("POST →", apiUrl, storedIds);
 
       // POST CALL
+      const token = localStorage.getItem("auth_token");
       const response = await axios.post(
         apiUrl,
         { account_ids: storedIds },   // <-- sending required payload
@@ -94,6 +95,7 @@ const Monitoring = () => {
           headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
           },
           timeout: 10000,
         }

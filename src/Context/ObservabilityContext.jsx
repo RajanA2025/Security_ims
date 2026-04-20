@@ -36,8 +36,12 @@ export const ObservabilityProvider = ({ children }) => {
     setLoading(true);
 
     try {
+      const token = localStorage.getItem("auth_token");
       const res = await axios.post(url, POST_BODY, {
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
       });
 
       console.log(`📌 ${url} →`, res.data);

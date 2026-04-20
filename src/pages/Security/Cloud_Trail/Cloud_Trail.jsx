@@ -53,10 +53,14 @@ const Cloud_Trail = () => {
         console.log("➡️ Sending POST account_ids:", accountIds);
 
         // 2️⃣ POST to backend (backend handles filtering)
+        const token = localStorage.getItem("auth_token");
         const response = await axios.post(
           "http://47.130.218.97:8012/cloudtrail/filter",
           { account_ids: accountIds },
-          { headers: { "Content-Type": "application/json" } }
+          { headers: { 
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          } }
         );
 
         console.log("📌 API Response:", response.data);

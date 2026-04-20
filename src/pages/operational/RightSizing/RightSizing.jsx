@@ -103,8 +103,12 @@ const fetchPerformanceData = async () => {
     console.log("➡️ POST Body:", requestBody);
 
     // --- POST REQUEST ---
+    const token = localStorage.getItem("auth_token");
     const response = await axios.post(apiUrl, requestBody, {
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        Authorization: token ? `Bearer ${token}` : "",
+      },
       timeout: 15000,
     });
 

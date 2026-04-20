@@ -17,7 +17,12 @@ function CpuAvg() {
         const fetchCpuData = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://47.130.218.97:8012/ec2');
+                const token = localStorage.getItem("auth_token");
+                const response = await fetch('http://47.130.218.97:8012/ec2', {
+                    headers: {
+                        Authorization: token ? `Bearer ${token}` : "",
+                    },
+                });
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }

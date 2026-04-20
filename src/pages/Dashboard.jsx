@@ -338,12 +338,21 @@ const Insights = () => {
         console.log("POST BODY:", { account_ids: storedAccountIds });
 
         // API calls
+        const token = localStorage.getItem("auth_token");
         const [iamRes, sgRes] = await Promise.all([
           axios.post("http://47.130.218.97:8012/iam/filter", {
             account_ids: storedAccountIds,
+          }, {
+            headers: {
+              Authorization: token ? `Bearer ${token}` : "",
+            },
           }),
           axios.post("http://47.130.218.97:8012/security-groups/filter", {
             account_ids: storedAccountIds,
+          }, {
+            headers: {
+              Authorization: token ? `Bearer ${token}` : "",
+            },
           }),
         ]);
 
