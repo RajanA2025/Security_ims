@@ -50,10 +50,10 @@ const Dashboard = () => {
   useEffect(() => {
     console.log("Filters sent to API:", filters);
     if (!costData) return;
-
-    const current = costData.monthly_summary?.current_month_cost || 0;
-    const previous = costData.monthly_summary?.previous_month_cost || 0;
-    const forecast = costData.monthly_summary?.forecast_amount || 0;
+console.log('costData', costData)
+    const current = costData?.monthly_summary?.current_month_cost || 0;
+    const previous = costData?.monthly_summary?.previous_month_cost || 0;
+    const forecast = costData?.monthly_summary?.forecast_amount || 0;
 
     setCurrentMonthCost(current);
     setForecastAmount(forecast);

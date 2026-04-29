@@ -189,9 +189,6 @@ export const CostProvider = ({ children }) => {
       try {
         setLoading(true);
 
-        // ---------------------------
-        // 1️⃣ Get stored + selected IDs
-        // ---------------------------
         const storedIds = JSON.parse(localStorage.getItem("account_ids")) || [];
         const { account_id } = filters;
 
@@ -199,11 +196,6 @@ export const CostProvider = ({ children }) => {
           account_ids: account_id && account_id !== "ALL" ? [account_id] : storedIds,
         };
 
-        console.log("➡️ POST Body:", postBody);
-
-        // ---------------------------
-        // 2️⃣ API Calls (ALL POST)
-        // ---------------------------
         const [costRes, resourcesRes, tagRes] = await Promise.all([
           // COST SUMMARY
           fetch("http://47.130.218.97:8021/cost-summary", {
@@ -270,7 +262,8 @@ setTreeData(
         // ---------------------------
         // 5️⃣ Build Accounts Dropdown
         // ---------------------------
-        const allIds = costJson?.all_account_ids || [];
+        const allIds = costJson?.results[0]?.all_account_ids || [];
+        console.log('allIds', allIds)
         const orderedAccounts = allIds.includes("ALL")
           ? allIds
           : ["ALL", ...allIds];
@@ -322,7 +315,7 @@ setTreeData(
         // ---------------------------
         setTagData(processedTagData);
         setTagSummary(summary);
-        setCostData(costJson);
+        setCostData(costJson.results[0]);
         setResourcesData(resourcesJson);
       } catch (err) {
         console.error("Fetch error:", err);
