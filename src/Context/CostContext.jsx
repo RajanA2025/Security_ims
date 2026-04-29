@@ -189,9 +189,6 @@ export const CostProvider = ({ children }) => {
       try {
         setLoading(true);
 
-        // ---------------------------
-        // 1️⃣ Get stored + selected IDs
-        // ---------------------------
         const storedIds = JSON.parse(localStorage.getItem("account_ids")) || [];
         const { account_id } = filters;
 
@@ -199,11 +196,6 @@ export const CostProvider = ({ children }) => {
           account_ids: account_id && account_id !== "ALL" ? [account_id] : storedIds,
         };
 
-        console.log("➡️ POST Body:", postBody);
-
-        // ---------------------------
-        // 2️⃣ API Calls (ALL POST)
-        // ---------------------------
         const [costRes, resourcesRes, tagRes] = await Promise.all([
           // COST SUMMARY
           fetch("http://47.130.218.97:8021/cost-summary", {

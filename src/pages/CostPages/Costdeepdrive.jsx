@@ -14,23 +14,18 @@ const jwt_token = localStorage.getItem("jwt_token");
       setLoading(true);
 
       try {
-        // ✅ Read accounts from localStorage
         let storedAccounts = localStorage.getItem("account_ids");
 
         try {
           storedAccounts = JSON.parse(storedAccounts);
         } catch {
-          storedAccounts = [storedAccounts]; // wrap if single string
+          storedAccounts = [storedAccounts]; 
         }
 
-        // Ensure array format
         if (!Array.isArray(storedAccounts)) {
           storedAccounts = [storedAccounts];
         }
 
-        console.log("📌 POST account_ids:", storedAccounts);
-
-        // --- POST BODY ---
         const body = {
           account_ids: storedAccounts,
         };
@@ -49,10 +44,7 @@ const jwt_token = localStorage.getItem("jwt_token");
 // get jwt_token from localStorage
 
         const json = await response.json();
-        console.log("📌 API Response:", json);
-
         const results = json.results || [];
-console.log('resultssss', results)
         // Backend already filters → NO frontend filter needed
         setFilteredAccounts(results);
 
