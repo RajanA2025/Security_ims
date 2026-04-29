@@ -17,12 +17,12 @@ const Companyadmin = () => {
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
-
+ const jwt_token = localStorage.getItem("jwt_token");
 
 
   // 🔹 Fetch cost accounts dynamically
   useEffect(() => {
-    const jwt_token = localStorage.getItem("jwt_token");
+   
     const fetchAccounts = async () => {
       try {
         setLoading(true);
@@ -119,11 +119,10 @@ const Companyadmin = () => {
 
   const deleteEntireAccount = async () => {
     try {
-      await axios.delete(`http://47.130.218.97:8016/api/account/delete`, {
-        headers: {
-          Authorization: `Bearer ${jwt_token}`,
-        },
-      }, {
+     await axios.delete(`http://47.130.218.97:8016/api/account/delete`, {
+  headers: {
+    Authorization: `Bearer ${jwt_token}`,
+  } ,
         data: {
           cid: selectedAccount.cid,
           account_id: selectedAccount.account_id,
